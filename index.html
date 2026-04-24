@@ -3,147 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Login Page</title>
+    <title>Lion Pride | Secure Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
-        /* CSS - Styling the Page */
+        /* --- CSS STYLES --- */
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            /* High-quality Lion Wallpaper with a dark overlay */
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
+                        url('https://images.unsplash.com/photo-1614027164847-1b28006879b2?q=80&w=1920') no-repeat center center/cover;
+            overflow: hidden;
         }
 
-        .login-card {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        .login-container {
+            position: relative;
+            background: rgba(20, 20, 20, 0.85);
+            border: 2px solid #d4af37; /* Gold Border */
+            padding: 50px 40px;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            border-radius: 15px;
             text-align: center;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Gold Lion Head Icon/Logo placeholder */
+        .lion-logo {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            color: #d4af37;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
         }
 
         h2 {
-            color: #333;
-            margin-bottom: 1.5rem;
+            color: #fff;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
-        .input-group {
-            margin-bottom: 1rem;
-            text-align: left;
+        .input-box {
+            position: relative;
+            margin-bottom: 25px;
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        input {
+        .input-box input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #555;
+            padding: 10px 0;
+            color: #fff;
+            font-size: 1rem;
             outline: none;
-            transition: border-color 0.3s;
+            transition: 0.4s;
         }
 
-        input:focus {
-            border-color: #764ba2;
+        .input-box input:focus {
+            border-bottom: 1px solid #d4af37;
+        }
+
+        .input-box label {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            color: #888;
+            pointer-events: none;
+            transition: 0.4s;
+        }
+
+        .input-box input:focus ~ label,
+        .input-box input:valid ~ label {
+            top: -15px;
+            font-size: 0.8rem;
+            color: #d4af37;
         }
 
         button {
             width: 100%;
             padding: 12px;
-            background-color: #764ba2;
-            color: white;
+            background: linear-gradient(45deg, #d4af37, #f1c40f);
             border: none;
-            border-radius: 6px;
-            font-size: 1rem;
+            border-radius: 5px;
+            color: #000;
+            font-weight: bold;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: background 0.3s;
-            margin-top: 1rem;
+            transition: 0.3s ease;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
         }
 
         button:hover {
-            background-color: #5a3782;
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
         }
 
-        #message {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            min-height: 1.2rem;
+        #status-msg {
+            margin-top: 20px;
+            height: 20px;
+            font-weight: bold;
         }
 
-        .error { color: #e74c3c; }
-        .success { color: #2ecc71; }
+        .creds-hint {
+            margin-top: 30px;
+            color: #555;
+            font-size: 0.75rem;
+            border-top: 1px solid #333;
+            padding-top: 15px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="login-card">
-        <h2>Welcome Back</h2>
+    <div class="login-container">
+        <div class="lion-logo">🦁</div>
+        <h2>RC Portal</h2>
+        
         <form id="loginForm">
-            <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter Username" required>
+            <div class="input-box">
+                <input type="text" id="username" required>
+                <label>User ID</label>
             </div>
-            <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter password" required>
+            <div class="input-box">
+                <input type="password" id="password" required>
+                <label>Password</label>
             </div>
-            <button type="submit">Login</button>
+            <button type="submit">Enter Access</button>
         </form>
-        <div id="message"></div>
+
+        <p id="status-msg"></p>
     </div>
 
     <script>
-        // JavaScript - Logic and Validation
-        const loginForm = document.getElementById('loginForm');
-        const message = document.getElementById('message');
+        /* --- JAVASCRIPT LOGIC --- */
+        const form = document.getElementById('loginForm');
+        const status = document.getElementById('status-msg');
 
-        // Default Credentials
-        const VALID_USER = "admin";
-        const VALID_PASS = "12345";
+        // Set your default credentials here
+        const DEFAULTS = {
+            id: "admin",
+            pass: "Siva9551"
+        };
 
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Prevent page refresh
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
 
-            const userEntry = document.getElementById('username').value;
-            const passEntry = document.getElementById('password').value;
+            const userVal = document.getElementById('username').value;
+            const passVal = document.getElementById('password').value;
 
-            if (userEntry === VALID_USER && passEntry === VALID_PASS) {
-                message.textContent = "Login Successful! Redirecting...";
-                message.className = "success";
+            if (userVal === DEFAULTS.id && passVal === DEFAULTS.pass) {
+                status.style.color = "#2ecc71";
+                status.textContent = "✓ Access Granted. Entering...";
                 
-                // Simulate redirection
                 setTimeout(() => {
-                    alert("Welcome, Admin!");
-                    // 1. Show a success message (Optional)
-            alert("Login Successful! Redirecting to Dashboard...");
-
-            // 2. Redirect to your target HTML file
+                    alert("Welcome back, Chief! Your portal is ready.");
+                    // 2. Redirect to your target HTML file
             // Make sure "dashboard.html" exists in the same folder
             window.location.href = "dashboard.html"; 
                 }, 1000);
-
             } else {
-                message.textContent = "Invalid username or password.";
-                message.className = "error";
+                status.style.color = "#e74c3c";
+                status.textContent = "✗ Invalid ID or Password!";
                 
-                // Visual shake effect (optional)
-                loginForm.style.animation = "shake 0.2s ease-in-out 0s 2";
+                // Shake effect for the box
+                document.querySelector('.login-container').style.animation = "shake 0.3s";
+                setTimeout(() => {
+                    document.querySelector('.login-container').style.animation = "";
+                }, 300);
             }
         });
     </script>
+
+    <style>
+        /* Animation for Error Shake */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
 
 </body>
 </html>
