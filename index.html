@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RC Portal | Login</title>
+    <title>Digital Service Portal | Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         /* CSS STYLES */
@@ -123,8 +123,8 @@
 <body>
 
     <div class="login-card">
-        <h2>ADMIN LOGIN</h2>
-        <p>Access your RC service</p>
+        <h2>Member Login</h2>
+        <p>Access your digital service dashboard</p>
 
         <form id="loginForm">
             <div class="input-group">
@@ -142,6 +142,11 @@
             <button type="submit" class="login-btn">LOGIN</button>
             
         </form>
+
+        <div class="footer">
+            Forgot Password? <a href="#">Click here</a> <br><br>
+            Don't have an account? <a href="#">Create Account</a>
+        </div>
     </div>
 
     <script>
@@ -152,9 +157,7 @@
         const pass = document.getElementById('password').value;
 
         // Replace 'admin' and '1234' with your actual logic
-        if (user === "admin" && pass === "7094")  
-        {
-        
+        if (user === "admin" && pass === "1234") {
             
             // 1. Show a success message (Optional)
             alert("Login Successful! Redirecting to Dashboard...");
