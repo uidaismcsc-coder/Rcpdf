@@ -3,202 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lion Pride | Secure Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>PDF Tool-SMCSC</title>
     
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
     <style>
-        /* --- CSS STYLES --- */
-        * {
-            margin: 0;
-            padding: 0;
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        .container { 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 900px; 
+        }
+        h2 { 
+            color: #2d3436; 
+            text-align: center; 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 10px; 
+            margin-top: 0;
+        }
+        
+        /* Flex Layout for Side-by-Side Sections */
+        .tool-grid { 
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap; 
+            margin-top: 20px; 
+        }
+        .section { 
+            flex: 1; 
+            min-width: 300px; 
+            padding: 20px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 10px; 
+            background: #fafafa; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        h3 { margin-top: 0; font-size: 1.1rem; color: #0984e3; }
+        label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.85rem; }
+        input[type="file"] { width: 100%; margin-top: 5px; font-size: 0.8rem; }
+        
+        button, .btn-link { 
+            width: 100%; 
+            background: #00b894; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            margin-top: auto; 
+            cursor: pointer; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            transition: 0.3s;
+            text-align: center; 
+            text-decoration: none; 
+            display: block;
             box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
         }
-
-        body {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            /* High-quality Lion Wallpaper with a dark overlay */
-            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), 
-                        url('https://images.unsplash.com/photo-1614027164847-1b28006879b2?q=80&w=1920') no-repeat center center/cover;
-            overflow: hidden;
+        .btn-merge { margin-top: 15px; }
+        button:hover { background: #009473; }
+        
+        #status { 
+            margin-top: 20px; 
+            text-align: center; 
+            font-weight: 500; 
+            font-size: 0.9rem; 
+            color: #636e72; 
+            border-top: 1px solid #eee; 
+            padding-top: 10px; 
         }
-
-        .login-container {
-            position: relative;
-            background: rgba(20, 20, 20, 0.85);
-            border: 2px solid #d4af37; /* Gold Border */
-            padding: 50px 40px;
-            width: 100%;
-            max-width: 420px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
-            backdrop-filter: blur(10px);
+        .support { 
+            display: block; 
+            text-align: center; 
+            margin-top: 20px; 
+            color: #6c5ce7; 
+            text-decoration: none; 
+            font-weight: bold; 
         }
-
-        /* Gold Lion Head Icon/Logo placeholder */
-        .lion-logo {
-            font-family: 'Cinzel', serif;
-            font-size: 3rem;
-            color: #d4af37;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
-        }
-
-        h2 {
-            color: #fff;
-            letter-spacing: 3px;
-            margin-bottom: 30px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .input-box {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .input-box input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid #555;
-            padding: 10px 0;
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-            transition: 0.4s;
-        }
-
-        .input-box input:focus {
-            border-bottom: 1px solid #d4af37;
-        }
-
-        .input-box label {
-            position: absolute;
-            top: 10px;
-            left: 0;
-            color: #888;
-            pointer-events: none;
-            transition: 0.4s;
-        }
-
-        .input-box input:focus ~ label,
-        .input-box input:valid ~ label {
-            top: -15px;
-            font-size: 0.8rem;
-            color: #d4af37;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(45deg, #d4af37, #f1c40f);
-            border: none;
-            border-radius: 5px;
-            color: #000;
-            font-weight: bold;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: 0.3s ease;
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-        }
-
-        button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
-        }
-
-        #status-msg {
-            margin-top: 20px;
-            height: 20px;
-            font-weight: bold;
-        }
-
-        .creds-hint {
-            margin-top: 30px;
-            color: #555;
-            font-size: 0.75rem;
-            border-top: 1px solid #333;
-            padding-top: 15px;
-        }
+        py-config { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="login-container">
-        <div class="lion-logo">🦁</div>
-        <h2>RC Portal</h2>
-        
-        <form id="loginForm">
-            <div class="input-box">
-                <input type="text" id="username" required>
-                <label>User ID</label>
-            </div>
-            <div class="input-box">
-                <input type="password" id="password" required>
-                <label>Password</label>
-            </div>
-            <button type="submit">Enter Access</button>
-        </form>
+<py-config>
+    packages = ["pypdf"]
+</py-config>
 
-        <p id="status-msg"></p>
+<div class="container">
+    <h2>PDF TOOl-SMCSC</h2>
+
+    <div class="tool-grid">
+        <div class="section">
+            <h3>1. Overlay PDF</h3>
+            <label>Source PDF (Content)</label>
+            <input type="file" id="srcFile" accept=".pdf">
+            <label>Background PDF</label>
+            <input type="file" id="bgFile" accept=".pdf">
+            <button class="btn-merge" id="mergeBtn" onclick="mergePDFs()">Merge & Download</button>
+        </div>
+
+        <div class="section">
+            <h3>2. Background PDF REMOVER</h3>
+            <label>Select PDF to Clean</label>
+            <input type="file" id="cleanInput" accept=".pdf">
+            <button id="cleanBtn" onclick="document.getElementById('cleanInput').click()">Clean PDF</button>
+            <a id="downloadClean" class="btn-link" style="display:none; background: #0984e3; margin-top:10px;">Download Cleaned PDF</a>
+        </div>
     </div>
 
-    <script>
-        /* --- JAVASCRIPT LOGIC --- */
-        const form = document.getElementById('loginForm');
-        const status = document.getElementById('status-msg');
+    <div id="status">System Ready</div>
+    
+    <a href="https://wa.me/917094041818" target="_blank" class="support">SMCSC SUPPORT 💬</a>
+</div>
 
-        // Set your default credentials here
-        const DEFAULTS = {
-            id: "admin",
-            pass: "Siva9551"
-        };
+<script>
+    const { PDFDocument } = PDFLib;
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
+    async function mergePDFs() {
+        const srcInput = document.getElementById('srcFile').files[0];
+        const bgInput = document.getElementById('bgFile').files[0];
+        const status = document.getElementById('status');
 
-            const userVal = document.getElementById('username').value;
-            const passVal = document.getElementById('password').value;
-
-            if (userVal === DEFAULTS.id && passVal === DEFAULTS.pass) {
-                status.style.color = "#2ecc71";
-                status.textContent = "✓ Access Granted. Entering...";
-                
-                setTimeout(() => {
-                    alert("Welcome back, Chief! Your portal is ready.");
-                    // 2. Redirect to your target HTML file
-            // Make sure "dashboard.html" exists in the same folder
-            window.location.href = "dashboard.html"; 
-                }, 1000);
-            } else {
-                status.style.color = "#e74c3c";
-                status.textContent = "✗ Invalid ID or Password!";
-                
-                // Shake effect for the box
-                document.querySelector('.login-container').style.animation = "shake 0.3s";
-                setTimeout(() => {
-                    document.querySelector('.login-container').style.animation = "";
-                }, 300);
-            }
-        });
-    </script>
-
-    <style>
-        /* Animation for Error Shake */
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            50% { transform: translateX(10px); }
-            75% { transform: translateX(-10px); }
-            100% { transform: translateX(0); }
+        if (!srcInput || !bgInput) {
+            alert("Please select both files for merging!");
+            return;
         }
-    </style>
+
+        try {
+            status.innerText = "Processing Merge...";
+            
+            // Fix: Capture original filename from Source PDF
+            const originalName = srcInput.name;
+            const newFileName = "Merged_" + originalName;
+
+            const srcBytes = await srcInput.arrayBuffer();
+            const bgBytes = await bgInput.arrayBuffer();
+
+            const srcDoc = await PDFDocument.load(srcBytes);
+            const dstDoc = await PDFDocument.load(bgBytes);
+
+            const embeddedPages = await dstDoc.embedPdf(srcDoc);
+            const dstPages = dstDoc.getPages();
+
+            dstPages.forEach((page, index) => {
+                const overlayPage = embeddedPages[index] || embeddedPages[0];
+                const { width, height } = page.getSize();
+                page.drawPage(overlayPage, { x: 0, y: 0, width, height });
+            });
+
+            const pdfBytes = await dstDoc.save();
+            
+            // Download with the fixed filename
+            downloadFile(pdfBytes, newFileName);
+            
+            status.innerText = "Merge Successful!";
+        } catch (err) {
+            status.innerText = "Error: " + err.message;
+        }
+    }
+
+    function downloadFile(bytes, name) {
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+<script type="py">
+import asyncio
+import io
+from pyscript import document
+from js import Uint8Array, URL, Blob
+from pypdf import PdfReader, PdfWriter
+from pyodide.ffi import create_proxy
+
+async def process_clean(event):
+    status = document.getElementById("status")
+    dl_btn = document.getElementById("downloadClean")
+    
+    file_list = event.target.files
+    if len(file_list) == 0: return
+
+    try:
+        status.innerText = "Cleaning PDF layers..."
+        file = file_list.item(0)
+        original_clean_name = "Cleaned_" + file.name
+        
+        array_buffer = await file.arrayBuffer()
+        reader = PdfReader(io.BytesIO(array_buffer.to_bytes()))
+        writer = PdfWriter()
+        
+        for page in reader.pages:
+            if "/Annots" in page: del page["/Annots"]
+            if "/Resources" in page and "/XObject" in page["/Resources"]:
+                del page["/Resources"]["/XObject"]
+            writer.add_page(page)
+        
+        out_buffer = io.BytesIO()
+        writer.write(out_buffer)
+        
+        js_array = Uint8Array.new(out_buffer.getvalue())
+        blob = Blob.new([js_array], {type: "application/pdf"})
+        dl_btn.href = URL.createObjectURL(blob)
+        dl_btn.download = original_clean_name
+        dl_btn.style.display = "block"
+        status.innerText = "Cleaning Complete!"
+    except Exception as e:
+        status.innerText = f"Error: {str(e)}"
+
+# Setup Listener
+clean_input = document.getElementById("cleanInput")
+clean_input.addEventListener("change", create_proxy(process_clean))
+</script>
 
 </body>
 </html>
