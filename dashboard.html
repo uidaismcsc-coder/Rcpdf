@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SM CSC PDF</title>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h2 { color: #2d3436; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 10px; background: #fafafa; }
+        h3 { margin-top: 0; font-size: 1.1rem; color: #0984e3; }
+        label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.85rem; }
+        input[type="file"] { width: 100%; margin-top: 5px; font-size: 0.8rem; }
+        button, .btn-link { 
+            width: 100%; background: #00b894; color: white; border: none; 
+            padding: 12px; margin-top: 15px; cursor: pointer; 
+            border-radius: 6px; font-weight: bold; transition: 0.3s;
+            text-align: center; text-decoration: none; display: block;
+        }
+        button:hover { background: #009473 #F54927 #00b894; }
+        #status { margin-top: 15px; text-align: center; font-weight: 500; font-size: 0.9rem; color: #636e72; min-height: 1.2em; }
+        .support { display: block; text-align: center; margin-top: 20px; color: #6c5ce7; text-decoration: none; font-weight: bold; }
+        py-config { display: none; }
+    </style>
+</head>
+<body>
+
+<py-config>
+    packages = ["pypdf"]
+</py-config>
+
+<div class="container">
+    <h2>TN RC </h2>
+
+    <div class="section">
+        <h3>RC PDF</h3>
+        <label>Source PDF</label>
+        <input type="file" id="srcFile" accept=".pdf">
+        <label>Background PDF</label>
+        <input type="file" id="bgFile" accept=".pdf">
+        <button onclick="mergePDFs()">RC PDF Download</button>
+    </div>
+
+    <div class="section">
+        <h3>Background Remover</h3>
+        <input type="file" id="cleanInput" accept=".pdf">
+        <button id="cleanBtn">Download PDF</button>
+    </div>
+
+    <div id="status">Ready</div>
+    
+    <a href="https://wa.me/917094041818" target="_blank" class="support">SMCSC SUPPORT 💬</a>
+</div>
+
+<script>
+    // JS Logic for Merging
+    async function mergePDFs() {
+        const srcInput = document.getElementById('srcFile').files[0];
+        const bgInput = document.getElementById('bgFile').files[0];
+        const status = document.getElementById('status');
+
+        if (!srcInput || !bgInput) {
+            alert("Please select both files!");
+            return;
+        }
+
+        try {
+            status.innerText = "Processing Merge...";
+            const srcBytes = await srcInput.arrayBuffer();
+            const bgBytes = await bgInput.arrayBuffer();
+
+            const srcDoc = await PDFLib.PDFDocument.load(srcBytes);
+            const dstDoc = await PDFLib.PDFDocument.load(bgBytes);
+
+            const embeddedPages = await dstDoc.embedPdf(srcDoc);
+            dstDoc.getPages().forEach((page, index) => {
+                const overlayPage = embeddedPages[index] || embeddedPages[0];
+                const { width, height } = page.getSize();
+                page.drawPage(overlayPage, { x: 0, y: 0, width, height });
+            });
+
+            const pdfBytes = await dstDoc.save();
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "Document.pdf";
+            link.click();
+            status.innerText = "Successful!";
+        } catch (err) {
+            status.innerText = "Error: " + err.message;
+        }
+    }
+</script>
+
+<script type="py">
+# Python Logic for Cleaning
+import io
+from pyscript import document
+from js import Uint8Array, URL, Blob
+from pypdf import PdfReader, PdfWriter
+from pyodide.ffi import create_proxy
+
+async def process_clean(event):
+    status = document.getElementById("status")
+    file_input = document.getElementById("cleanInput")
+    
+    if not file_input.files:
+        status.innerText = "Please select a file first."
+        return
+
+    try:
+        status.innerText = "Cleaning... please wait."
+        file = file_input.files.item(0)
+        array_buffer = await file.arrayBuffer()
+        
+        reader = PdfReader(io.BytesIO(array_buffer.to_bytes()))
+        writer = PdfWriter()
+        
+        for page in reader.pages:
+            # Remove Annotations (Watermarks, comments)
+            if "/Annots" in page:
+                del page["/Annots"]
+            
+            # Remove XObjects (Images and Background layers)
+            if "/Resources" in page and "/XObject" in page["/Resources"]:
+                # Access the object and clear it
+                xobj = page["/Resources"]["/XObject"]
+                for obj in list(xobj.keys()):
+                    del xobj[obj]
+
+            writer.add_page(page)
+        
+        out_buffer = io.BytesIO()
+        writer.write(out_buffer)
+        
+        # Create Download
+        js_array = Uint8Array.new(out_buffer.getvalue())
+        blob = Blob.new([js_array], {type: "application/pdf"})
+        url = URL.createObjectURL(blob)
+        
+        a = document.createElement('a')
+        a.href = url
+        a.download = "cleaned_document.pdf"
+        a.click()
+        
+        status.innerText = "Cleaned & Downloaded!"
+    except Exception as e:
+        status.innerText = f"Error: {str(e)}"
+
+# Attach event properly
+clean_btn = document.getElementById("cleanBtn")
+clean_btn.onclick = create_proxy(process_clean)
+</script>
+
+</body>
+</html>

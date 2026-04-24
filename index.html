@@ -3,159 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SM CSC PDF</title>
-    
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
-    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-
+    <title>Digital Service Portal | Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
-        h2 { color: #2d3436; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 10px; background: #fafafa; }
-        h3 { margin-top: 0; font-size: 1.1rem; color: #0984e3; }
-        label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.85rem; }
-        input[type="file"] { width: 100%; margin-top: 5px; font-size: 0.8rem; }
-        button, .btn-link { 
-            width: 100%; background: #00b894; color: white; border: none; 
-            padding: 12px; margin-top: 15px; cursor: pointer; 
-            border-radius: 6px; font-weight: bold; transition: 0.3s;
-            text-align: center; text-decoration: none; display: block;
+        /* CSS STYLES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
         }
-        button:hover { background: #009473; }
-        #status { margin-top: 15px; text-align: center; font-weight: 500; font-size: 0.9rem; color: #636e72; min-height: 1.2em; }
-        .support { display: block; text-align: center; margin-top: 20px; color: #6c5ce7; text-decoration: none; font-weight: bold; }
-        py-config { display: none; }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 1);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card h2 {
+            color: #1e3c72;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .login-card p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 38px;
+            color: #1e3c72;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #1e3c72;
+            box-shadow: 0 0 5px rgba(30, 60, 114, 0.2);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #1e3c72;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: #2a5298;
+            letter-spacing: 0.5px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #777;
+        }
+
+        .footer a {
+            color: #1e3c72;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<py-config>
-    packages = ["pypdf"]
-</py-config>
+    <div class="login-card">
+        <h2>Member Login</h2>
+        <p>Access your digital service dashboard</p>
 
-<div class="container">
-    <h2>TN RC </h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label>Username</label>
+                <i class="fas fa-user"></i>
+                <input type="text" id="username" placeholder="Enter username" required>
+            </div>
 
-    <div class="section">
-        <h3>RC PDF</h3>
-        <label>Source PDF</label>
-        <input type="file" id="srcFile" accept=".pdf">
-        <label>Background PDF</label>
-        <input type="file" id="bgFile" accept=".pdf">
-        <button onclick="mergePDFs()">RC PDF Download</button>
-    </div>
+            <div class="input-group">
+                <label>Password</label>
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" placeholder="Enter password" required>
+            </div>
 
-    <div class="section">
-        <h3>Background Remover</h3>
-        <input type="file" id="cleanInput" accept=".pdf">
-        <button id="cleanBtn">Download PDF</button>
-    </div>
-
-    <div id="status">Ready</div>
-    
-    <a href="https://wa.me/917094041818" target="_blank" class="support">SMCSC SUPPORT 💬</a>
-</div>
-
-<script>
-    // JS Logic for Merging
-    async function mergePDFs() {
-        const srcInput = document.getElementById('srcFile').files[0];
-        const bgInput = document.getElementById('bgFile').files[0];
-        const status = document.getElementById('status');
-
-        if (!srcInput || !bgInput) {
-            alert("Please select both files!");
-            return;
-        }
-
-        try {
-            status.innerText = "Processing Merge...";
-            const srcBytes = await srcInput.arrayBuffer();
-            const bgBytes = await bgInput.arrayBuffer();
-
-            const srcDoc = await PDFLib.PDFDocument.load(srcBytes);
-            const dstDoc = await PDFLib.PDFDocument.load(bgBytes);
-
-            const embeddedPages = await dstDoc.embedPdf(srcDoc);
-            dstDoc.getPages().forEach((page, index) => {
-                const overlayPage = embeddedPages[index] || embeddedPages[0];
-                const { width, height } = page.getSize();
-                page.drawPage(overlayPage, { x: 0, y: 0, width, height });
-            });
-
-            const pdfBytes = await dstDoc.save();
-            const blob = new Blob([pdfBytes], { type: "application/pdf" });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = "Document.pdf";
-            link.click();
-            status.innerText = "Successful!";
-        } catch (err) {
-            status.innerText = "Error: " + err.message;
-        }
-    }
-</script>
-
-<script type="py">
-# Python Logic for Cleaning
-import io
-from pyscript import document
-from js import Uint8Array, URL, Blob
-from pypdf import PdfReader, PdfWriter
-from pyodide.ffi import create_proxy
-
-async def process_clean(event):
-    status = document.getElementById("status")
-    file_input = document.getElementById("cleanInput")
-    
-    if not file_input.files:
-        status.innerText = "Please select a file first."
-        return
-
-    try:
-        status.innerText = "Cleaning... please wait."
-        file = file_input.files.item(0)
-        array_buffer = await file.arrayBuffer()
-        
-        reader = PdfReader(io.BytesIO(array_buffer.to_bytes()))
-        writer = PdfWriter()
-        
-        for page in reader.pages:
-            # Remove Annotations (Watermarks, comments)
-            if "/Annots" in page:
-                del page["/Annots"]
+            <button type="submit" class="login-btn">LOGIN</button>
             
-            # Remove XObjects (Images and Background layers)
-            if "/Resources" in page and "/XObject" in page["/Resources"]:
-                # Access the object and clear it
-                xobj = page["/Resources"]["/XObject"]
-                for obj in list(xobj.keys()):
-                    del xobj[obj]
+        </form>
 
-            writer.add_page(page)
-        
-        out_buffer = io.BytesIO()
-        writer.write(out_buffer)
-        
-        # Create Download
-        js_array = Uint8Array.new(out_buffer.getvalue())
-        blob = Blob.new([js_array], {type: "application/pdf"})
-        url = URL.createObjectURL(blob)
-        
-        a = document.createElement('a')
-        a.href = url
-        a.download = "cleaned_document.pdf"
-        a.click()
-        
-        status.innerText = "Cleaned & Downloaded!"
-    except Exception as e:
-        status.innerText = f"Error: {str(e)}"
+        <div class="footer">
+            Forgot Password? <a href="#">Click here</a> <br><br>
+            Don't have an account? <a href="#">Create Account</a>
+        </div>
+    </div>
 
-# Attach event properly
-clean_btn = document.getElementById("cleanBtn")
-clean_btn.onclick = create_proxy(process_clean)
+    <script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+
+        // Replace 'admin' and '1234' with your actual logic
+        if (user === "admin" && pass === "1234") {
+            
+            // 1. Show a success message (Optional)
+            alert("Login Successful! Redirecting to Dashboard...");
+
+            // 2. Redirect to your target HTML file
+            // Make sure "dashboard.html" exists in the same folder
+            window.location.href = "dashboard.html"; 
+
+        } else {
+            alert("Error: Incorrect username or password.");
+        }
+    });
 </script>
 
 </body>
