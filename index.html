@@ -94,11 +94,11 @@
         <form id="loginForm">
             <div class="input-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter admin" required>
+                <input type="text" id="username" placeholder="Enter Username" required>
             </div>
             <div class="input-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter 12345" required>
+                <input type="password" id="password" placeholder="Enter password" required>
             </div>
             <button type="submit">Login</button>
         </form>
@@ -113,6 +113,9 @@
         // Default Credentials
         const VALID_USER = "admin";
         const VALID_PASS = "12345";
+
+        const VALID_USER = "9551941286";
+        const VALID_PASS = "709404";
 
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault(); // Prevent page refresh
