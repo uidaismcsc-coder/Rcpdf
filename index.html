@@ -8,93 +8,21 @@
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-
+    
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background: #f0f2f5; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            padding: 20px; 
-        }
-        .container { 
-            background: white; 
-            padding: 2rem; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            width: 100%; 
-            max-width: 900px; 
-        }
-        h2 { 
-            color: #2d3436; 
-            text-align: center; 
-            border-bottom: 2px solid #eee; 
-            padding-bottom: 10px; 
-            margin-top: 0;
-        }
-        
-        /* Flex Layout for Side-by-Side Sections */
-        .tool-grid { 
-            display: flex; 
-            gap: 20px; 
-            flex-wrap: wrap; 
-            margin-top: 20px; 
-        }
-        .section { 
-            flex: 1; 
-            min-width: 300px; 
-            padding: 20px; 
-            border: 1px solid #e0e0e0; 
-            border-radius: 10px; 
-            background: #fafafa; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 900px; }
+        h2 { color: #2d3436; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        .tool-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
+        .section { flex: 1; min-width: 300px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background: #fafafa; display: flex; flex-direction: column; }
         h3 { margin-top: 0; font-size: 1.1rem; color: #0984e3; }
         label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.85rem; }
         input[type="file"] { width: 100%; margin-top: 5px; font-size: 0.8rem; }
-        
-        button, .btn-link { 
-            width: 100%; 
-            background: #00b894; 
-            color: white; 
-            border: none; 
-            padding: 12px; 
-            margin-top: auto; 
-            cursor: pointer; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            transition: 0.3s;
-            text-align: center; 
-            text-decoration: none; 
-            display: block;
-            box-sizing: border-box;
-        }
-        .btn-merge { margin-top: 15px; }
+        button, .btn-link { width: 100%; background: #00b894; color: white; border: none; padding: 12px; margin-top: auto; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.3s; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
         button:hover { background: #009473; }
-        
-        #status { 
-            margin-top: 20px; 
-            text-align: center; 
-            font-weight: 500; 
-            font-size: 0.9rem; 
-            color: #636e72; 
-            border-top: 1px solid #eee; 
-            padding-top: 10px; 
-        }
-        .support { 
-            display: block; 
-            text-align: center; 
-            margin-top: 20px; 
-            color: #6c5ce7; 
-            text-decoration: none; 
-            font-weight: bold; 
-        }
-        py-config { display: none; }
+        #status { margin-top: 20px; text-align: center; font-weight: 500; font-size: 0.9rem; color: #636e72; border-top: 1px solid #eee; padding-top: 10px; }
+        .support { display: block; text-align: center; margin-top: 20px; color: #6c5ce7; text-decoration: none; font-weight: bold; }
+        .preview-box { margin-top: 10px; border: 1px dashed #ccc; height: 150px; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #666; }
     </style>
 </head>
 <body>
@@ -104,29 +32,32 @@
 </py-config>
 
 <div class="container">
-    <h2>PDF TOOl-SMCSC</h2>
+    <h2>PDF TOOL-SMCSC</h2>
 
     <div class="tool-grid">
         <div class="section">
             <h3>1. Overlay PDF</h3>
             <label>Source PDF (Content)</label>
             <input type="file" id="srcFile" accept=".pdf">
-            <label>Background PDF</label>
-            <input type="file" id="bgFile" accept=".pdf">
-            <button class="btn-merge" id="mergeBtn" onclick="mergePDFs()">Merge & Download</button>
+            
+            <label>Fixed Background Status</label>
+            <div class="preview-box" id="previewContainer">
+                <embed id="pdfEmbed" src="background.pdf" type="application/pdf" width="100%" height="100%">
+            </div>
+            
+            <button class="btn-merge" onclick="mergePDFs()">Merge & Download</button>
         </div>
 
         <div class="section">
             <h3>2. Background PDF REMOVER</h3>
             <label>Select PDF to Clean</label>
-            <input type="file" id="cleanInput" accept=".pdf">
-            <button id="cleanBtn" onclick="document.getElementById('cleanInput').click()">Clean PDF</button>
+            <input type="file" id="cleanInput" accept=".pdf" style="display:none;">
+            <button onclick="document.getElementById('cleanInput').click()">Upload & Clean PDF</button>
             <a id="downloadClean" class="btn-link" style="display:none; background: #0984e3; margin-top:10px;">Download Cleaned PDF</a>
         </div>
     </div>
 
     <div id="status">System Ready</div>
-    
     <a href="https://wa.me/917094041818" target="_blank" class="support">SMCSC SUPPORT 💬</a>
 </div>
 
@@ -135,27 +66,32 @@
 
     async function mergePDFs() {
         const srcInput = document.getElementById('srcFile').files[0];
-        const bgInput = document.getElementById('bgFile').files[0];
         const status = document.getElementById('status');
+        const fixedBgUrl = 'background.pdf'; 
 
-        if (!srcInput || !bgInput) {
-            alert("Please select both files for merging!");
+        if (!srcInput) {
+            alert("Please select a source file!");
             return;
         }
 
         try {
-            status.innerText = "Processing Merge...";
+            status.innerText = "Accessing background file...";
             
-            // Fix: Capture original filename from Source PDF
-            const originalName = srcInput.name;
-            const newFileName = "Merged_" + originalName;
-
+            // 1. Load Source PDF
             const srcBytes = await srcInput.arrayBuffer();
-            const bgBytes = await bgInput.arrayBuffer();
-
             const srcDoc = await PDFDocument.load(srcBytes);
+
+            // 2. Fetch Background with Cache Bypassing
+            const bgResponse = await fetch(fixedBgUrl, { cache: "no-store" }).catch(err => {
+                throw new Error("Browser blocked local file access. Please use a local server (VS Code Live Server) or upload the background manually.");
+            });
+
+            if (!bgResponse.ok) throw new Error("Background.pdf not found in folder.");
+            
+            const bgBytes = await bgResponse.arrayBuffer();
             const dstDoc = await PDFDocument.load(bgBytes);
 
+            // 3. Merge Logic
             const embeddedPages = await dstDoc.embedPdf(srcDoc);
             const dstPages = dstDoc.getPages();
 
@@ -167,28 +103,26 @@
 
             const pdfBytes = await dstDoc.save();
             
-            // Download with the fixed filename
-            downloadFile(pdfBytes, newFileName);
+            // 4. Trigger Download
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Merged_" + srcInput.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
             
-            status.innerText = "Merge Successful!";
+            status.innerText = "Download Successful!";
         } catch (err) {
             status.innerText = "Error: " + err.message;
+            console.error(err);
         }
-    }
-
-    function downloadFile(bytes, name) {
-        const blob = new Blob([bytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name;
-        a.click();
-        URL.revokeObjectURL(url);
     }
 </script>
 
 <script type="py">
-import asyncio
 import io
 from pyscript import document
 from js import Uint8Array, URL, Blob
@@ -198,15 +132,12 @@ from pyodide.ffi import create_proxy
 async def process_clean(event):
     status = document.getElementById("status")
     dl_btn = document.getElementById("downloadClean")
-    
     file_list = event.target.files
     if len(file_list) == 0: return
 
     try:
         status.innerText = "Cleaning PDF layers..."
         file = file_list.item(0)
-        original_clean_name = "Cleaned_" + file.name
-        
         array_buffer = await file.arrayBuffer()
         reader = PdfReader(io.BytesIO(array_buffer.to_bytes()))
         writer = PdfWriter()
@@ -219,17 +150,15 @@ async def process_clean(event):
         
         out_buffer = io.BytesIO()
         writer.write(out_buffer)
-        
         js_array = Uint8Array.new(out_buffer.getvalue())
         blob = Blob.new([js_array], {type: "application/pdf"})
         dl_btn.href = URL.createObjectURL(blob)
-        dl_btn.download = original_clean_name
+        dl_btn.download = "Cleaned_" + file.name
         dl_btn.style.display = "block"
         status.innerText = "Cleaning Complete!"
     except Exception as e:
         status.innerText = f"Error: {str(e)}"
 
-# Setup Listener
 clean_input = document.getElementById("cleanInput")
 clean_input.addEventListener("change", create_proxy(process_clean))
 </script>
