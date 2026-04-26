@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Tool-SMCSC</title>
+    <title>RC PDF-SMCSC</title>
     
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
@@ -45,7 +45,7 @@
                 <embed id="pdfEmbed" placeholder disabled hidden="background.pdf" type="application/pdf" width="100%" height="100%">
             </div>
             
-            <button class="btn-merge" onclick="mergePDFs()">Merge & Download</button>
+            <button class="btn-merge" onclick="mergePDFs()">RC PDF & Download</button>
         </div>
 
         <div class="section">
@@ -108,7 +108,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = "Merged_" + srcInput.name;
+            a.download = "SM CSC_" + srcInput.name;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
