@@ -1,247 +1,152 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SM CSC LOGIN</title>
+    <title>SMCSC Login</title>
     <style>
-        :root {
-            --primary: #6366f1;
-            --success: #22c55e;
-            --error: #ef4444;
-            --bg: #0f172a;
-        }
-
+        /* --- CSS STYLING --- */
         body {
-            background-color: var(--bg);
-            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
-            perspective: 1200px;
+            background: linear-gradient(135th, #11998e, #38ef7d); /* Jungle Gradient */
+            font-family: 'Comic Sans MS', cursive, sans-serif;
             overflow: hidden;
-            color: white;
         }
 
-        /* 3D Wrapper */
-        .card-container {
-            width: 380px;
-            height: 500px;
-            position: relative;
-            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
-        }
-
-        .card-container.flipped { transform: rotateY(180deg); }
-
-        /* Card Faces */
-        .card-face {
+        /* Floating Paw Prints Background */
+        .background-decor {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            padding: 40px;
-            box-sizing: border-box;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            font-size: 50px;
+            opacity: 0.2;
+            z-index: 0;
         }
 
-        .back { transform: rotateY(180deg); }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 50px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 320px;
+            text-align: center;
+            border: 8px solid #f9ca24; /* Giraffe Yellow */
+            position: relative;
+            z-index: 1;
+        }
 
-        h2 { margin: 0 0 10px 0; font-size: 1.8rem; }
-        p { color: #94a3b8; margin-bottom: 30px; font-size: 0.9rem; }
+        .avatar-circle {
+            width: 100px;
+            height: 100px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            border: 4px solid #6ab04c;
+        }
 
-        .input-group { margin-bottom: 15px; width: 100%; }
+        h2 { color: #2d3436; margin-bottom: 20px; }
+
+        .input-group { margin-bottom: 15px; text-align: left; }
 
         input {
             width: 100%;
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: white;
-            outline: none;
+            padding: 12px;
+            border: 2px solid #badc58;
+            border-radius: 20px;
             box-sizing: border-box;
+            outline: none;
             transition: 0.3s;
         }
 
-        input:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.1); }
+        input:focus { border-color: #6ab04c; box-shadow: 0 0 8px #6ab04c; }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            border: none;
-            border-radius: 12px;
+        .login-btn {
+            background: #eb4d4b; /* Fox Red */
             color: white;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: 0.3s;
-        }
-
-        button:hover { filter: brightness(1.2); transform: translateY(-2px); }
-
-        .message {
-            margin-top: 15px;
-            font-size: 0.85rem;
-            text-align: center;
-            min-height: 20px;
-        }
-
-        .toggle-btn {
-            background: none;
             border: none;
-            color: var(--primary);
+            padding: 15px;
+            width: 100%;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
-            font-weight: 600;
-            padding: 0;
-            margin-top: 20px;
-            font-size: 0.9rem;
+            transition: transform 0.2s, background 0.3s;
         }
 
-        /* Ambient Background */
-        .orb {
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
-            filter: blur(100px);
-            opacity: 0.2;
-            z-index: -1;
-            animation: drift 10s infinite alternate;
-        }
+        .login-btn:hover { background: #ff7979; transform: scale(1.05); }
 
-        @keyframes drift {
-            from { transform: translate(-10%, -10%); }
-            to { transform: translate(10%, 10%); }
-        }
+        #message { margin-top: 15px; font-weight: bold; min-height: 20px; }
+
+        .hint { font-size: 12px; color: #636e72; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="orb"></div>
+    <div class="background-decor" style="top: 10%; left: 10%;">🐾</div>
+    <div class="background-decor" style="bottom: 10%; right: 15%;">🌿</div>
+    <div class="background-decor" style="top: 20%; right: 10%;">🐒</div>
+    <div class="background-decor" style="bottom: 20%; left: 15%;">🐘</div>
 
-    <div class="card-container" id="card">
-        <div class="card-face front">
-            <h2>Login</h2>
-            <p>Access your local account</p>
+    <div class="login-container">
+        <div class="avatar-circle" id="animal-avatar">🦁</div>
+        <h2>RC PDF</h2>
+        
+        <form id="loginForm">
             <div class="input-group">
-                <input type="email" id="loginEmail" placeholder="Email Address">
+                <input type="text" id="username" placeholder="Username" required>
             </div>
             <div class="input-group">
-                <input type="password" id="loginPass" placeholder="Password">
+                <input type="password" id="password" placeholder="Password" required>
             </div>
-            <button onclick="handleLogin()">Sign In</button>
-            <div id="loginMsg" class="message"></div>
-            <center>
-                <button class="toggle-btn" onclick="flip()">New here? Create Account</button>
-            </center>
-        </div>
+            <button type="submit" class="login-btn">ACCESS ACCOUNT 🐾</button>
+        </form>
 
-        <div class="card-face back">
-            <h2>Register</h2>
-            <p>Data is stored in LocalStorage</p>
-            <div class="input-group">
-                <input type="text" id="regName" placeholder="Full Name">
-            </div>
-            <div class="input-group">
-                <input type="email" id="regEmail" placeholder="Email Address">
-            </div>
-            <div class="input-group">
-                <input type="password" id="regPass" placeholder="Password">
-            </div>
-            <button onclick="handleSignup()">Create Account</button>
-            <div id="regMsg" class="message"></div>
-            <center>
-                <button class="toggle-btn" onclick="flip()">Back to Login</button>
-            </center>
-        </div>
+        <p id="message"></p>
+        <div class="hint">ADMIN <b></b> SM <b></b>CSC</div>
     </div>
 
     <script>
-        const card = document.getElementById('card');
+        const DEFAULT_ID = "admin";
+        const DEFAULT_PW = "Siva123";
+        const animals = ['🦁', '🐯', '🐼', '🦊', '🐨', '🐸', '🐵'];
 
-        function flip() {
-            card.classList.toggle('flipped');
-            clearMsgs();
-        }
+        const avatar = document.getElementById('animal-avatar');
+        const form = document.getElementById('loginForm');
+        const message = document.getElementById('message');
 
-        function clearMsgs() {
-            document.getElementById('loginMsg').innerText = '';
-            document.getElementById('regMsg').innerText = '';
-        }
+        // Randomly change animal avatar every 3 seconds
+        setInterval(() => {
+            const randomAnimal = animals[Math.floor(Math.random() * animals.length)];
+            avatar.innerText = randomAnimal;
+        }, 3000);
 
-        // REGISTER LOGIC
-        function handleSignup() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const pass = document.getElementById('regPass').value;
-            const msg = document.getElementById('regMsg');
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const userIn = document.getElementById('username').value;
+            const passIn = document.getElementById('password').value;
 
-            if (!name || !email || !pass) {
-                msg.style.color = 'var(--error)';
-                msg.innerText = "Please fill all fields.";
-                return;
-            }
-
-            // Check if user exists
-            if (localStorage.getItem(email)) {
-                msg.style.color = 'var(--error)';
-                msg.innerText = "User already exists!";
-                return;
-            }
-
-            // Save User
-            const userData = { name, email, pass };
-            localStorage.setItem(email, JSON.stringify(userData));
-            
-            msg.style.color = 'var(--success)';
-            msg.innerText = "Success! Redirecting to login...";
-            
-            setTimeout(() => {
-                flip();
-                document.getElementById('regName').value = '';
-                document.getElementById('regEmail').value = '';
-                document.getElementById('regPass').value = '';
-            }, 1500);
-        }
-
-        // LOGIN LOGIC
-        function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const pass = document.getElementById('loginPass').value;
-            const msg = document.getElementById('loginMsg');
-
-            const storedUser = localStorage.getItem(email);
-
-            if (!storedUser) {
-                msg.style.color = 'var(--error)';
-                msg.innerText = "User not found.";
-                return;
-            }
-
-            const user = JSON.parse(storedUser);
-
-            if (user.pass === pass) {
-                msg.style.color = 'var(--success)';
-                msg.innerText = `Welcome back, ${user.name}!`;
+            if (userIn === DEFAULT_ID && passIn === DEFAULT_PW) {
+                message.style.color = "#27ae60";
+                message.innerText = "Access Granted! Welcome, " + userIn + " 🐾";
+                avatar.innerText = "👑";
                 // 2. Redirect to your target HTML file
             // Make sure "dashboard.html" exists in the same folder
             window.location.href = "dashboard.html"; 
             } else {
-                msg.style.color = 'var(--error)';
-                msg.innerText = "Wrong password.";
+                message.style.color = "#d63031";
+                message.innerText = "Wrong path! The animals are growling...";
+                // Shake effect
+                form.style.transform = "translateX(10px)";
+                setTimeout(() => form.style.transform = "translateX(0)", 100);
             }
-        }
+        };
     </script>
 </body>
 </html>
