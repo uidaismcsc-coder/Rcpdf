@@ -1,167 +1,247 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RC PDF-SMCSC</title>
-    
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
-    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-    
+    <title>SM CSC LOGIN</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5279c64; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { background: rgb(243, 211, 211); padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 900px; }
-        h2 { color: #2d3436; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
-        .tool-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
-        .section { flex: 1; min-width: 300px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background: #fafafa; display: flex; flex-direction: column; }
-        h3 { margin-top: 0; font-size: 1.1rem; color: #0984e3; }
-        label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.85rem; }
-        input[type="file"] { width: 100%; margin-top: 5px; font-size: 0.8rem; }
-        button, .btn-link { width: 100%; background: #00b894; color: white; border: none; padding: 12px; margin-top: auto; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.3s; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
-        button:hover { background: #009473; }
-        #status { margin-top: 20px; text-align: center; font-weight: 500; font-size: 0.9rem; color: #636e72; border-top: 1px solid #eee; padding-top: 10px; }
-        .support { display: block; text-align: center; margin-top: 20px; color: #6c5ce7; text-decoration: none; font-weight: bold; }
-        .preview-box { margin-top: 10px; border: 1px dashed #ccc; height: 150px; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #666; }
+        :root {
+            --primary: #6366f1;
+            --success: #22c55e;
+            --error: #ef4444;
+            --bg: #0f172a;
+        }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Inter', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            perspective: 1200px;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* 3D Wrapper */
+        .card-container {
+            width: 380px;
+            height: 500px;
+            position: relative;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card-container.flipped { transform: rotateY(180deg); }
+
+        /* Card Faces */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            box-sizing: border-box;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .back { transform: rotateY(180deg); }
+
+        h2 { margin: 0 0 10px 0; font-size: 1.8rem; }
+        p { color: #94a3b8; margin-bottom: 30px; font-size: 0.9rem; }
+
+        .input-group { margin-bottom: 15px; width: 100%; }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.1); }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        button:hover { filter: brightness(1.2); transform: translateY(-2px); }
+
+        .message {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Ambient Background */
+        .orb {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            filter: blur(100px);
+            opacity: 0.2;
+            z-index: -1;
+            animation: drift 10s infinite alternate;
+        }
+
+        @keyframes drift {
+            from { transform: translate(-10%, -10%); }
+            to { transform: translate(10%, 10%); }
+        }
     </style>
 </head>
 <body>
 
-<py-config>
-    packages = ["pypdf"]
-</py-config>
+    <div class="orb"></div>
 
-<div class="container">
-    <h2>RC PDF-SMCSC</h2>
-
-    <div class="tool-grid">
-        <div class="section">
-            <h3>1. SOURCE UPLOAD PDF</h3>
-            <label>Source PDF</label>
-            <input type="file" id="srcFile" accept=".pdf">
-            
-            <label>Fixed Background Status</label>
-            <div class="preview-box" id="previewContainer">
-                <embed id="pdfEmbed" placeholder disabled hidden="background.pdf" type="application/pdf" width="0%" height="0%">
+    <div class="card-container" id="card">
+        <div class="card-face front">
+            <h2>Login</h2>
+            <p>Access your local account</p>
+            <div class="input-group">
+                <input type="email" id="loginEmail" placeholder="Email Address">
             </div>
-            
-            <button class="btn-merge" onclick="mergePDFs()">RC PDF & Download</button>
+            <div class="input-group">
+                <input type="password" id="loginPass" placeholder="Password">
+            </div>
+            <button onclick="handleLogin()">Sign In</button>
+            <div id="loginMsg" class="message"></div>
+            <center>
+                <button class="toggle-btn" onclick="flip()">New here? Create Account</button>
+            </center>
         </div>
 
-        <div class="section">
-            <h3>2. Background PDF REMOVER</h3>
-            <label>Select PDF to Clean</label>
-            <input type="file" id="cleanInput" accept=".pdf" style="display:none;">
-            <button onclick="document.getElementById('cleanInput').click()">Upload & Clean PDF</button>
-            <a id="downloadClean" class="btn-link" style="display:none; background: #0984e3; margin-top:10px;">Download Cleaned PDF</a>
+        <div class="card-face back">
+            <h2>Register</h2>
+            <p>Data is stored in LocalStorage</p>
+            <div class="input-group">
+                <input type="text" id="regName" placeholder="Full Name">
+            </div>
+            <div class="input-group">
+                <input type="email" id="regEmail" placeholder="Email Address">
+            </div>
+            <div class="input-group">
+                <input type="password" id="regPass" placeholder="Password">
+            </div>
+            <button onclick="handleSignup()">Create Account</button>
+            <div id="regMsg" class="message"></div>
+            <center>
+                <button class="toggle-btn" onclick="flip()">Back to Login</button>
+            </center>
         </div>
     </div>
 
-    <div id="status">System Ready</div>
-    <a href="https://wa.me/917094041818" target="_blank" class="support">SMCSC SUPPORT 💬</a>
-</div>
+    <script>
+        const card = document.getElementById('card');
 
-<script>
-    const { PDFDocument } = PDFLib;
-
-    async function mergePDFs() {
-        const srcInput = document.getElementById('srcFile').files[0];
-        const status = document.getElementById('status');
-        const fixedBgUrl = 'background.pdf'; 
-
-        if (!srcInput) {
-            alert("Please select a source file!");
-            return;
+        function flip() {
+            card.classList.toggle('flipped');
+            clearMsgs();
         }
 
-        try {
-            status.innerText = "Accessing background file...";
-            
-            // 1. Load Source PDF
-            const srcBytes = await srcInput.arrayBuffer();
-            const srcDoc = await PDFDocument.load(srcBytes);
-
-            // 2. Fetch Background with Cache Bypassing
-            const bgResponse = await fetch(fixedBgUrl, { cache: "no-store" }).catch(err => {
-                throw new Error("Browser blocked local file access. Please use a local server (VS Code Live Server) or upload the background manually.");
-            });
-
-            if (!bgResponse.ok) throw new Error("Background.pdf not found in folder.");
-            
-            const bgBytes = await bgResponse.arrayBuffer();
-            const dstDoc = await PDFDocument.load(bgBytes);
-
-            // 3. Merge Logic
-            const embeddedPages = await dstDoc.embedPdf(srcDoc);
-            const dstPages = dstDoc.getPages();
-
-            dstPages.forEach((page, index) => {
-                const overlayPage = embeddedPages[index] || embeddedPages[0];
-                const { width, height } = page.getSize();
-                page.drawPage(overlayPage, { x: 0, y: 0, width, height });
-            });
-
-            const pdfBytes = await dstDoc.save();
-            
-            // 4. Trigger Download
-            const blob = new Blob([pdfBytes], { type: "application/pdf" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "SM CSC_" + srcInput.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            status.innerText = "Download Successful!";
-        } catch (err) {
-            status.innerText = "Error: " + err.message;
-            console.error(err);
+        function clearMsgs() {
+            document.getElementById('loginMsg').innerText = '';
+            document.getElementById('regMsg').innerText = '';
         }
-    }
-</script>
 
-<script type="py">
-import io
-from pyscript import document
-from js import Uint8Array, URL, Blob
-from pypdf import PdfReader, PdfWriter
-from pyodide.ffi import create_proxy
+        // REGISTER LOGIC
+        function handleSignup() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPass').value;
+            const msg = document.getElementById('regMsg');
 
-async def process_clean(event):
-    status = document.getElementById("status")
-    dl_btn = document.getElementById("downloadClean")
-    file_list = event.target.files
-    if len(file_list) == 0: return
+            if (!name || !email || !pass) {
+                msg.style.color = 'var(--error)';
+                msg.innerText = "Please fill all fields.";
+                return;
+            }
 
-    try:
-        status.innerText = "Cleaning PDF layers..."
-        file = file_list.item(0)
-        array_buffer = await file.arrayBuffer()
-        reader = PdfReader(io.BytesIO(array_buffer.to_bytes()))
-        writer = PdfWriter()
-        
-        for page in reader.pages:
-            if "/Annots" in page: del page["/Annots"]
-            if "/Resources" in page and "/XObject" in page["/Resources"]:
-                del page["/Resources"]["/XObject"]
-            writer.add_page(page)
-        
-        out_buffer = io.BytesIO()
-        writer.write(out_buffer)
-        js_array = Uint8Array.new(out_buffer.getvalue())
-        blob = Blob.new([js_array], {type: "application/pdf"})
-        dl_btn.href = URL.createObjectURL(blob)
-        dl_btn.download = "Cleaned_" + file.name
-        dl_btn.style.display = "block"
-        status.innerText = "Cleaning Complete!"
-    except Exception as e:
-        status.innerText = f"Error: {str(e)}"
+            // Check if user exists
+            if (localStorage.getItem(email)) {
+                msg.style.color = 'var(--error)';
+                msg.innerText = "User already exists!";
+                return;
+            }
 
-clean_input = document.getElementById("cleanInput")
-clean_input.addEventListener("change", create_proxy(process_clean))
-</script>
+            // Save User
+            const userData = { name, email, pass };
+            localStorage.setItem(email, JSON.stringify(userData));
+            
+            msg.style.color = 'var(--success)';
+            msg.innerText = "Success! Redirecting to login...";
+            
+            setTimeout(() => {
+                flip();
+                document.getElementById('regName').value = '';
+                document.getElementById('regEmail').value = '';
+                document.getElementById('regPass').value = '';
+            }, 1500);
+        }
 
+        // LOGIN LOGIC
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            const msg = document.getElementById('loginMsg');
+
+            const storedUser = localStorage.getItem(email);
+
+            if (!storedUser) {
+                msg.style.color = 'var(--error)';
+                msg.innerText = "User not found.";
+                return;
+            }
+
+            const user = JSON.parse(storedUser);
+
+            if (user.pass === pass) {
+                msg.style.color = 'var(--success)';
+                msg.innerText = `Welcome back, ${user.name}!`;
+                // 2. Redirect to your target HTML file
+            // Make sure "dashboard.html" exists in the same folder
+            window.location.href = "dashboard.html"; 
+            } else {
+                msg.style.color = 'var(--error)';
+                msg.innerText = "Wrong password.";
+            }
+        }
+    </script>
 </body>
 </html>
