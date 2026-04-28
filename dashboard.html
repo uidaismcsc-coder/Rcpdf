@@ -33,6 +33,9 @@
 
 <div class="container">
     <h2>RC PDF-SMCSC</h2>
+    <div style="display: flex; justify-content: flex-end;">
+    <button onclick="logout()" style="width: auto; background: #eb4d4b; padding: 8px 15px; margin: 0;">Logout</button>
+</div>
 
     <div class="tool-grid">
         <div class="section">
@@ -60,6 +63,28 @@
     <div id="status">System Ready</div>
     <a href="https://wa.me/917094041818" target="_blank" class="support">SMCSC SUPPORT 💬</a>
 </div>
+<script>
+    // --- AUTHENTICATION & TIMEOUT LOGIC ---
+    let timeout;
+
+    function logout() {
+        window.location.href = "index.html";
+    }
+
+    function resetTimer() {
+        clearTimeout(timeout);
+        // 10 minutes = 600,000 milliseconds
+        timeout = setTimeout(logout, 600000); 
+    }
+
+    // Listen for any user activity to reset the 10-minute clock
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+
+    // Optional: Basic session check (if coming from login)
+    // if (!document.referrer.includes("index.html")) { logout(); }
+</script>
 
 <script>
     const { PDFDocument } = PDFLib;
@@ -121,6 +146,7 @@
         }
     }
 </script>
+
 
 <script type="py">
 import io
