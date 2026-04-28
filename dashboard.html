@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RC PDF-SMCSC</title>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
     
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background:linear-gradient(135deg, #0fd1a7, #a8f3ef); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { background: linear-gradient(135deg, #11998e, #ffffff); padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 900px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5279c64; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background: rgb(243, 211, 211); padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 900px; }
         h2 { color: #2d3436; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
         .tool-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
         .section { flex: 1; min-width: 300px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background: #fafafa; display: flex; flex-direction: column; }
@@ -21,7 +23,23 @@
         button, .btn-link { width: 100%; background: #00b894; color: white; border: none; padding: 12px; margin-top: auto; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.3s; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
         button:hover { background: #009473; }
         #status { margin-top: 20px; text-align: center; font-weight: 500; font-size: 0.9rem; color: #636e72; border-top: 1px solid #eee; padding-top: 10px; }
-        .support { display: block; text-align: center; margin-top: 20px; color: #6c5ce7; text-decoration: none; font-weight: bold; }
+        
+        /* Updated Support Styling */
+        .support { 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            width: 100%;
+            margin-top: 25px; 
+            color: #25D366; /* WhatsApp Green */
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .support i { font-size: 1.5rem; margin-right: 10px; }
+        .support:hover { color: #128C7E; transform: scale(1.02); }
+
         .preview-box { margin-top: 10px; border: 1px dashed #ccc; height: 150px; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #666; }
     </style>
 </head>
@@ -34,8 +52,8 @@
 <div class="container">
     <h2>RC PDF-SMCSC</h2>
     <div style="display: flex; justify-content: flex-end;">
-    <button onclick="logout()" style="width: auto; background: #eb4d4b; padding: 8px 15px; margin: 0;">Logout</button>
-</div>
+        <button onclick="logout()" style="width: auto; background: #eb4d4b; padding: 8px 15px; margin: 0;">Logout</button>
+    </div>
 
     <div class="tool-grid">
         <div class="section">
@@ -61,29 +79,23 @@
     </div>
 
     <div id="status">System Ready</div>
-    <a href="https://wa.me/917094041818" target="_blank" class="support">SMCSC SUPPORT 💬</a>
+    
+    <a href="https://api.whatsapp.com/send?phone=917094041818&text=Hi%20SMCSC%20Support,%20I%20need%20help%20with%20the%20RC%20PDF%20Tool." target="_blank" class="support">
+        <i class="fab fa-whatsapp"></i> SMCSC SUPPORT
+    </a>
 </div>
+
 <script>
     // --- AUTHENTICATION & TIMEOUT LOGIC ---
     let timeout;
-
-    function logout() {
-        window.location.href = "index.html";
-    }
-
+    function logout() { window.location.href = "index.html"; }
     function resetTimer() {
         clearTimeout(timeout);
-        // 10 minutes = 600,000 milliseconds
         timeout = setTimeout(logout, 600000); 
     }
-
-    // Listen for any user activity to reset the 10-minute clock
     window.onload = resetTimer;
     document.onmousemove = resetTimer;
     document.onkeypress = resetTimer;
-
-    // Optional: Basic session check (if coming from login)
-    // if (!document.referrer.includes("index.html")) { logout(); }
 </script>
 
 <script>
@@ -101,22 +113,16 @@
 
         try {
             status.innerText = "Accessing background file...";
-            
-            // 1. Load Source PDF
             const srcBytes = await srcInput.arrayBuffer();
             const srcDoc = await PDFDocument.load(srcBytes);
-
-            // 2. Fetch Background with Cache Bypassing
             const bgResponse = await fetch(fixedBgUrl, { cache: "no-store" }).catch(err => {
-                throw new Error("Browser blocked local file access. Please use a local server (VS Code Live Server) or upload the background manually.");
+                throw new Error("Browser blocked local file access. Please use a local server.");
             });
 
             if (!bgResponse.ok) throw new Error("Background.pdf not found in folder.");
             
             const bgBytes = await bgResponse.arrayBuffer();
             const dstDoc = await PDFDocument.load(bgBytes);
-
-            // 3. Merge Logic
             const embeddedPages = await dstDoc.embedPdf(srcDoc);
             const dstPages = dstDoc.getPages();
 
@@ -127,8 +133,6 @@
             });
 
             const pdfBytes = await dstDoc.save();
-            
-            // 4. Trigger Download
             const blob = new Blob([pdfBytes], { type: "application/pdf" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -138,7 +142,6 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
             status.innerText = "Download Successful!";
         } catch (err) {
             status.innerText = "Error: " + err.message;
@@ -146,7 +149,6 @@
         }
     }
 </script>
-
 
 <script type="py">
 import io
@@ -188,6 +190,5 @@ async def process_clean(event):
 clean_input = document.getElementById("cleanInput")
 clean_input.addEventListener("change", create_proxy(process_clean))
 </script>
-
 </body>
 </html>
