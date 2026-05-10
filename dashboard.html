@@ -24,14 +24,13 @@
         button:hover { background: #ff03e6; }
         #status { margin-top: 20px; text-align: center; font-weight: 500; font-size: 0.9rem; color: #636e72; border-top: 1px solid #eee; padding-top: 10px; }
         
-        /* Updated Support Styling */
         .support { 
             display: inline-flex; 
             align-items: center; 
             justify-content: center;
             width: 100%;
             margin-top: 25px; 
-            color: #25D366; /* WhatsApp Green */
+            color: #25D366; 
             text-decoration: none; 
             font-weight: bold; 
             font-size: 1.1rem;
@@ -41,6 +40,13 @@
         .support:hover { color: #128C7E; transform: scale(1.02); }
 
         .preview-box { margin-top: 10px; border: 1px dashed #ccc; height: 150px; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #666; }
+
+        /* புதிய அம்சத்திற்கான ஸ்டைல்கள் */
+        .list-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+        .btn-list { width: auto; background: #0984e3; padding: 10px 15px; margin: 0; font-size: 0.85rem; }
+        #htmlViewer { display: none; margin-top: 15px; border: 2px solid #0984e3; border-radius: 10px; overflow: hidden; background: white; }
+        .viewer-header { background: #eee; padding: 8px; display: flex; justify-content: space-between; align-items: center; }
+        iframe { width: 100%; height: 500px; border: none; }
     </style>
 </head>
 <body>
@@ -51,8 +57,22 @@
 
 <div class="container">
     <h2>RC PDF-SMCSC</h2>
-    <div style="display: flex; justify-content: flex-end;">
+    
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
         <button onclick="logout()" style="width: auto; background: #eb4d4b; padding: 8px 15px; margin: 0;">Logout</button>
+    </div>
+
+    <div class="list-buttons">
+        <button class="btn-list" onclick="loadHTML('dashboard.html')"><i class="fas fa-file-code"></i>PONDICHERRY</button>
+        <button class="btn-list" onclick="loadHTML('page2.html')"><i class="fas fa-file-code"></i>KERALA</button>
+    </div>
+
+    <div id="htmlViewer">
+        <div class="viewer-header">
+            <span id="viewTitle" style="font-weight: bold; color: #333; font-size: 0.85rem;">Internal Page View</span>
+            <button onclick="closeHTML()" style="width: auto; background: #eb4d4b; padding: 4px 12px; margin: 0; font-size: 0.75rem;">Close</button>
+        </div>
+        <iframe id="frameBox" src=""></iframe>
     </div>
 
     <div class="tool-grid">
@@ -86,7 +106,24 @@
 </div>
 
 <script>
-    // --- AUTHENTICATION & TIMEOUT LOGIC ---
+    // --- புதிய HTML பக்கங்களை கையாளும் லாஜிக் ---
+    function loadHTML(fileName) {
+        const viewer = document.getElementById('htmlViewer');
+        const frame = document.getElementById('frameBox');
+        frame.src = fileName;
+        viewer.style.display = 'block';
+        viewer.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('status').innerText = "Loading Internal Page...";
+    }
+
+    function closeHTML() {
+        const viewer = document.getElementById('htmlViewer');
+        document.getElementById('frameBox').src = "";
+        viewer.style.display = 'none';
+        document.getElementById('status').innerText = "System Ready";
+    }
+
+    // --- ஏற்கனவே உள்ள செயல்பாடுகள் (மாற்றப்படவில்லை) ---
     let timeout;
     function logout() { window.location.href = "index.html"; }
     function resetTimer() {
@@ -96,9 +133,7 @@
     window.onload = resetTimer;
     document.onmousemove = resetTimer;
     document.onkeypress = resetTimer;
-</script>
 
-<script>
     const { PDFDocument } = PDFLib;
 
     async function mergePDFs() {
@@ -116,10 +151,10 @@
             const srcBytes = await srcInput.arrayBuffer();
             const srcDoc = await PDFDocument.load(srcBytes);
             const bgResponse = await fetch(fixedBgUrl, { cache: "no-store" }).catch(err => {
-                throw new Error("Browser blocked local file access. Please use a local server.");
+                throw new Error("Browser blocked local file access.");
             });
 
-            if (!bgResponse.ok) throw new Error("Background.pdf not found in folder.");
+            if (!bgResponse.ok) throw new Error("Background.pdf not found.");
             
             const bgBytes = await bgResponse.arrayBuffer();
             const dstDoc = await PDFDocument.load(bgBytes);
@@ -145,7 +180,6 @@
             status.innerText = "Download Successful!";
         } catch (err) {
             status.innerText = "Error: " + err.message;
-            console.error(err);
         }
     }
 </script>
