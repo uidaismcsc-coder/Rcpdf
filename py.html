@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RC PDF-SMCSC | 3D Dashboard</title>
+    
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #00b894;
+            --secondary: #0984e3;
+            --accent: #6c5ce7;
+            --danger: #eb4d4b;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: var(--bg-gradient); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        /* 3D Floating Animation */
+        @keyframes float {
+            0% { transform: translateY(0px) rotateX(2deg) rotateY(-2deg); }
+            50% { transform: translateY(-15px) rotateX(-2deg) rotateY(2deg); }
+            100% { transform: translateY(0px) rotateX(2deg) rotateY(-2deg); }
+        }
+
+        .container { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 2.5rem; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3), 
+                        inset 0 0 0 1px rgba(255,255,255,0.5);
+            width: 100%; 
+            max-width: 500px; 
+            animation: float 6s ease-in-out infinite;
+            transform-style: preserve-3d;
+            backdrop-filter: blur(10px);
+        }
+
+        h2 { 
+            color: #2d3436; 
+            text-align: center; 
+            margin-top: 0;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section { 
+            padding: 20px; 
+            border-radius: 15px; 
+            background: #ffffff; 
+            display: flex; 
+            flex-direction: column;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateZ(20px);
+        }
+
+        h3 { 
+            margin-top: 0; 
+            font-size: 1.1rem; 
+            color: var(--secondary); 
+            border-left: 4px solid var(--secondary);
+            padding-left: 10px;
+        }
+
+        label { 
+            display: block; 
+            margin-top: 15px; 
+            font-weight: bold; 
+            font-size: 0.85rem; 
+            color: #636e72;
+        }
+
+        input[type="file"] { 
+            width: 100%; 
+            margin-top: 8px; 
+            padding: 10px;
+            border: 2px dashed #dfe6e9;
+            border-radius: 8px;
+            background: #f9f9f9;
+            box-sizing: border-box;
+        }
+
+        /* 3D Button Style */
+        button { 
+            width: 100%; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            margin-top: 25px; 
+            cursor: pointer; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            font-size: 1rem;
+            transition: all 0.2s; 
+            box-shadow: 0 5px 0 #009473;
+            position: relative;
+            top: 0;
+        }
+
+        button:hover { 
+            background: #00c9a1; 
+            top: -2px;
+            box-shadow: 0 7px 0 #009473;
+        }
+
+        button:active { 
+            top: 4px;
+            box-shadow: 0 1px 0 #009473;
+        }
+
+        .logout-btn {
+            background: var(--danger);
+            box-shadow: 0 4px 0 #c0392b;
+            padding: 8px 20px;
+            width: auto;
+            margin: 0;
+        }
+
+        .logout-btn:hover {
+            background: #ff5e57;
+            box-shadow: 0 5px 0 #c0392b;
+        }
+
+        #status { 
+            margin-top: 25px; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 0.9rem; 
+            color: var(--accent);
+            padding: 10px;
+            background: rgba(108, 92, 231, 0.1);
+            border-radius: 8px;
+        }
+
+        .support { 
+            display: inline-block; 
+            text-align: center; 
+            margin-top: 20px; 
+            color: #fff; 
+            text-decoration: none; 
+            font-weight: bold; 
+            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 30px;
+            transition: 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .support:hover {
+            background: rgba(0,0,0,0.4);
+            transform: scale(1.05);
+        }
+
+        .preview-box { 
+            margin-top: 15px; 
+            border: 2px solid #eee; 
+            height: 80px; 
+            border-radius: 10px;
+            background: #f1f2f6; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 0.8rem; 
+            color: #a4b0be; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">RC PDF</h2>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="section">
+        <h3>SOURCE UPLOAD</h3>
+        <label>Select PDF to Process</label>
+        <input type="file" id="srcFile" accept=".pdf">
+        
+        <div class="preview-box" id="previewContainer">
+            Ready to merge with background.pdf
+        </div>
+        
+        <button onclick="mergePDFs()">RC PDF & DOWNLOAD</button>
+    </div>
+
+    <div id="status">System Ready</div>
+    <a href="https://wa.me/917094041818" target="_blank" class="support">💬 SMCSC SUPPORT</a>
+</div>
+
+<script>
+    let timeout;
+
+    function logout() {
+        window.location.href = "index.html";
+    }
+
+    function resetTimer() {
+        clearTimeout(timeout);
+        timeout = setTimeout(logout, 600000); 
+    }
+
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+
+    const { PDFDocument } = PDFLib;
+
+    async function mergePDFs() {
+        const srcInput = document.getElementById('srcFile').files[0];
+        const status = document.getElementById('status');
+        const fixedBgUrl = 'background.pdf'; 
+
+        if (!srcInput) {
+            alert("Please select a source file!");
+            return;
+        }
+
+        try {
+            status.innerText = "Processing layers...";
+            
+            const srcBytes = await srcInput.arrayBuffer();
+            const srcDoc = await PDFDocument.load(srcBytes);
+
+            const bgResponse = await fetch(fixedBgUrl, { cache: "no-store" }).catch(err => {
+                throw new Error("Unable to access background.pdf");
+            });
+
+            if (!bgResponse.ok) throw new Error("Background.pdf not found.");
+            
+            const bgBytes = await bgResponse.arrayBuffer();
+            const dstDoc = await PDFDocument.load(bgBytes);
+
+            const embeddedPages = await dstDoc.embedPdf(srcDoc);
+            const dstPages = dstDoc.getPages();
+
+            dstPages.forEach((page, index) => {
+                const overlayPage = embeddedPages[index] || embeddedPages[0];
+                const { width, height } = page.getSize();
+                page.drawPage(overlayPage, { x: 0, y: 0, width, height });
+            });
+
+            const pdfBytes = await dstDoc.save();
+            
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "SM_CSC_" + srcInput.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            status.innerText = "Success! File Downloaded.";
+        } catch (err) {
+            status.innerText = "Error: " + err.message;
+        }
+    }
+</script>
+
+</body>
+</html>
