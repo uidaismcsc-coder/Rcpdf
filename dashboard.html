@@ -15,13 +15,75 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #5f934e5b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .container { background:linear-gradient(135deg, #11998e, #ffffff); padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 900px; }
         h2 { color: #2d3436; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
-        .tool-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
-        .section { flex: 1; min-width: 300px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background: #fafafa; display: flex; flex-direction: column; }
-        h3 { margin-top: 0; font-size: 1.1rem; color: #0984e3; }
+        .tool-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; justify-content: center; }
+        
+        /* --- 3D UI Format Change Only --- */
+        .section { 
+            flex: 1; 
+            min-width: 320px; 
+            max-width: 450px;
+            padding: 30px; 
+            border-radius: 20px; 
+            background: #ffffff; 
+            display: flex; 
+            flex-direction: column;
+            position: relative;
+            /* 3D Depth Effect */
+            transform: perspective(1000px) rotateX(2deg);
+            box-shadow: 
+                0 5px 15px rgba(0,0,0,0.08),
+                0 15px 35px rgba(50,50,93,0.1),
+                0 20px 40px rgba(0,0,0,0.07);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .section:hover {
+            transform: perspective(1000px) rotateX(0deg) translateY(-15px);
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.15),
+                0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .section h3 { 
+            margin-top: 0; 
+            font-size: 1.3rem; 
+            color: #0984e3; 
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .preview-box { 
+            margin-top: 20px; 
+            border: 2px dashed #0984e3; 
+            border-radius: 15px;
+            height: 120px; 
+            background: #f8fbff; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            font-size: 0.9rem; 
+            color: #666;
+            transition: 0.3s;
+        }
+        /* ------------------------------- */
+
         label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.85rem; }
         input[type="file"] { width: 100%; margin-top: 5px; font-size: 0.8rem; }
+        
         button, .btn-link { width: 100%; background: #07d731; color: white; border: none; padding: 12px; margin-top: auto; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.3s; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
-        button:hover { background: #ff03e6; }
+        
+        /* 3D Button Press Effect */
+        .btn-merge {
+            background: linear-gradient(135deg, #07d731 0%, #05b128 100%);
+            box-shadow: 0 4px 0 #048a1f;
+            margin-top: 20px;
+        }
+        .btn-merge:hover { background: #ff03e6; box-shadow: 0 4px 0 #d102bc; }
+        .btn-merge:active { transform: translateY(3px); box-shadow: 0 1px 0 #048a1f; }
+
         #status { margin-top: 20px; text-align: center; font-weight: 500; font-size: 0.9rem; color: #636e72; border-top: 1px solid #eee; padding-top: 10px; }
         
         .support { 
@@ -39,12 +101,9 @@
         .support i { font-size: 1.5rem; margin-right: 10px; }
         .support:hover { color: #128C7E; transform: scale(1.02); }
 
-        .preview-box { margin-top: 10px; border: 1px dashed #ccc; height: 150px; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #666; }
-
         .list-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-list { width: auto; background: #0984e3; padding: 10px 15px; margin: 0; font-size: 0.85rem; }
+        .btn-list { width: auto; background: #0984e3; padding: 10px 15px; margin: 0; font-size: 0.85rem; box-shadow: none; }
         
-        /* Viewer Box Style */
         #htmlViewer, #cleanerViewer { display: none; margin-top: 15px; border: 2px solid #0984e3; border-radius: 10px; overflow: hidden; background: white; }
         .viewer-header { background: #eee; padding: 8px; display: flex; justify-content: space-between; align-items: center; }
         iframe { width: 100%; height: 500px; border: none; }
@@ -62,7 +121,7 @@
     <h2>RC PDF-SMCSC</h2>
     
     <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-        <button onclick="logout()" style="width: auto; background: #eb4d4b; padding: 8px 15px; margin: 0;">Logout</button>
+        <button onclick="logout()" style="width: auto; background: #eb4d4b; padding: 8px 15px; margin: 0; box-shadow: none;">Logout</button>
     </div>
 
     <div class="list-buttons">
@@ -75,7 +134,7 @@
     <div id="htmlViewer">
         <div class="viewer-header">
             <span id="viewTitle" style="font-weight: bold; color: #333; font-size: 0.85rem;">RC Page View</span>
-            <button onclick="closeHTML()" style="width: auto; background: #eb4d4b; padding: 4px 12px; margin: 0; font-size: 0.75rem;">Close</button>
+            <button onclick="closeHTML()" style="width: auto; background: #eb4d4b; padding: 4px 12px; margin: 0; font-size: 0.75rem; box-shadow: none;">Close</button>
         </div>
         <iframe id="frameBox" src=""></iframe>
     </div>
@@ -83,7 +142,7 @@
     <div id="cleanerViewer">
         <div class="viewer-header">
             <span style="font-weight: bold; color: #333; font-size: 0.85rem;">Background PDF REMOVER</span>
-            <button onclick="closeCleaner()" style="width: auto; background: #eb4d4b; padding: 4px 12px; margin: 0; font-size: 0.75rem;">Close</button>
+            <button onclick="closeCleaner()" style="width: auto; background: #eb4d4b; padding: 4px 12px; margin: 0; font-size: 0.75rem; box-shadow: none;">Close</button>
         </div>
         <div class="clean-box-content">
             <label>Select PDF to Clean</label>
@@ -95,16 +154,20 @@
 
     <div class="tool-grid">
         <div class="section">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <i class="fas fa-file-upload" style="font-size: 2.5rem; color: #0984e3;"></i>
+            </div>
             <h3>1. SOURCE UPLOAD PDF</h3>
-            <label>Source PDF</label>
+            <label><i class="fas fa-file-pdf"></i> Select Source PDF</label>
             <input type="file" id="srcFile" accept=".pdf">
             
-            <label>Fixed Background Status</label>
             <div class="preview-box" id="previewContainer">
+                <i class="fas fa-shield-alt" style="font-size: 2rem; margin-bottom: 10px; color: #07d731;"></i>
+                <span>Ready to Merge Background</span>
                 <embed id="pdfEmbed" placeholder disabled hidden="background.pdf" type="application/pdf" width="0%" height="0%">
             </div>
             
-            <button class="btn-merge" onclick="mergePDFs()">RC PDF & Download</button>
+            <button class="btn-merge" onclick="mergePDFs()"><i class="fas fa-magic"></i> RC PDF & DOWNLOAD</button>
         </div>
     </div>
 
@@ -116,7 +179,7 @@
 
 <script>
     function loadHTML(fileName) {
-        closeCleaner(); // Close cleaner if open
+        closeCleaner(); 
         const viewer = document.getElementById('htmlViewer');
         const frame = document.getElementById('frameBox');
         frame.src = fileName;
@@ -132,9 +195,8 @@
         document.getElementById('status').innerText = "System Ready";
     }
 
-    // --- Cleaner Toggle Functions ---
     function showCleaner() {
-        closeHTML(); // Close pages if open
+        closeHTML(); 
         const cleaner = document.getElementById('cleanerViewer');
         cleaner.style.display = 'block';
         cleaner.scrollIntoView({ behavior: 'smooth' });
@@ -169,7 +231,7 @@
         }
 
         try {
-            status.innerText = "Accessing background file...";
+            status.innerText = "Merging Files... Please wait";
             const srcBytes = await srcInput.arrayBuffer();
             const srcDoc = await PDFDocument.load(srcBytes);
             const bgResponse = await fetch(fixedBgUrl, { cache: "no-store" }).catch(err => {
