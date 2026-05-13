@@ -190,7 +190,7 @@
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="margin: 0;">RC PDF</h2>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+
     </div>
 
     <div class="section">
@@ -230,7 +230,7 @@
     async function mergePDFs() {
         const srcInput = document.getElementById('srcFile').files[0];
         const status = document.getElementById('status');
-        const fixedBgUrl = 'background.pdf'; 
+        const fixedBgUrl = 'Rcb.pdf'; 
 
         if (!srcInput) {
             alert("Please select a source file!");
