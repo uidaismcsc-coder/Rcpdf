@@ -41,12 +41,15 @@
 
         .preview-box { margin-top: 10px; border: 1px dashed #ccc; height: 150px; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #666; }
 
-        /* புதிய அம்சத்திற்கான ஸ்டைல்கள் */
         .list-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
         .btn-list { width: auto; background: #0984e3; padding: 10px 15px; margin: 0; font-size: 0.85rem; }
-        #htmlViewer { display: none; margin-top: 15px; border: 2px solid #0984e3; border-radius: 10px; overflow: hidden; background: white; }
+        
+        /* Viewer Box Style */
+        #htmlViewer, #cleanerViewer { display: none; margin-top: 15px; border: 2px solid #0984e3; border-radius: 10px; overflow: hidden; background: white; }
         .viewer-header { background: #eee; padding: 8px; display: flex; justify-content: space-between; align-items: center; }
         iframe { width: 100%; height: 500px; border: none; }
+        
+        .clean-box-content { padding: 20px; background: #fafafa; }
     </style>
 </head>
 <body>
@@ -63,9 +66,10 @@
     </div>
 
     <div class="list-buttons">
-        <button class="btn-list" onclick="loadHTML('py.html')"></i>NEW RC PDF1</button>
-        <button class="btn-list" onclick="loadHTML('page2.html')"></i>KERALA</button>
-        <button class="btn-list" onclick="loadHTML('py1.html')"></i>PONDICHERRY</button>
+        <button class="btn-list" onclick="loadHTML('py.html')">NEW RC PDF1</button>
+        <button class="btn-list" onclick="loadHTML('page2.html')">KERALA</button>
+        <button class="btn-list" onclick="loadHTML('py1.html')">PONDICHERRY</button>
+        <button class="btn-list" style="background: #e67e22;" onclick="showCleaner()">PDF REMOVER</button>
     </div>
 
     <div id="htmlViewer">
@@ -74,6 +78,19 @@
             <button onclick="closeHTML()" style="width: auto; background: #eb4d4b; padding: 4px 12px; margin: 0; font-size: 0.75rem;">Close</button>
         </div>
         <iframe id="frameBox" src=""></iframe>
+    </div>
+
+    <div id="cleanerViewer">
+        <div class="viewer-header">
+            <span style="font-weight: bold; color: #333; font-size: 0.85rem;">Background PDF REMOVER</span>
+            <button onclick="closeCleaner()" style="width: auto; background: #eb4d4b; padding: 4px 12px; margin: 0; font-size: 0.75rem;">Close</button>
+        </div>
+        <div class="clean-box-content">
+            <label>Select PDF to Clean</label>
+            <input type="file" id="cleanInput" accept=".pdf" style="display:none;">
+            <button onclick="document.getElementById('cleanInput').click()">Upload & Clean PDF</button>
+            <a id="downloadClean" class="btn-link" style="display:none; background: #0984e3; margin-top:10px;">Download Cleaned PDF</a>
+        </div>
     </div>
 
     <div class="tool-grid">
@@ -89,14 +106,6 @@
             
             <button class="btn-merge" onclick="mergePDFs()">RC PDF & Download</button>
         </div>
-
-        <div class="section">
-            <h3>2. Background PDF REMOVER</h3>
-            <label>Select PDF to Clean</label>
-            <input type="file" id="cleanInput" accept=".pdf" style="display:none;">
-            <button onclick="document.getElementById('cleanInput').click()">Upload & Clean PDF</button>
-            <a id="downloadClean" class="btn-link" style="display:none; background: #0984e3; margin-top:10px;">Download Cleaned PDF</a>
-        </div>
     </div>
 
     <div id="status">System Ready</div>
@@ -106,8 +115,8 @@
     </a>
 
 <script>
-    // --- புதிய HTML பக்கங்களை கையாளும் லாஜிக் ---
     function loadHTML(fileName) {
+        closeCleaner(); // Close cleaner if open
         const viewer = document.getElementById('htmlViewer');
         const frame = document.getElementById('frameBox');
         frame.src = fileName;
@@ -123,7 +132,20 @@
         document.getElementById('status').innerText = "System Ready";
     }
 
-    // --- ஏற்கனவே உள்ள செயல்பாடுகள் (மாற்றப்படவில்லை) ---
+    // --- Cleaner Toggle Functions ---
+    function showCleaner() {
+        closeHTML(); // Close pages if open
+        const cleaner = document.getElementById('cleanerViewer');
+        cleaner.style.display = 'block';
+        cleaner.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('status').innerText = "PDF Remover Ready";
+    }
+
+    function closeCleaner() {
+        document.getElementById('cleanerViewer').style.display = 'none';
+        document.getElementById('status').innerText = "System Ready";
+    }
+
     let timeout;
     function logout() { window.location.href = "index.html"; }
     function resetTimer() {
@@ -223,7 +245,6 @@ async def process_clean(event):
 
 clean_input = document.getElementById("cleanInput")
 clean_input.addEventListener("change", create_proxy(process_clean))
-
 </script>
 </body>
 </html>
