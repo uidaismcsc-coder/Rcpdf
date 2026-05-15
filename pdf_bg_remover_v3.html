@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Background Remover – Vector Quality</title>
+
+<!-- pdf-lib: reads & writes REAL PDF vectors (no rasterize) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<!-- PDF.js only for PREVIEW rendering -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<!-- pako: zlib inflate/deflate for compressed PDF streams -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:     #0d0d14;
+  --card:   #13131f;
+  --card2:  #1a1a2e;
+  --border: #2a2a45;
+  --accent: #7c5cfc;
+  --accent2:#fc5c7d;
+  --green:  #3be8a0;
+  --text:   #e2e2f0;
+  --muted:  #6b6b9a;
+  --glow:   rgba(124,92,252,0.25);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter','Noto Sans Tamil',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:32px 16px 80px;}
+.wrap{max-width:840px;margin:0 auto;}
+
+/* ── header ── */
+.header{text-align:center;margin-bottom:36px;}
+.badge{display:inline-block;background:var(--card2);border:1px solid var(--border);border-radius:100px;padding:5px 16px;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;}
+h1{font-size:clamp(26px,5vw,44px);font-weight:700;line-height:1.1;letter-spacing:-.02em;margin-bottom:10px;}
+.grad{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sub{color:var(--muted);font-size:15px;line-height:1.7;max-width:560px;margin:0 auto;}
+
+/* quality badge */
+.qbadge{display:inline-flex;align-items:center;gap:6px;background:rgba(59,232,160,.1);border:1px solid rgba(59,232,160,.3);border-radius:100px;padding:5px 14px;font-size:12px;color:var(--green);margin-top:12px;font-weight:600;}
+
+/* ── dropzone ── */
+.dropzone{border:2px dashed var(--border);border-radius:18px;background:var(--card);padding:52px 24px;text-align:center;cursor:pointer;transition:.25s;margin-bottom:20px;}
+.dropzone:hover,.dropzone.over{border-color:var(--accent);box-shadow:0 0 40px var(--glow);background:var(--card2);}
+.dz-icon{font-size:52px;display:block;margin-bottom:14px;}
+.dz-title{font-size:18px;font-weight:600;margin-bottom:6px;}
+.dz-sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.btn-pick{background:linear-gradient(135deg,var(--accent),#a76cf8);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(124,92,252,.4);transition:.2s;}
+.btn-pick:hover{transform:translateY(-1px);}
+#fi{display:none;}
+
+/* ── chip ── */
+.chip{display:none;align-items:center;gap:12px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:18px;}
+.chip.show{display:flex;}
+.chip-icon{font-size:22px;}
+.chip-info{flex:1;min-width:0;}
+.chip-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chip-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.chip-rm{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;font-family:inherit;transition:.2s;}
+.chip-rm:hover{border-color:var(--accent2);color:var(--accent2);}
+
+/* ── settings ── */
+.settings{display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:20px;}
+.settings.show{display:block;}
+.s-hd{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:18px;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:560px){.sg{grid-template-columns:1fr;}}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:7px;font-weight:500;}
+select{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--card2);outline:none;margin-top:6px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.rv{font-weight:700;color:var(--accent);}
+
+/* colour row */
+.color-row{display:none;align-items:center;gap:10px;margin-top:12px;}
+.color-row.show{display:flex;}
+.color-row label{margin:0;white-space:nowrap;}
+input[type=color]{width:44px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;}
+
+/* info box */
+.info-box{background:rgba(59,232,160,.06);border:1px solid rgba(59,232,160,.2);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--green);margin-bottom:20px;display:none;line-height:1.6;}
+.info-box.show{display:block;}
+
+/* ── go button ── */
+.btn-go{width:100%;background:linear-gradient(135deg,var(--accent),#a76cf8);color:#fff;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 28px rgba(124,92,252,.4);transition:.25s;margin-bottom:22px;}
+.btn-go:hover:not(:disabled){transform:translateY(-2px);}
+.btn-go:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+/* ── progress ── */
+.prog{display:none;margin-bottom:20px;}
+.prog.show{display:block;}
+.prog-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;}
+.prog-bar{background:var(--card2);border-radius:100px;height:7px;overflow:hidden;margin-bottom:8px;}
+.prog-fill{height:100%;border-radius:100px;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s ease;}
+.prog-info{font-size:12px;color:var(--accent);text-align:center;}
+
+/* ── log ── */
+.log{display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;line-height:1.9;color:var(--muted);max-height:160px;overflow-y:auto;margin-bottom:20px;font-family:monospace;}
+.log.show{display:block;}
+.lok{color:var(--green);}
+.lerr{color:var(--accent2);}
+
+/* ── preview ── */
+.prev-row{display:none;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.prev-row.show{display:grid;}
+@media(max-width:500px){.prev-row{grid-template-columns:1fr;}}
+.prev-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.prev-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--border);}
+.prev-body{padding:10px;min-height:100px;background:repeating-conic-gradient(#1a1a2e 0% 25%,#13131f 0% 50%) 0 0/14px 14px;display:flex;align-items:center;justify-content:center;}
+.prev-body canvas{max-width:100%;max-height:180px;border-radius:4px;display:block;}
+
+/* ── result ── */
+.result{display:none;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:32px;text-align:center;}
+.result.show{display:block;}
+.r-icon{font-size:44px;display:block;margin-bottom:10px;}
+.r-title{font-size:20px;font-weight:700;margin-bottom:6px;}
+.r-sub{color:var(--muted);font-size:14px;margin-bottom:24px;}
+.btn-dl{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--green),#38d9a9);color:#050510;border:none;border-radius:11px;padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(59,232,160,.3);transition:.2s;}
+.btn-dl:hover{transform:translateY(-2px);}
+
+/* spinner */
+.spin{width:17px;height:17px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:sp .65s linear infinite;display:none;}
+.spin.on{display:block;}
+@keyframes sp{to{transform:rotate(360deg);}}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">🔒 Browser-only · No Server Upload</div>
+    <h1>PDF <span class="grad">Background</span> Remover</h1>
+    <p class="sub">PDF-ல் background மட்டும் அகற்றி — Text, QR, Images அனைத்தும் Vector quality-ல் பாதுகாப்பாக இருக்கும்</p>
+    <div class="qbadge">⚡ Vector Preserved — Zoom செய்தாலும் எழுத்துக்கள் சிதைவடையாது</div>
+  </div>
+
+  <!-- Dropzone -->
+  <div class="dropzone" id="dz">
+    <span class="dz-icon">📄</span>
+    <div class="dz-title">PDF இங்கே இழுத்து விடுங்கள்</div>
+    <div class="dz-sub">அல்லது கீழே உள்ள பட்டனை அழுத்துங்கள்</div>
+    <button class="btn-pick" id="pickBtn">📂 PDF தேர்வு செய்க</button>
+  </div>
+  <input type="file" id="fi" accept="application/pdf">
+
+  <!-- Chip -->
+  <div class="chip" id="chip">
+    <span class="chip-icon">📑</span>
+    <div class="chip-info">
+      <div class="chip-name" id="cname"></div>
+      <div class="chip-meta" id="cmeta"></div>
+    </div>
+    <button class="chip-rm" id="rmBtn">✕ நீக்கு</button>
+  </div>
+
+  <!-- Info -->
+  <div class="info-box" id="infoBox">
+    ✅ <strong>Vector mode:</strong> pdf-lib மூலம் PDF-ஐ நேரடியாக திருத்துகிறோம். எழுத்துக்கள், QR codes, lines எல்லாம் original vector quality-ல் இருக்கும் — image-ஆக convert ஆவதில்லை.
+  </div>
+
+  <!-- Settings -->
+  <div class="settings" id="settings">
+    <div class="s-hd">⚙️ Background அகற்றல் அமைப்புகள்</div>
+    <div class="sg">
+
+      <div>
+        <label>Background Type</label>
+        <select id="bgType">
+          <option value="white">Solid White (வெள்ளை)</option>
+          <option value="light_gray">Light Gray / Off-white</option>
+          <option value="color">Custom Color</option>
+          <option value="all_fills">All Filled Rectangles (அனைத்தும்)</option>
+        </select>
+        <div class="color-row" id="colorRow">
+          <label>Color:</label>
+          <input type="color" id="customColor" value="#f0f0f0">
+          <span style="font-size:12px;color:var(--muted);">tolerance: <span class="rv" id="tolV">30</span></span>
+          <input type="range" id="tolR" min="5" max="80" value="30" style="flex:1"
+            oninput="document.getElementById('tolV').textContent=this.value">
+        </div>
+      </div>
+
+      <div>
+        <label>Layer Depth (எத்தனை layers)</label>
+        <select id="layerDepth">
+          <option value="1">1 Layer</option>
+          <option value="3" selected>Up to 3 Layers</option>
+          <option value="10">All Layers (அனைத்தும்)</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Remove Images in BG — <span class="rv" id="imgTolV">85</span>%</label>
+        <input type="range" id="imgTol" min="50" max="100" value="85"
+          oninput="document.getElementById('imgTolV').textContent=this.value">
+      </div>
+
+      <div>
+        <label>Preview Scale</label>
+        <select id="prevScale">
+          <option value="1.0">Normal (1x)</option>
+          <option value="1.5" selected>HD (1.5x)</option>
+          <option value="2.0">Full HD (2x)</option>
+        </select>
+      </div>
+
+      <div>
+        <label>🔲 QR / Barcode பாதுகாப்பு — Max cell size: <span class="rv" id="qrCellV">20</span> pt</label>
+        <input type="range" id="qrCellR" min="5" max="60" value="20"
+          oninput="document.getElementById('qrCellV').textContent=this.value">
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;">இந்த அளவுக்கு சிறிய rectangles QR/Barcode என்று கருதி காப்பாற்றப்படும்</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Go -->
+  <button class="btn-go" id="goBtn" disabled>
+    <div class="spin" id="spin"></div>
+    <span id="goTxt">⚡ Background அகற்றுக</span>
+  </button>
+
+  <!-- Progress -->
+  <div class="prog" id="prog">
+    <div class="prog-row"><span id="pLbl">தயாராகிறது...</span><span id="pPct">0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="pFill"></div></div>
+    <div class="prog-info" id="pInfo"></div>
+  </div>
+
+  <!-- Log -->
+  <div class="log" id="logDiv"></div>
+
+  <!-- Preview -->
+  <div class="prev-row" id="prevRow">
+    <div class="prev-card">
+      <div class="prev-lbl">📌 Before (Original)</div>
+      <div class="prev-body"><canvas id="cvB"></canvas></div>
+    </div>
+    <div class="prev-card">
+      <div class="prev-lbl">✨ After (BG Removed)</div>
+      <div class="prev-body"><canvas id="cvA"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result" id="result">
+    <span class="r-icon">🎉</span>
+    <div class="r-title">வெற்றிகரமாக முடிந்தது!</div>
+    <div class="r-sub" id="rSub">PDF தயார்.</div>
+    <button class="btn-dl" id="dlBtn">⬇️ PDF Download செய்க</button>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+'use strict';
+
+// ── PDF.js worker (preview only) ──
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+var selFile   = null;
+var outBytes  = null;   // Uint8Array of final PDF
+var outName   = 'bg_removed.pdf';
+
+// ── Wire events ──
+document.getElementById('pickBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  document.getElementById('fi').click();
+});
+document.getElementById('fi').addEventListener('change', function(){
+  if (this.files && this.files[0]) loadFile(this.files[0]);
+});
+document.getElementById('rmBtn').addEventListener('click', resetAll);
+document.getElementById('goBtn').addEventListener('click', run);
+document.getElementById('dlBtn').addEventListener('click', doDownload);
+document.getElementById('bgType').addEventListener('change', function(){
+  var show = this.value === 'color';
+  document.getElementById('colorRow').classList.toggle('show', show);
+});
+
+var dz = document.getElementById('dz');
+dz.addEventListener('click', function(){ document.getElementById('fi').click(); });
+dz.addEventListener('dragover',  function(e){ e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', function(){ dz.classList.remove('over'); });
+dz.addEventListener('drop', function(e){
+  e.preventDefault(); dz.classList.remove('over');
+  var f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') loadFile(f);
+  else addLog('PDF file மட்டுமே ஏற்கப்படும்!', 'err');
+});
+
+// ── Helpers ──
+function show(id){ document.getElementById(id).classList.add('show'); }
+function hide(id){ document.getElementById(id).classList.remove('show'); }
+
+function addLog(msg, type){
+  var d = document.getElementById('logDiv');
+  show('logDiv');
+  var el = document.createElement('div');
+  if (type === 'ok')  el.className = 'lok';
+  if (type === 'err') el.className = 'lerr';
+  el.textContent = msg;
+  d.appendChild(el);
+  d.scrollTop = d.scrollHeight;
+}
+
+function setProg(pct, lbl, info){
+  document.getElementById('pFill').style.width = pct+'%';
+  document.getElementById('pPct').textContent   = pct+'%';
+  if (lbl  != null) document.getElementById('pLbl').textContent  = lbl;
+  if (info != null) document.getElementById('pInfo').textContent = info;
+}
+
+function loadFile(f){
+  selFile = f; outBytes = null;
+  document.getElementById('cname').textContent = f.name;
+  document.getElementById('cmeta').textContent = (f.size/1024/1024).toFixed(2)+' MB';
+  show('chip'); show('settings'); show('infoBox');
+  document.getElementById('goBtn').disabled = false;
+  ['result','prevRow','prog'].forEach(hide);
+  document.getElementById('logDiv').innerHTML = ''; hide('logDiv');
+  addLog('✓ "'+f.name+'" தேர்வு செய்யப்பட்டது ('+( f.size/1024/1024).toFixed(2)+' MB)', 'ok');
+}
+
+function resetAll(){
+  selFile = null; outBytes = null;
+  document.getElementById('fi').value = '';
+  ['chip','settings','infoBox','prog','result','prevRow','logDiv'].forEach(hide);
+  document.getElementById('goBtn').disabled = true;
+  document.getElementById('logDiv').innerHTML = '';
+  setProg(0,'','');
+}
+
+// ── Hex colour → {r,g,b} 0-1 ──
+function hexToRgb01(hex){
+  var r=parseInt(hex.slice(1,3),16)/255;
+  var g=parseInt(hex.slice(3,5),16)/255;
+  var b=parseInt(hex.slice(5,7),16)/255;
+  return {r:r,g:g,b:b};
+}
+
+// colour distance (0-1 components)
+function colDist(r1,g1,b1,r2,g2,b2){
+  return Math.sqrt((r1-r2)**2+(g1-g2)**2+(b1-b2)**2);
+}
+
+// Is this colour "background"?
+function isBG(r,g,b, bgType, targetColor, tolerance){
+  var tol = tolerance / 100 * Math.sqrt(3); // normalise
+  if (bgType === 'white'){
+    return (r > 0.88 && g > 0.88 && b > 0.88);
+  }
+  if (bgType === 'light_gray'){
+    return (r > 0.78 && g > 0.78 && b > 0.78);
+  }
+  if (bgType === 'color'){
+    return colDist(r,g,b,targetColor.r,targetColor.g,targetColor.b) < tol;
+  }
+  if (bgType === 'all_fills'){
+    return true; // remove ALL rectangles
+  }
+  return false;
+}
+
+// ── Stream compression helpers ──
+// Most PDF content streams are FlateDecode (zlib) compressed.
+// We MUST decompress -> filter operators -> recompress. Skipping this = blank/white output.
+
+function isStreamCompressed(stream){
+  try {
+    var dict = stream.dict;
+    if (!dict || !dict.get) return false;
+    var filter = dict.get(PDFLib.PDFName.of('Filter'));
+    if (!filter) return false;
+    var fname = filter.encodedName || filter.toString();
+    return fname.indexOf('FlateDecode') !== -1 || fname.indexOf('Fl') !== -1;
+  } catch(e){ return false; }
+}
+
+function safeDecompress(rawBytes){
+  try { return pako.inflate(rawBytes); }
+  catch(e1){
+    try { return pako.inflateRaw(rawBytes); }
+    catch(e2){ return rawBytes; }
+  }
+}
+
+function writeStreamData(stream, newPlainBytes, wasCompressed){
+  var dict = stream.dict;
+  var finalBytes;
+  if (wasCompressed){
+    finalBytes = pako.deflate(newPlainBytes);
+    if (dict && dict.set){
+      dict.set(PDFLib.PDFName.of('Filter'), PDFLib.PDFName.of('FlateDecode'));
+      if (dict.delete) dict.delete(PDFLib.PDFName.of('DecodeParms'));
+      dict.set(PDFLib.PDFName.of('Length'), PDFLib.PDFNumber.of(finalBytes.length));
+    }
+  } else {
+    finalBytes = newPlainBytes;
+    if (dict){
+      if (dict.delete){ dict.delete(PDFLib.PDFName.of('Filter')); dict.delete(PDFLib.PDFName.of('DecodeParms')); }
+      if (dict.set) dict.set(PDFLib.PDFName.of('Length'), PDFLib.PDFNumber.of(finalBytes.length));
+    }
+  }
+  if (typeof stream.setContents === 'function') stream.setContents(finalBytes);
+  else stream.contents = finalBytes;
+}
+
+function processOneStream(stream, bgType, targetColor, tolerance, layerDepth, imgThreshold){
+  var rawBytes   = stream.getContents();
+  var wasCompr   = isStreamCompressed(stream);
+  var plainBytes = wasCompr ? safeDecompress(rawBytes) : rawBytes;
+  var text       = new TextDecoder('latin1').decode(plainBytes);
+  var filtered   = filterContentStream(text, bgType, targetColor, tolerance, layerDepth, imgThreshold);
+  var newBytes   = new TextEncoder().encode(filtered);
+  writeStreamData(stream, newBytes, wasCompr);
+}
+
+// ── CORE: Vector-level background removal using pdf-lib ──
+async function removeBGVector(pdfBytes, options){
+  var { bgType, targetColor, tolerance, layerDepth, imgThreshold, qrCellSize } = options;
+  if (typeof qrCellSize === 'number') QR_MAX_CELL_PT = qrCellSize;
+
+  var pdfDoc = await PDFLib.PDFDocument.load(pdfBytes, { ignoreEncryption: true, updateMetadata: false });
+  var pages  = pdfDoc.getPages();
+  var nPages = pages.length;
+
+  addLog('pdf-lib: '+nPages+' pages loaded', 'ok');
+
+  for (var pi=0; pi<pages.length; pi++){
+    setProg(10 + Math.round(pi/nPages*75), 'Page '+(pi+1)+'/'+nPages+' processing...', '');
+    addLog('Page '+(pi+1)+' operators scan ஆகிறது...');
+
+    var page = pages[pi];
+
+    // ── Strategy 1: Page content streams ──
+    var contentStreams = [];
+    try {
+      var pageNode    = page.node;
+      var contentsRef = pageNode.get(PDFLib.PDFName.of('Contents'));
+      if (!contentsRef){ addLog('Page '+(pi+1)+': no Contents', 'err'); continue; }
+      var contentsObj = pdfDoc.context.lookup(contentsRef);
+      if (contentsObj instanceof PDFLib.PDFArray){
+        for (var ci=0; ci<contentsObj.size(); ci++)
+          contentStreams.push(pdfDoc.context.lookup(contentsObj.get(ci)));
+      } else {
+        contentStreams.push(contentsObj);
+      }
+    } catch(e){
+      addLog('Page '+(pi+1)+' stream access: '+e.message, 'err'); continue;
+    }
+
+    for (var csi=0; csi<contentStreams.length; csi++){
+      var stream = contentStreams[csi];
+      if (!stream || !stream.getContents) continue;
+      try {
+        processOneStream(stream, bgType, targetColor, tolerance, layerDepth, imgThreshold);
+        addLog('  Stream '+(csi+1)+': operators filtered ✓', 'ok');
+      } catch(e){
+        addLog('  Stream '+(csi+1)+' error: '+e.message, 'err');
+      }
+    }
+
+    // ── Strategy 2: XObject form streams ──
+    try {
+      var resRef = page.node.get(PDFLib.PDFName.of('Resources'));
+      if (resRef){
+        var resDict = pdfDoc.context.lookup(resRef);
+        var xRef    = resDict && resDict.get ? resDict.get(PDFLib.PDFName.of('XObject')) : null;
+        if (xRef){
+          var xObjs = pdfDoc.context.lookup(xRef);
+          if (xObjs && xObjs.entries){
+            for (var [key, ref] of xObjs.entries()){
+              var xObj = pdfDoc.context.lookup(ref);
+              if (xObj && xObj.getContents){
+                try { processOneStream(xObj, bgType, targetColor, tolerance, layerDepth, imgThreshold); }
+                catch(xe){}
+              }
+            }
+          }
+        }
+      }
+    } catch(e){}
+  }
+
+  var saved = await pdfDoc.save({ useObjectStreams: false });
+  return saved;
+}
+
+// ── PDF Content Stream Operator Filter ──
+// Removes ONLY background-coloured rectangles/paths.
+// QR code protection: small squares (< QR_MAX_CELL_PT points) are NEVER removed,
+// because QR modules are tiny dark cells — not background fills.
+// Only large page-spanning rectangles (background fills) are removed.
+
+var QR_MAX_CELL_PT = 20; // rectangles smaller than this (user-adjustable via slider) (in points) on BOTH sides = QR/barcode cell → keep
+
+function isLargeRect(opStack){
+  // opStack before "re" should be [x, y, w, h]
+  if (opStack.length < 4) return true; // unknown → treat as large (safe to remove if BG colour)
+  var w = Math.abs(parseFloat(opStack[opStack.length-2]));
+  var h = Math.abs(parseFloat(opStack[opStack.length-1]));
+  // If BOTH dimensions are tiny → this is a QR/barcode cell → DO NOT remove
+  if (w <= QR_MAX_CELL_PT && h <= QR_MAX_CELL_PT) return false;
+  return true;
+}
+
+function filterContentStream(text, bgType, targetColor, tolerance, layerDepth, imgThreshold){
+  var curR=1, curG=1, curB=1;
+  var depth   = 0;
+  var inText  = false;
+  var gstack  = [{r:1,g:1,b:1}];
+  var maxDepth = parseInt(layerDepth) || 3;
+
+  var tokens = text.match(/\S+/g) || [];
+  var i = 0;
+  var outTokens = [];
+  var opStack   = [];
+
+  function currentColorIsBG(){
+    return isBG(curR, curG, curB, bgType, targetColor, tolerance);
+  }
+
+  // Track path bounding box to detect small paths (QR cells drawn as paths not rects)
+  var pathMinX=Infinity, pathMinY=Infinity, pathMaxX=-Infinity, pathMaxY=-Infinity;
+  var inPath = false;
+
+  function updatePathBounds(x, y){
+    if (x < pathMinX) pathMinX=x;
+    if (y < pathMinY) pathMinY=y;
+    if (x > pathMaxX) pathMaxX=x;
+    if (y > pathMaxY) pathMaxY=y;
+  }
+
+  function resetPathBounds(){
+    pathMinX=Infinity; pathMinY=Infinity; pathMaxX=-Infinity; pathMaxY=-Infinity;
+    inPath=false;
+  }
+
+  function pathIsLarge(){
+    var pw = pathMaxX - pathMinX;
+    var ph = pathMaxY - pathMinY;
+    // If path bounding box is tiny on BOTH axes → QR/barcode cell → keep
+    if (isFinite(pw) && isFinite(ph) && pw <= QR_MAX_CELL_PT && ph <= QR_MAX_CELL_PT) return false;
+    return true;
+  }
+
+  while (i < tokens.length){
+    var tok = tokens[i]; i++;
+
+    // Graphics state push/pop
+    if (tok === 'q'){
+      depth++;
+      gstack.push({r:curR,g:curG,b:curB});
+      outTokens.push(tok); opStack=[]; continue;
+    }
+    if (tok === 'Q'){
+      if (depth > 0) depth--;
+      if (gstack.length > 1){ var prev=gstack.pop(); curR=prev.r; curG=prev.g; curB=prev.b; }
+      outTokens.push(tok); opStack=[]; continue;
+    }
+
+    // Text block — always preserve
+    if (tok === 'BT'){ inText=true;  outTokens.push(tok); opStack=[]; continue; }
+    if (tok === 'ET'){ inText=false; outTokens.push(tok); opStack=[]; continue; }
+    if (inText){ outTokens.push(tok); continue; }
+
+    // Non-stroking colour: rg (RGB), k (CMYK), g (gray), sc/scn
+    if (tok === 'rg' && opStack.length >= 3){
+      curR=parseFloat(opStack[opStack.length-3]);
+      curG=parseFloat(opStack[opStack.length-2]);
+      curB=parseFloat(opStack[opStack.length-1]);
+      opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[]; continue;
+    }
+    if (tok === 'k' && opStack.length >= 4){
+      var C=parseFloat(opStack[opStack.length-4]), M=parseFloat(opStack[opStack.length-3]);
+      var Y=parseFloat(opStack[opStack.length-2]), K=parseFloat(opStack[opStack.length-1]);
+      curR=(1-C)*(1-K); curG=(1-M)*(1-K); curB=(1-Y)*(1-K);
+      opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[]; continue;
+    }
+    if (tok === 'g' && opStack.length >= 1){
+      var gray=parseFloat(opStack[opStack.length-1]);
+      curR=gray; curG=gray; curB=gray;
+      opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[]; continue;
+    }
+    if ((tok === 'sc' || tok === 'scn') && opStack.length >= 1){
+      // generic — just pass through without colour tracking (safe)
+      opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[]; continue;
+    }
+
+    // Path construction operators — track for bounding box
+    if (tok === 'm' && opStack.length >= 2){
+      inPath=true;
+      var px=parseFloat(opStack[opStack.length-2]), py=parseFloat(opStack[opStack.length-1]);
+      updatePathBounds(px,py);
+      opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[]; continue;
+    }
+    if (tok === 'l' && opStack.length >= 2){
+      var px=parseFloat(opStack[opStack.length-2]), py=parseFloat(opStack[opStack.length-1]);
+      updatePathBounds(px,py);
+      opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[]; continue;
+    }
+    if (tok === 'c' && opStack.length >= 6){
+      var px=parseFloat(opStack[opStack.length-2]), py=parseFloat(opStack[opStack.length-1]);
+      updatePathBounds(px,py);
+      opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[]; continue;
+    }
+    if (tok === 'h'){
+      outTokens.push(tok); opStack=[]; continue;
+    }
+
+    // Rectangle operator: x y w h re
+    if (tok === 're'){
+      var lookahead = tokens[i] || '';
+      var lookahead2 = tokens[i+1] || '';
+      var isFill = (lookahead==='f'||lookahead==='F'||lookahead==='f*'||lookahead==='B'||lookahead==='b'
+                    ||lookahead2==='f'||lookahead2==='F'||lookahead2==='f*');
+
+      var large = isLargeRect(opStack);
+
+      if (isFill && currentColorIsBG() && large && (depth <= maxDepth || maxDepth >= 10)){
+        // Remove BG rectangle — but only if it is a large rect (not QR cell)
+        opStack=[];
+        i++; // consume fill operator
+        resetPathBounds();
+        continue;
+      } else {
+        opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[];
+      }
+      resetPathBounds();
+      continue;
+    }
+
+    // Fill operators after path (f F f* b B)
+    if (tok==='f'||tok==='F'||tok==='f*'){
+      var large = pathIsLarge();
+      if (currentColorIsBG() && large && (depth <= maxDepth || maxDepth >= 10)){
+        // Replace fill with no-paint for large BG-coloured paths
+        outTokens.push('n');
+        opStack=[];
+      } else {
+        opStack.forEach(function(t){ outTokens.push(t); }); outTokens.push(tok); opStack=[];
+      }
+      resetPathBounds();
+      continue;
+    }
+
+    // Path: no-op paint (n) — keep, reset bounds
+    if (tok==='n'){ outTokens.push(tok); opStack=[]; resetPathBounds(); continue; }
+
+    // Default: accumulate operand
+    opStack.push(tok);
+  }
+
+  // flush remaining operands
+  opStack.forEach(function(t){ outTokens.push(t); });
+
+  return outTokens.join(' ');
+}
+
+// ── MAIN ──
+async function run(){
+  if (!selFile) return;
+
+  var goBtn = document.getElementById('goBtn');
+  var spin  = document.getElementById('spin');
+  var goTxt = document.getElementById('goTxt');
+
+  goBtn.disabled=true; spin.classList.add('on');
+  goTxt.textContent='Processing...';
+  show('prog'); hide('result'); hide('prevRow');
+  document.getElementById('logDiv').innerHTML=''; hide('logDiv');
+  outBytes=null;
+
+  var bgType    = document.getElementById('bgType').value;
+  var targetColor= hexToRgb01(document.getElementById('customColor').value);
+  var tolerance  = parseInt(document.getElementById('tolR').value);
+  var layerDepth = document.getElementById('layerDepth').value;
+  var imgThreshold = parseInt(document.getElementById('imgTol').value);
+  var prevScale  = parseFloat(document.getElementById('prevScale').value);
+  var qrCellSize = parseFloat(document.getElementById('qrCellR').value);
+
+  try {
+    addLog('PDF வாசிக்கப்படுகிறது...');
+    setProg(5,'PDF loading...','');
+
+    var ab = await new Promise(function(resolve,reject){
+      var fr=new FileReader();
+      fr.onload=function(){ resolve(fr.result); };
+      fr.onerror=function(){ reject(new Error('File read failed')); };
+      fr.readAsArrayBuffer(selFile);
+    });
+
+    var pdfBytes = new Uint8Array(ab);
+    addLog('✓ '+Math.round(pdfBytes.length/1024)+' KB loaded', 'ok');
+
+    // ── BEFORE preview (PDF.js render) ──
+    setProg(8,'Preview (Before) உருவாக்கப்படுகிறது...','');
+    addLog('Before preview render ஆகிறது...');
+    try {
+      var pjsDoc  = await pdfjsLib.getDocument({ data: pdfBytes.slice() }).promise;
+      var page1   = await pjsDoc.getPage(1);
+      var vp      = page1.getViewport({ scale: prevScale });
+      var cvB     = document.getElementById('cvB');
+      var scB     = Math.min(280/vp.width, 200/vp.height);
+      cvB.width   = Math.round(vp.width*scB);
+      cvB.height  = Math.round(vp.height*scB);
+      var vp2     = page1.getViewport({ scale: prevScale*scB });
+      await page1.render({ canvasContext:cvB.getContext('2d'), viewport:vp2 }).promise;
+    } catch(pe){ addLog('Before preview: '+pe.message,'err'); }
+
+    // ── Vector BG removal ──
+    setProg(10,'Vector operators scan ஆகிறது...','');
+    var result = await removeBGVector(pdfBytes, { bgType, targetColor, tolerance, layerDepth, imgThreshold, qrCellSize });
+    outBytes = result;
+    outName  = selFile.name.replace(/\.pdf$/i,'')+'_bg_removed.pdf';
+
+    // ── AFTER preview ──
+    setProg(90,'Preview (After) உருவாக்கப்படுகிறது...','');
+    addLog('After preview render ஆகிறது...');
+    try {
+      var pjsDoc2 = await pdfjsLib.getDocument({ data: outBytes.slice() }).promise;
+      var pg2     = await pjsDoc2.getPage(1);
+      var vp3     = pg2.getViewport({ scale: prevScale });
+      var cvA     = document.getElementById('cvA');
+      var scA     = Math.min(280/vp3.width, 200/vp3.height);
+      cvA.width   = Math.round(vp3.width*scA);
+      cvA.height  = Math.round(vp3.height*scA);
+      var vp4     = pg2.getViewport({ scale: prevScale*scA });
+      var aCtx    = cvA.getContext('2d');
+      // checker bg to show transparency
+      aCtx.fillStyle='#ffffff'; aCtx.fillRect(0,0,cvA.width,cvA.height);
+      await pg2.render({ canvasContext:aCtx, viewport:vp4 }).promise;
+    } catch(pe){ addLog('After preview: '+pe.message,'err'); }
+
+    show('prevRow');
+
+    setProg(100,'✓ முடிந்தது!','');
+    addLog('✓ முடிந்தது! '+Math.round(outBytes.length/1024)+' KB · Vector quality preserved', 'ok');
+
+    document.getElementById('rSub').textContent =
+      'Vector quality PDF · '+Math.round(outBytes.length/1024)+' KB · Zoom செய்தாலும் sharp!';
+    show('result');
+
+  } catch(err){
+    addLog('பிழை: '+err.message,'err');
+    console.error(err);
+  } finally {
+    goBtn.disabled=false; spin.classList.remove('on');
+    goTxt.textContent='⚡ Background அகற்றுக';
+  }
+}
+
+// ── Download ──
+function doDownload(){
+  if (!outBytes){ addLog('முதலில் PDF process செய்யுங்கள்!','err'); return; }
+  try {
+    var blob = new Blob([outBytes],{type:'application/pdf'});
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.style.display='none';
+    a.href=url; a.download=outName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); if(a.parentNode)a.parentNode.removeChild(a); },5000);
+    addLog('✓ Download தொடங்கியது — "'+outName+'"','ok');
+  } catch(e){
+    addLog('Download பிழை: '+e.message,'err');
+  }
+}
+</script>
+</body>
+</html>
