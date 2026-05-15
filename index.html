@@ -4,230 +4,326 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMCSC - RC PDF Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* --- 3D & MODERN UI STYLING --- */
         :root {
-            --primary: #6ab04c;
-            --secondary: #f9ca24;
-            --danger: #eb4d4b;
-            --glass: rgba(255, 255, 255, 0.2);
+            --neon: #00ffcc;
+            --neon2: #00aaff;
+            --danger: #ff4757;
+            --glass: rgba(255,255,255,0.07);
+            --border: rgba(0,255,204,0.25);
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            margin: 0;
-            padding: 0;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background: radial-gradient(circle at center, #11998e, #38ef7d);
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #050d1a;
+            font-family: 'Rajdhani', sans-serif;
             overflow: hidden;
-            perspective: 1000px;
         }
 
-        /* Animated Background Elements */
-        .bg-shape {
-            position: absolute;
-            background: var(--glass);
-            backdrop-filter: blur(5px);
+        /* Animated grid background */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,204,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,204,0.04) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(5deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(5deg) translateY(50px); }
+        }
+
+        /* Floating orbs */
+        .orb {
+            position: fixed;
             border-radius: 50%;
-            z-index: 0;
-            animation: float 10s infinite alternate ease-in-out;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: orbFloat 12s ease-in-out infinite alternate;
+        }
+        .orb1 { width: 400px; height: 400px; background: #00ffcc; top: -100px; left: -100px; }
+        .orb2 { width: 300px; height: 300px; background: #00aaff; bottom: -80px; right: -80px; animation-delay: -4s; }
+        .orb3 { width: 200px; height: 200px; background: #6c5ce7; top: 50%; left: 50%; animation-delay: -8s; }
+
+        @keyframes orbFloat {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(30px, -30px) scale(1.15); }
         }
 
-        @keyframes float {
-            from { transform: translateY(0) rotate(0deg); }
-            to { transform: translateY(-50px) rotate(360deg); }
-        }
-
-        .login-container {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            padding: 40px;
-            border-radius: 30px;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.2);
-            width: 90%;
-            max-width: 350px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+        .login-wrapper {
             position: relative;
-            z-index: 1;
+            z-index: 10;
+        }
+
+        /* 3D card */
+        .login-container {
+            background: linear-gradient(135deg, rgba(0,255,204,0.08), rgba(0,170,255,0.05));
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            padding: 50px 45px;
+            border-radius: 24px;
+            box-shadow:
+                0 0 0 1px var(--border),
+                0 30px 80px rgba(0,0,0,0.6),
+                0 0 60px rgba(0,255,204,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            width: 380px;
+            text-align: center;
             transform-style: preserve-3d;
-            transition: transform 0.5s;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            animation: cardEntry 0.8s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+
+        @keyframes cardEntry {
+            from { opacity: 0; transform: translateY(40px) rotateX(15deg); }
+            to { opacity: 1; transform: translateY(0) rotateX(0deg); }
         }
 
         .login-container:hover {
-            transform: rotateY(5deg) rotateX(5deg);
+            transform: rotateY(4deg) rotateX(3deg) translateZ(10px);
+        }
+
+        /* Glowing top accent line */
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 10%; right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon), transparent);
+            box-shadow: 0 0 20px var(--neon);
         }
 
         .avatar-circle {
-            width: 90px;
-            height: 90px;
-            background: white;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(0,255,204,0.15), rgba(0,170,255,0.15));
+            border: 2px solid var(--border);
             border-radius: 50%;
-            margin: 0 auto 20px;
+            margin: 0 auto 25px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 50px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            border: 5px solid var(--secondary);
+            font-size: 38px;
+            box-shadow: 0 0 30px rgba(0,255,204,0.2), inset 0 0 20px rgba(0,255,204,0.05);
+            transition: 0.5s;
         }
 
-        h2 { color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); margin-bottom: 25px; }
+        .avatar-circle:hover { box-shadow: 0 0 50px rgba(0,255,204,0.4); }
 
-        .input-group { margin-bottom: 20px; }
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(0,255,204,0.5);
+        }
 
-        input {
+        .subtitle {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 35px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .input-group input {
             width: 100%;
-            padding: 15px;
-            border: none;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            box-sizing: border-box;
+            padding: 14px 18px 14px 44px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0,255,204,0.15);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
             outline: none;
-            font-size: 16px;
-            transition: 0.3s;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s;
         }
 
-        input:focus { 
-            background: white;
-            box-shadow: 0 0 15px var(--primary);
+        .input-group input::placeholder { color: rgba(255,255,255,0.3); }
+        .input-group input:focus {
+            border-color: var(--neon);
+            background: rgba(0,255,204,0.05);
+            box-shadow: 0 0 20px rgba(0,255,204,0.1), inset 0 0 10px rgba(0,255,204,0.03);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            opacity: 0.4;
         }
 
         .login-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 15px;
             width: 100%;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: bold;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--neon), var(--neon2));
+            border: none;
+            border-radius: 10px;
+            color: #050d1a;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 900;
+            letter-spacing: 3px;
             cursor: pointer;
-            box-shadow: 0 10px 20px rgba(235, 77, 75, 0.4);
-            transition: 0.3s;
+            margin-top: 8px;
+            box-shadow: 0 5px 0 rgba(0,150,120,0.5), 0 10px 30px rgba(0,255,204,0.3);
+            transition: all 0.2s;
+            position: relative;
+            top: 0;
         }
 
-        .login-btn:hover { 
-            background: #ff5e5e; 
-            transform: translateY(-3px); 
-            box-shadow: 0 15px 25px rgba(235, 77, 75, 0.5);
+        .login-btn:hover {
+            top: -2px;
+            box-shadow: 0 7px 0 rgba(0,150,120,0.5), 0 15px 40px rgba(0,255,204,0.5);
         }
 
-        #message { margin-top: 15px; font-weight: bold; color: white; min-height: 20px; }
+        .login-btn:active { top: 4px; box-shadow: 0 1px 0 rgba(0,150,120,0.5); }
 
-        .hint { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 15px; }
+        #message {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            min-height: 22px;
+            color: var(--danger);
+            text-shadow: 0 0 10px rgba(255,71,87,0.5);
+        }
 
-        /* WhatsApp Button */
+        .hint {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.2);
+            margin-top: 20px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
         .whatsapp-float {
             position: fixed;
-            width: 55px;
-            height: 55px;
-            bottom: 30px;
-            right: 30px;
-            background-color: #25d366;
+            width: 52px;
+            height: 52px;
+            bottom: 25px;
+            right: 25px;
+            background: linear-gradient(135deg, #25d366, #128C7E);
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 20px rgba(37,211,102,0.4);
             z-index: 100;
             transition: 0.3s;
+            text-decoration: none;
         }
-
-        .whatsapp-float:hover { transform: scale(1.1); }
+        .whatsapp-float:hover { transform: scale(1.1) translateY(-3px); }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+            0%,100% { transform: translateX(0); }
+            20% { transform: translateX(-12px) rotateZ(-2deg); }
+            40% { transform: translateX(12px) rotateZ(2deg); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
         }
+        .shake { animation: shake 0.4s ease-in-out; }
     </style>
 </head>
 <body>
 
-    <div class="bg-shape" style="width: 150px; height: 150px; top: 10%; left: 5%;"></div>
-    <div class="bg-shape" style="width: 100px; height: 100px; bottom: 15%; right: 10%;"></div>
+<div class="grid-bg"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
 
+<div class="login-wrapper">
     <div class="login-container" id="loginBox">
         <div class="avatar-circle" id="animal-avatar">🦁</div>
-        <h2>RC PDF Portal</h2>
-        
+        <h2>RC PDF PORTAL</h2>
+        <div class="subtitle">SM CSC · Digital Service</div>
+
         <form id="loginForm">
             <div class="input-group">
+                <span class="input-icon">👤</span>
                 <input type="text" id="username" placeholder="Username" required autocomplete="off">
             </div>
             <div class="input-group">
+                <span class="input-icon">🔑</span>
                 <input type="password" id="password" placeholder="Password" required autocomplete="off">
             </div>
-            <button type="submit" class="login-btn">LOGIN 🐾</button>
+            <button type="submit" class="login-btn">ACCESS PORTAL</button>
         </form>
 
         <p id="message"></p>
-        <div class="hint"><b>SM</b> CSC | Digital Service</div>
+        <div class="hint">SMCSC · Secure Access</div>
     </div>
+</div>
 
-    <a href="https://wa.me/917094041818?text=Hello%20SMCSC%20Support,%20I%20need%20help%20with%20the%20RC%20PDF%20Portal." class="whatsapp-float" target="_blank">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.438 9.889-9.886.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.435-9.889 9.886-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.982zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-    </a>
+<a href="https://wa.me/917094041818?text=Hello%20SMCSC%20Support,%20I%20need%20help%20with%20the%20RC%20PDF%20Portal." class="whatsapp-float" target="_blank">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.438 9.889-9.886.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.435-9.889 9.886-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.982zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+</a>
 
-    <script>
-        // --- CONFIGURATION ---
-        // 4 Default Passwords as requested
-        const VALID_USERS = {
-            "admin": "Siva@123",
-            "8122220305": "8122220305",
-            "staff": "Esevai99",
-            "guest": "Welcome1"
-        };
+<script>
+    const VALID_USERS = {
+        "admin": "Siva@123",
+        "8122220305": "8122220305",
+        "staff": "Esevai99",
+        "guest": "Welcome1"
+    };
 
-        const animals = ['🦁', '🐯', '🐼', '🦊', '🐨', '🐸', '🐵'];
-        const avatar = document.getElementById('animal-avatar');
-        const form = document.getElementById('loginForm');
-        const message = document.getElementById('message');
-        const loginBox = document.getElementById('loginBox');
+    const animals = ['🦁', '🐯', '🐼', '🦊', '🐨', '🐸', '🐵'];
+    const avatar = document.getElementById('animal-avatar');
+    const form = document.getElementById('loginForm');
+    const message = document.getElementById('message');
+    const loginBox = document.getElementById('loginBox');
 
-        setInterval(() => {
-            const randomAnimal = animals[Math.floor(Math.random() * animals.length)];
-            if(avatar.innerText !== "👨‍💻") {
-                avatar.innerText = randomAnimal;
-            }
-        }, 3000);
+    setInterval(() => {
+        if(avatar.innerText !== "👨‍💻") {
+            avatar.innerText = animals[Math.floor(Math.random() * animals.length)];
+        }
+    }, 3000);
 
-        // --- LOGIN LOGIC ---
-        form.onsubmit = (e) => {
-            e.preventDefault();
-            
-            const userIn = document.getElementById('username').value.trim();
-            const passIn = document.getElementById('password').value.trim();
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        const userIn = document.getElementById('username').value.trim();
+        const passIn = document.getElementById('password').value.trim();
 
-            // Check if user exists and password matches
-            if (VALID_USERS[userIn] && VALID_USERS[userIn] === passIn) {
-                message.style.color = "#fff";
-                message.innerText = "வெற்றி! உள்நுழைகிறது... 🐾";
-                avatar.innerText = "👨‍💻";
-                
-                sessionStorage.setItem("isLoggedIn", "true");
-                sessionStorage.setItem("lastActivity", Date.now());
+        if (VALID_USERS[userIn] && VALID_USERS[userIn] === passIn) {
+            message.style.color = "#00ffcc";
+            message.style.textShadow = "0 0 10px rgba(0,255,204,0.5)";
+            message.innerText = "வெற்றி! உள்நுழைகிறது... ✓";
+            avatar.innerText = "👨‍💻";
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("lastActivity", Date.now());
+            setTimeout(() => { window.location.replace("dashboard.html"); }, 900);
+        } else {
+            message.style.color = "#ff4757";
+            message.style.textShadow = "0 0 10px rgba(255,71,87,0.5)";
+            message.innerText = "தவறான விவரங்கள். மீண்டும் முயலவும்.";
+            loginBox.classList.remove('shake');
+            void loginBox.offsetWidth;
+            loginBox.classList.add('shake');
+            document.getElementById('password').value = "";
+        }
+    };
 
-                setTimeout(() => {
-                    window.location.replace("dashboard.html"); 
-                }, 800);
-            } else {
-                message.style.color = "#ffcccc";
-                message.innerText = "தவறான விவரங்கள். மீண்டும் முயலவும்.";
-                
-                loginBox.style.animation = "none";
-                void loginBox.offsetWidth; 
-                loginBox.style.animation = "shake 0.3s ease-in-out";
-                document.getElementById('password').value = "";
-            }
-        };
-
-        window.onload = () => { sessionStorage.clear(); };
-    </script>
+    window.onload = () => { sessionStorage.clear(); };
+</script>
 </body>
 </html>
