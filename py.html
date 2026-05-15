@@ -3,224 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RC PDF-SMCSC | 3D Dashboard</title>
-    
+    <title>RC PDF · SMCSC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    
     <style>
         :root {
-            --primary: #00b894;
-            --secondary: #0984e3;
-            --accent: #6c5ce7;
-            --danger: #eb4d4b;
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --neon: #00ffcc;
+            --neon2: #00aaff;
+            --accent: #7c3aed;
+            --danger: #ff4757;
+            --bg: #060e1a;
+            --card: rgba(255,255,255,0.04);
+            --border: rgba(0,255,204,0.18);
+            --text: rgba(255,255,255,0.85);
+            --muted: rgba(255,255,255,0.35);
         }
 
-        body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background: var(--bg-gradient); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text);
             overflow: hidden;
-            perspective: 1000px;
+            perspective: 1200px;
         }
 
-        /* 3D Floating Animation */
-        @keyframes float {
-            0% { transform: translateY(0px) rotateX(2deg) rotateY(-2deg); }
-            50% { transform: translateY(-15px) rotateX(-2deg) rotateY(2deg); }
-            100% { transform: translateY(0px) rotateX(2deg) rotateY(-2deg); }
+        /* Animated background grid */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,204,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,204,0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .container { 
-            background: rgba(255, 255, 255, 0.95); 
-            padding: 2.5rem; 
-            border-radius: 20px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3), 
-                        inset 0 0 0 1px rgba(255,255,255,0.5);
-            width: 100%; 
-            max-width: 500px; 
-            animation: float 6s ease-in-out infinite;
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-orb1 { width: 500px; height: 500px; background: #00ffcc; top: -200px; right: -100px; animation: pulse 8s ease-in-out infinite alternate; }
+        .bg-orb2 { width: 350px; height: 350px; background: #7c3aed; bottom: -100px; left: -80px; animation: pulse 8s ease-in-out infinite alternate; animation-delay: -4s; }
+
+        @keyframes pulse { from { opacity: 0.07; } to { opacity: 0.14; } }
+
+        /* Card */
+        .container {
+            position: relative;
+            z-index: 1;
+            background: rgba(6, 14, 26, 0.85);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 480px;
+            backdrop-filter: blur(30px);
+            box-shadow:
+                0 0 0 1px rgba(0,255,204,0.06),
+                0 25px 60px rgba(0,0,0,0.6),
+                0 0 80px rgba(0,255,204,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+            animation: floatCard 6s ease-in-out infinite;
             transform-style: preserve-3d;
-            backdrop-filter: blur(10px);
         }
 
-        h2 { 
-            color: #2d3436; 
-            text-align: center; 
-            margin-top: 0;
-            font-size: 1.8rem;
+        @keyframes floatCard {
+            0%   { transform: translateY(0px) rotateX(1deg) rotateY(-1deg); }
+            50%  { transform: translateY(-12px) rotateX(-1deg) rotateY(1deg); }
+            100% { transform: translateY(0px) rotateX(1deg) rotateY(-1deg); }
+        }
+
+        /* Top glow line */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 15%; right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon), transparent);
+            box-shadow: 0 0 20px var(--neon);
+        }
+
+        /* Header area */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .logo-mark {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(0,255,204,0.15), rgba(0,170,255,0.1));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 0 20px rgba(0,255,204,0.1);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--neon);
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(0,255,204,0.4);
+            text-align: center;
+            flex: 1;
+        }
+
+        /* Upload section */
+        .upload-section {
+            background: rgba(0,255,204,0.02);
+            border: 1px solid rgba(0,255,204,0.1);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .section { 
-            padding: 20px; 
-            border-radius: 15px; 
-            background: #ffffff; 
-            display: flex; 
-            flex-direction: column;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-        }
-
-        .section:hover {
-            transform: translateZ(20px);
-        }
-
-        h3 { 
-            margin-top: 0; 
-            font-size: 1.1rem; 
-            color: var(--secondary); 
-            border-left: 4px solid var(--secondary);
+            color: var(--neon2);
+            border-left: 3px solid var(--neon2);
             padding-left: 10px;
+            margin-bottom: 16px;
+            text-shadow: 0 0 10px rgba(0,170,255,0.3);
         }
 
-        label { 
-            display: block; 
-            margin-top: 15px; 
-            font-weight: bold; 
-            font-size: 0.85rem; 
-            color: #636e72;
+        .file-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
         }
 
-        input[type="file"] { 
-            width: 100%; 
-            margin-top: 8px; 
-            padding: 10px;
-            border: 2px dashed #dfe6e9;
-            border-radius: 8px;
-            background: #f9f9f9;
-            box-sizing: border-box;
+        input[type="file"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(0,255,204,0.25);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.3s;
         }
 
-        /* 3D Button Style */
-        button { 
-            width: 100%; 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            padding: 15px; 
-            margin-top: 25px; 
-            cursor: pointer; 
-            border-radius: 10px; 
-            font-weight: bold; 
-            font-size: 1rem;
-            transition: all 0.2s; 
-            box-shadow: 0 5px 0 #009473;
+        input[type="file"]:hover {
+            border-color: var(--neon);
+            background: rgba(0,255,204,0.04);
+        }
+
+        /* Drag drop preview */
+        .preview-box {
+            margin-top: 16px;
+            border: 1px dashed rgba(0,255,204,0.15);
+            border-radius: 10px;
+            height: 80px;
+            background: rgba(0,255,204,0.015);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        /* Main action button */
+        .action-btn {
+            width: 100%;
+            padding: 17px;
+            background: linear-gradient(135deg, var(--neon) 0%, var(--neon2) 100%);
+            border: none;
+            border-radius: 12px;
+            color: #060e1a;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            cursor: pointer;
+            margin-top: 24px;
+            box-shadow:
+                0 6px 0 rgba(0,140,110,0.6),
+                0 12px 35px rgba(0,255,204,0.3);
+            transition: all 0.2s;
             position: relative;
             top: 0;
         }
 
-        button:hover { 
-            background: #00c9a1; 
-            top: -2px;
-            box-shadow: 0 7px 0 #009473;
+        .action-btn:hover {
+            top: -3px;
+            box-shadow: 0 9px 0 rgba(0,140,110,0.6), 0 18px 45px rgba(0,255,204,0.5);
+            filter: brightness(1.05);
         }
 
-        button:active { 
-            top: 4px;
-            box-shadow: 0 1px 0 #009473;
+        .action-btn:active {
+            top: 5px;
+            box-shadow: 0 1px 0 rgba(0,140,110,0.6);
         }
 
-        .logout-btn {
-            background: var(--danger);
-            box-shadow: 0 4px 0 #c0392b;
-            padding: 8px 20px;
-            width: auto;
-            margin: 0;
+        /* Scan line effect on hover */
+        .action-btn::after {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: 0; right: 0;
+            height: 100%;
+            background: linear-gradient(transparent, rgba(255,255,255,0.15), transparent);
+            transform: skewY(-5deg);
+            transition: top 0.4s ease;
         }
+        .action-btn:hover::after { top: 100%; }
 
-        .logout-btn:hover {
-            background: #ff5e57;
-            box-shadow: 0 5px 0 #c0392b;
-        }
-
-        #status { 
-            margin-top: 25px; 
-            text-align: center; 
-            font-weight: bold; 
-            font-size: 0.9rem; 
-            color: var(--accent);
-            padding: 10px;
-            background: rgba(108, 92, 231, 0.1);
-            border-radius: 8px;
-        }
-
-        .support { 
-            display: inline-block; 
-            text-align: center; 
-            margin-top: 20px; 
-            color: #fff; 
-            text-decoration: none; 
-            font-weight: bold; 
-            background: rgba(0,0,0,0.2);
-            padding: 10px 20px;
-            border-radius: 30px;
-            transition: 0.3s;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .support:hover {
-            background: rgba(0,0,0,0.4);
-            transform: scale(1.05);
-        }
-
-        .preview-box { 
-            margin-top: 15px; 
-            border: 2px solid #eee; 
-            height: 80px; 
+        /* Status */
+        .status-bar {
+            margin-top: 20px;
+            padding: 12px 18px;
+            background: rgba(0,255,204,0.04);
+            border: 1px solid rgba(0,255,204,0.12);
             border-radius: 10px;
-            background: #f1f2f6; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 0.8rem; 
-            color: #a4b0be; 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            color: var(--neon);
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0,255,204,0.3);
+        }
+
+        /* Support */
+        .support {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 16px;
+            padding: 12px 20px;
+            background: rgba(37,211,102,0.06);
+            border: 1px solid rgba(37,211,102,0.18);
+            border-radius: 10px;
+            color: #25D366;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        .support:hover {
+            background: rgba(37,211,102,0.12);
+            border-color: #25D366;
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
 
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+
 <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">RC PDF</h2>
 
+    <div class="header-row">
+        <div class="logo-mark">📄</div>
+        <h2>RC PDF</h2>
+        <div style="width:50px;"></div>
     </div>
 
-    <div class="section">
-        <h3>SOURCE UPLOAD</h3>
-        <label>Select PDF to Process</label>
+    <div class="upload-section">
+        <div class="section-title">Source Upload</div>
+
+        <label class="file-label">Select PDF to Process</label>
         <input type="file" id="srcFile" accept=".pdf">
-        
+
         <div class="preview-box" id="previewContainer">
-            Ready to merge with background.pdf
+            <span>🛡️</span>
+            <span>Ready to merge with background.pdf</span>
         </div>
-        
-        <button onclick="mergePDFs()">RC PDF & DOWNLOAD</button>
+
+        <button class="action-btn" onclick="mergePDFs()">⚡ RC PDF & DOWNLOAD</button>
     </div>
 
-    <div id="status">System Ready</div>
+    <div class="status-bar" id="status">◉ SYSTEM READY</div>
     <a href="https://wa.me/917094041818" target="_blank" class="support">💬 SMCSC SUPPORT</a>
+
 </div>
 
 <script>
     let timeout;
-
-    function logout() {
-        window.location.href = "index.html";
-    }
-
-    function resetTimer() {
-        clearTimeout(timeout);
-        timeout = setTimeout(logout, 600000); 
-    }
-
+    function logout() { window.location.href = "index.html"; }
+    function resetTimer() { clearTimeout(timeout); timeout = setTimeout(logout, 600000); }
     window.onload = resetTimer;
     document.onmousemove = resetTimer;
     document.onkeypress = resetTimer;
@@ -230,28 +323,23 @@
     async function mergePDFs() {
         const srcInput = document.getElementById('srcFile').files[0];
         const status = document.getElementById('status');
-        const fixedBgUrl = 'Rcb.pdf'; 
+        const fixedBgUrl = 'Rcb.pdf';
 
-        if (!srcInput) {
-            alert("Please select a source file!");
-            return;
-        }
+        if (!srcInput) { alert("Please select a source file!"); return; }
 
         try {
-            status.innerText = "Processing layers...";
-            
+            status.innerText = "⚡ PROCESSING LAYERS...";
+
             const srcBytes = await srcInput.arrayBuffer();
             const srcDoc = await PDFDocument.load(srcBytes);
 
-            const bgResponse = await fetch(fixedBgUrl, { cache: "no-store" }).catch(err => {
+            const bgResponse = await fetch(fixedBgUrl, { cache: "no-store" }).catch(() => {
                 throw new Error("Unable to access background.pdf");
             });
-
             if (!bgResponse.ok) throw new Error("Background.pdf not found.");
-            
+
             const bgBytes = await bgResponse.arrayBuffer();
             const dstDoc = await PDFDocument.load(bgBytes);
-
             const embeddedPages = await dstDoc.embedPdf(srcDoc);
             const dstPages = dstDoc.getPages();
 
@@ -262,23 +350,19 @@
             });
 
             const pdfBytes = await dstDoc.save();
-            
             const blob = new Blob([pdfBytes], { type: "application/pdf" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = "SM_CSC_" + srcInput.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
-            status.innerText = "Success! File Downloaded.";
+
+            status.innerText = "✓ SUCCESS! FILE DOWNLOADED.";
         } catch (err) {
-            status.innerText = "Error: " + err.message;
+            status.innerText = "✕ ERROR: " + err.message;
         }
     }
 </script>
-
 </body>
 </html>
