@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMCSC - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon: #00ffcc;
+            --neon2: #00aaff;
+            --danger: #ff4757;
+            --warn: #ffd32a;
+            --glass: rgba(255,255,255,0.07);
+            --border: rgba(0,255,204,0.25);
+            --bg: #050d1a;
+            --card: rgba(0,255,204,0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            font-family: 'Rajdhani', sans-serif;
+            color: white;
+        }
+
+        /* Backgrounds */
+        .grid-bg {
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,204,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,204,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        /* ─── LOGIN SCREEN ─── */
+        #adminLoginScreen {
+            position: fixed; inset: 0;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; background: var(--bg);
+        }
+
+        .login-card {
+            background: linear-gradient(135deg, rgba(0,255,204,0.08), rgba(0,170,255,0.05));
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 45px 40px;
+            width: 360px;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(0,255,204,0.06);
+            animation: cardEntry 0.7s cubic-bezier(0.23,1,0.32,1) both;
+        }
+
+        @keyframes cardEntry {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .admin-shield {
+            font-size: 50px;
+            margin-bottom: 18px;
+            filter: drop-shadow(0 0 20px rgba(0,255,204,0.4));
+        }
+
+        .login-card h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(0,255,204,0.5);
+        }
+
+        .login-card .sub {
+            color: rgba(255,255,255,0.35);
+            font-size: 0.72rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        .inp-wrap {
+            position: relative;
+            margin-bottom: 13px;
+        }
+
+        .inp-wrap input {
+            width: 100%;
+            padding: 13px 16px 13px 42px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0,255,204,0.15);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .inp-wrap input:focus {
+            border-color: var(--neon);
+            background: rgba(0,255,204,0.05);
+            box-shadow: 0 0 15px rgba(0,255,204,0.1);
+        }
+
+        .inp-wrap input::placeholder { color: rgba(255,255,255,0.3); }
+
+        .inp-ico {
+            position: absolute; left: 13px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 15px; opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .toggle-pw {
+            position: absolute; right: 12px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            color: rgba(255,255,255,0.35);
+            cursor: pointer; font-size: 14px;
+            transition: 0.2s;
+        }
+        .toggle-pw:hover { color: var(--neon); }
+
+        .login-btn-admin {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, var(--neon), var(--neon2));
+            border: none; border-radius: 10px;
+            color: #050d1a;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.78rem; font-weight: 900;
+            letter-spacing: 2px;
+            cursor: pointer; margin-top: 6px;
+            box-shadow: 0 5px 25px rgba(0,255,204,0.3);
+            transition: 0.2s;
+        }
+        .login-btn-admin:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,255,204,0.5); }
+
+        #loginErr {
+            margin-top: 12px;
+            min-height: 20px;
+            color: var(--danger);
+            font-size: 0.88rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* ─── DASHBOARD ─── */
+        #adminDashboard { display: none; }
+
+        /* Topbar */
+        .topbar {
+            background: rgba(0,10,25,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .topbar-logo {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            font-size: 1rem;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px rgba(0,255,204,0.4);
+        }
+        .topbar-sub { color: rgba(255,255,255,0.35); font-size: 0.75rem; letter-spacing: 2px; }
+        .admin-badge {
+            background: rgba(0,255,204,0.12);
+            border: 1px solid rgba(0,255,204,0.3);
+            color: var(--neon);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .pending-notify {
+            background: rgba(255,211,42,0.15);
+            border: 1px solid rgba(255,211,42,0.4);
+            color: #ffd32a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            animation: pulse-warn 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-warn {
+            0%,100% { box-shadow: 0 0 0 rgba(255,211,42,0.3); }
+            50% { box-shadow: 0 0 14px rgba(255,211,42,0.5); }
+        }
+
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .logout-btn {
+            padding: 8px 18px;
+            background: rgba(255,71,87,0.12);
+            border: 1px solid rgba(255,71,87,0.3);
+            border-radius: 8px;
+            color: var(--danger);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .logout-btn:hover { background: rgba(255,71,87,0.22); }
+
+        /* Stats */
+        .content { padding: 28px; max-width: 1100px; margin: 0 auto; }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 18px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,255,204,0.1); }
+        .stat-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--neon);
+            text-shadow: 0 0 20px rgba(0,255,204,0.4);
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* Section header */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 7px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0,255,204,0.15);
+            border-radius: 20px;
+            color: rgba(255,255,255,0.5);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: rgba(0,255,204,0.12);
+            border-color: var(--neon);
+            color: var(--neon);
+        }
+
+        /* Search */
+        .search-bar {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 11px 16px 11px 40px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(0,255,204,0.15);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .search-bar input:focus { border-color: var(--neon); background: rgba(0,255,204,0.03); }
+        .search-bar input::placeholder { color: rgba(255,255,255,0.25); }
+        .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 14px; opacity: 0.4; pointer-events: none; }
+
+        /* User table */
+        .user-table { width: 100%; border-collapse: collapse; }
+        .user-table thead tr {
+            background: rgba(0,255,204,0.06);
+            border-bottom: 1px solid var(--border);
+        }
+        .user-table th {
+            padding: 12px 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.68rem;
+            letter-spacing: 2px;
+            color: rgba(0,255,204,0.7);
+            text-align: left;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .user-table tbody tr {
+            border-bottom: 1px solid rgba(0,255,204,0.06);
+            transition: 0.2s;
+        }
+        .user-table tbody tr:hover { background: rgba(0,255,204,0.04); }
+        .user-table td {
+            padding: 13px 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        /* Status badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .badge-active { background: rgba(0,255,204,0.12); border: 1px solid rgba(0,255,204,0.3); color: var(--neon); }
+        .badge-pending { background: rgba(255,211,42,0.12); border: 1px solid rgba(255,211,42,0.35); color: var(--warn); }
+        .badge-inactive { background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.3); color: var(--danger); }
+
+        /* Action buttons */
+        .action-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 7px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn-activate { background: rgba(0,255,204,0.15); color: var(--neon); border: 1px solid rgba(0,255,204,0.3); }
+        .btn-activate:hover { background: rgba(0,255,204,0.28); }
+        .btn-deactivate { background: rgba(255,71,87,0.12); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); }
+        .btn-deactivate:hover { background: rgba(255,71,87,0.25); }
+        .btn-reset { background: rgba(0,170,255,0.12); color: var(--neon2); border: 1px solid rgba(0,170,255,0.3); }
+        .btn-reset:hover { background: rgba(0,170,255,0.25); }
+        .btn-delete { background: rgba(255,71,87,0.08); color: #ff8c96; border: 1px solid rgba(255,71,87,0.2); }
+        .btn-delete:hover { background: rgba(255,71,87,0.2); }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: rgba(255,255,255,0.25);
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+        }
+        .empty-state .big { font-size: 3rem; margin-bottom: 12px; }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 30px; left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: rgba(0,255,204,0.12);
+            border: 1px solid var(--border);
+            color: var(--neon);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            backdrop-filter: blur(20px);
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), opacity 0.4s;
+            opacity: 0;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #toast.toast-err { background: rgba(255,71,87,0.12); border-color: rgba(255,71,87,0.3); color: var(--danger); }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,5,15,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 500;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: linear-gradient(135deg, rgba(0,255,204,0.08), rgba(0,170,255,0.05));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 36px 32px;
+            width: 380px;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+            animation: cardEntry 0.4s ease both;
+        }
+        .modal-box h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        .modal-box p {
+            color: rgba(255,255,255,0.55);
+            font-size: 0.9rem;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+        .modal-box .inp-wrap { margin-bottom: 14px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+        .modal-btn {
+            flex: 1;
+            padding: 11px;
+            border: none;
+            border-radius: 9px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .modal-btn.confirm { background: linear-gradient(135deg, var(--neon), var(--neon2)); color: #050d1a; }
+        .modal-btn.cancel { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); }
+        .modal-btn:hover { transform: translateY(-1px); }
+
+        /* Change admin password section */
+        .change-pw-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px 22px;
+            margin-top: 28px;
+        }
+
+        .table-wrap {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            overflow-x: auto;
+        }
+
+        /* Role colors */
+        .role-staff   { color: #a29bfe; }
+        .role-operator { color: var(--neon2); }
+        .role-viewer  { color: #fdcb6e; }
+        .role-guest   { color: rgba(255,255,255,0.5); }
+
+        @media (max-width: 600px) {
+            .content { padding: 16px; }
+            .topbar { padding: 12px 16px; }
+            .topbar-logo { font-size: 0.82rem; }
+            .user-table th:nth-child(4),
+            .user-table td:nth-child(4) { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- ══════════════ ADMIN LOGIN SCREEN ══════════════ -->
+<div id="adminLoginScreen">
+    <div class="login-card">
+        <div class="admin-shield">🛡️</div>
+        <h2>ADMIN PANEL</h2>
+        <div class="sub">SMCSC · Secure Management</div>
+
+        <form id="adminLoginForm">
+            <div class="inp-wrap">
+                <span class="inp-ico">👤</span>
+                <input type="text" id="adm_user" placeholder="Admin பயனர் பெயர்" required autocomplete="off">
+            </div>
+            <div class="inp-wrap">
+                <span class="inp-ico">🔑</span>
+                <input type="password" id="adm_pass" placeholder="Admin கடவுச்சொல்" required autocomplete="off">
+                <button type="button" class="toggle-pw" onclick="togglePw('adm_pass', this)">👁</button>
+            </div>
+            <button type="submit" class="login-btn-admin">🔐 ADMIN LOGIN</button>
+        </form>
+
+        <p id="loginErr"></p>
+    </div>
+</div>
+
+<!-- ══════════════ ADMIN DASHBOARD ══════════════ -->
+<div id="adminDashboard">
+    <div class="topbar">
+        <div class="topbar-left">
+            <div>
+                <div class="topbar-logo">⚙ ADMIN PANEL</div>
+                <div class="topbar-sub">SMCSC · RC PDF Portal</div>
+            </div>
+            <span class="admin-badge" id="loggedInAs">Admin</span>
+            <span class="pending-notify" id="pendingBadge" style="display:none;">⏳ <span id="pendingCount">0</span> புதிய கோரிக்கை</span>
+        </div>
+        <div class="topbar-right">
+            <span style="color:rgba(255,255,255,0.35);font-size:.8rem;letter-spacing:1px;" id="currentTime"></span>
+            <button class="logout-btn" onclick="adminLogout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-num" id="statTotal">0</div>
+                <div class="stat-label">மொத்த கணக்குகள்</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" id="statActive" style="color:#00ffcc;">0</div>
+                <div class="stat-label">செயலில் உள்ளவை</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" id="statPending" style="color:#ffd32a;">0</div>
+                <div class="stat-label">அனுமதி காத்திருக்கும்</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" id="statInactive" style="color:#ff4757;">0</div>
+                <div class="stat-label">செயலற்றவை</div>
+            </div>
+        </div>
+
+        <!-- User List -->
+        <div class="section-header">
+            <div class="section-title">👥 பயனர் மேலாண்மை</div>
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="filterUsers('all', this)">அனைத்தும்</button>
+                <button class="filter-btn" onclick="filterUsers('pending', this)">⏳ காத்திருக்கும்</button>
+                <button class="filter-btn" onclick="filterUsers('active', this)">✅ செயலில்</button>
+                <button class="filter-btn" onclick="filterUsers('inactive', this)">❌ செயலற்ற</button>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="பயனர் பெயர், பெயர், கைபேசி தேடு..." oninput="renderTable()">
+        </div>
+
+        <div class="table-wrap">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>பயனர் பெயர்</th>
+                        <th>முழு பெயர்</th>
+                        <th>கைபேசி</th>
+                        <th>பணி</th>
+                        <th>நிலை</th>
+                        <th>தேதி</th>
+                        <th>செயல்</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Change Admin Password -->
+        <div class="change-pw-card">
+            <div class="section-title" style="margin-bottom:18px;">🔒 Admin கடவுச்சொல் மாற்று</div>
+            <form id="changePwForm" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;">
+                <div class="inp-wrap">
+                    <span class="inp-ico">🔑</span>
+                    <input type="password" id="cp_current" placeholder="தற்போதைய கடவுச்சொல்" required>
+                    <button type="button" class="toggle-pw" onclick="togglePw('cp_current', this)">👁</button>
+                </div>
+                <div class="inp-wrap">
+                    <span class="inp-ico">🔑</span>
+                    <input type="password" id="cp_new" placeholder="புதிய கடவுச்சொல்" required>
+                </div>
+                <div class="inp-wrap">
+                    <span class="inp-ico">🔁</span>
+                    <input type="password" id="cp_confirm" placeholder="உறுதி கடவுச்சொல்" required>
+                </div>
+                <button type="submit" class="btn-sm btn-activate" style="height:44px;font-size:.85rem;padding:0 16px;">கடவுச்சொல் மாற்று</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="resetModal">
+    <div class="modal-box">
+        <h3>🔑 கடவுச்சொல் மீட்டமை</h3>
+        <p id="resetModalUser"></p>
+        <div class="inp-wrap">
+            <span class="inp-ico">🔑</span>
+            <input type="text" id="modal_newpw" placeholder="புதிய கடவுச்சொல்" autocomplete="off">
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeModal()">ரத்து</button>
+            <button class="modal-btn confirm" onclick="confirmReset()">மாற்று</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h3 style="color:var(--danger);">⚠️ உறுதிப்படுத்தவும்</h3>
+        <p id="deleteModalUser"></p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeModal()">ரத்து</button>
+            <button class="modal-btn confirm" style="background:linear-gradient(135deg,#ff4757,#c0392b);" onclick="confirmDelete()">நீக்கு</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+    // ─── ADMIN CREDENTIALS ───
+    const ADMIN_CRED_KEY = 'smcsc_admin_creds';
+    const DEFAULT_ADMIN = { username: 'smcsc_admin', password: 'Admin@SMCSC1' };
+
+    function getAdminCred() {
+        try {
+            const stored = JSON.parse(localStorage.getItem(ADMIN_CRED_KEY));
+            return stored || DEFAULT_ADMIN;
+        } catch(e) { return DEFAULT_ADMIN; }
+    }
+
+    function saveAdminCred(cred) {
+        localStorage.setItem(ADMIN_CRED_KEY, JSON.stringify(cred));
+    }
+
+    // ─── USER DATA ───
+    const STORAGE_KEY = 'smcsc_accounts';
+
+    function getAccounts() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+        catch(e) { return []; }
+    }
+
+    function saveAccounts(arr) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    // ─── STATE ───
+    let currentFilter = 'all';
+    let modalTarget = null;
+    let adminSession = false;
+
+    // ─── HELPERS ───
+    function togglePw(inputId, btn) {
+        const inp = document.getElementById(inputId);
+        if (inp.type === 'password') { inp.type = 'text'; btn.innerText = '🙈'; }
+        else { inp.type = 'password'; btn.innerText = '👁'; }
+    }
+
+    function toast(msg, isErr = false) {
+        const t = document.getElementById('toast');
+        t.className = isErr ? 'toast-err' : '';
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function closeModal() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+        modalTarget = null;
+    }
+
+    // ─── ADMIN LOGIN ───
+    document.getElementById('adminLoginForm').onsubmit = (e) => {
+        e.preventDefault();
+        const u = document.getElementById('adm_user').value.trim();
+        const p = document.getElementById('adm_pass').value;
+        const cred = getAdminCred();
+
+        if (u === cred.username && p === cred.password) {
+            adminSession = true;
+            document.getElementById('adminLoginScreen').style.display = 'none';
+            document.getElementById('adminDashboard').style.display = 'block';
+            document.getElementById('loggedInAs').innerText = '🛡 ' + u;
+            refreshStats();
+            renderTable();
+            updateClock();
+            setInterval(updateClock, 1000);
+            startAutoRefresh();
+        } else {
+            const err = document.getElementById('loginErr');
+            err.style.color = '#ff4757';
+            err.innerText = '❌ தவறான Admin விவரங்கள்.';
+            setTimeout(() => err.innerText = '', 3000);
+        }
+    };
+
+    function adminLogout() {
+        adminSession = false;
+        document.getElementById('adminDashboard').style.display = 'none';
+        document.getElementById('adminLoginScreen').style.display = 'flex';
+        document.getElementById('adm_pass').value = '';
+        document.getElementById('loginErr').innerText = '';
+    }
+
+    function updateClock() {
+        document.getElementById('currentTime').innerText =
+            new Date().toLocaleTimeString('ta-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    // ─── STATS ───
+    function refreshStats() {
+        const acc = getAccounts();
+        document.getElementById('statTotal').innerText   = acc.length;
+        document.getElementById('statActive').innerText  = acc.filter(a => a.active).length;
+        const pendingCount = acc.filter(a => !a.active && !a.rejected).length;
+        document.getElementById('statPending').innerText = pendingCount;
+        document.getElementById('statInactive').innerText = acc.filter(a => a.rejected).length;
+
+        // Pending badge in topbar
+        const badge = document.getElementById('pendingBadge');
+        const countEl = document.getElementById('pendingCount');
+        if (pendingCount > 0) {
+            countEl.innerText = pendingCount;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // Auto-refresh every 10 seconds so new registrations always appear
+    function startAutoRefresh() {
+        setInterval(() => {
+            refreshStats();
+            renderTable();
+        }, 10000);
+    }
+
+    // ─── FILTER ───
+    function filterUsers(type, btn) {
+        currentFilter = type;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTable();
+    }
+
+    // ─── RENDER TABLE ───
+    function renderTable() {
+        const accounts = getAccounts();
+        const search = document.getElementById('searchInput').value.toLowerCase();
+
+        let filtered = accounts.filter(a => {
+            const matchSearch =
+                a.username.toLowerCase().includes(search) ||
+                (a.fullname || '').toLowerCase().includes(search) ||
+                (a.mobile || '').includes(search);
+
+            if (!matchSearch) return false;
+            if (currentFilter === 'active')   return a.active && !a.rejected;
+            if (currentFilter === 'pending')  return !a.active && !a.rejected;
+            if (currentFilter === 'inactive') return a.rejected;
+            return true;
+        });
+
+        const tbody = document.getElementById('userTableBody');
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8">
+                <div class="empty-state">
+                    <div class="big">📭</div>
+                    பயனர்கள் இல்லை
+                </div>
+            </td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map((a, i) => {
+            let statusBadge, actionBtns;
+
+            if (a.active) {
+                statusBadge = `<span class="badge badge-active">✅ செயலில்</span>`;
+                actionBtns = `
+                    <div class="action-row">
+                        <button class="btn-sm btn-deactivate" onclick="deactivate(${a.id})">❌ முடக்கு</button>
+                        <button class="btn-sm btn-reset" onclick="openReset(${a.id})">🔑 Reset</button>
+                        <button class="btn-sm btn-delete" onclick="openDelete(${a.id})">🗑</button>
+                    </div>`;
+            } else if (!a.rejected) {
+                statusBadge = `<span class="badge badge-pending">⏳ காத்திருக்கும்</span>`;
+                actionBtns = `
+                    <div class="action-row">
+                        <button class="btn-sm btn-activate" onclick="activate(${a.id})">✅ அனுமதி</button>
+                        <button class="btn-sm btn-delete" onclick="openDelete(${a.id})">🗑</button>
+                    </div>`;
+            } else {
+                statusBadge = `<span class="badge badge-inactive">🚫 நிராகரிக்கப்பட்டது</span>`;
+                actionBtns = `
+                    <div class="action-row">
+                        <button class="btn-sm btn-activate" onclick="activate(${a.id})">↩ மீட்டமை</button>
+                        <button class="btn-sm btn-delete" onclick="openDelete(${a.id})">🗑</button>
+                    </div>`;
+            }
+
+            const roleClass = 'role-' + (a.role || '').toLowerCase();
+            const date = a.createdAt ? new Date(a.createdAt).toLocaleDateString('ta-IN') : '-';
+
+            return `<tr>
+                <td style="color:rgba(255,255,255,0.3);font-size:.8rem;">${i + 1}</td>
+                <td style="color:var(--neon);font-weight:700;">${a.username}</td>
+                <td>${a.fullname || '-'}</td>
+                <td style="color:rgba(255,255,255,0.6);">📱 ${a.mobile || '-'}</td>
+                <td class="${roleClass}">${a.role || '-'}</td>
+                <td>${statusBadge}</td>
+                <td style="color:rgba(255,255,255,0.4);font-size:.8rem;">${date}</td>
+                <td>${actionBtns}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ─── ACTIVATE ───
+    function activate(id) {
+        const acc = getAccounts();
+        const idx = acc.findIndex(a => a.id === id);
+        if (idx === -1) return;
+        acc[idx].active = true;
+        acc[idx].rejected = false;
+        saveAccounts(acc);
+        toast('✅ ' + acc[idx].username + ' — கணக்கு செயல்படுத்தப்பட்டது!');
+        refreshStats(); renderTable();
+    }
+
+    // ─── DEACTIVATE ───
+    function deactivate(id) {
+        const acc = getAccounts();
+        const idx = acc.findIndex(a => a.id === id);
+        if (idx === -1) return;
+        acc[idx].active = false;
+        acc[idx].rejected = true;
+        saveAccounts(acc);
+        toast('❌ ' + acc[idx].username + ' — முடக்கப்பட்டது.', true);
+        refreshStats(); renderTable();
+    }
+
+    // ─── RESET PW MODAL ───
+    function openReset(id) {
+        modalTarget = { type: 'reset', id };
+        const acc = getAccounts().find(a => a.id === id);
+        document.getElementById('resetModalUser').innerText =
+            `"${acc.username}" (${acc.fullname || ''}) — புதிய கடவுச்சொல் உள்ளிடவும்.`;
+        document.getElementById('modal_newpw').value = '';
+        document.getElementById('resetModal').classList.add('open');
+    }
+
+    function confirmReset() {
+        const pw = document.getElementById('modal_newpw').value.trim();
+        if (pw.length < 4) { toast('குறைந்தது 4 எழுத்துக்கள் வேண்டும்.', true); return; }
+        const acc = getAccounts();
+        const idx = acc.findIndex(a => a.id === modalTarget.id);
+        if (idx !== -1) {
+            acc[idx].password = pw;
+            saveAccounts(acc);
+            toast('🔑 கடவுச்சொல் மாற்றப்பட்டது!');
+        }
+        closeModal(); renderTable();
+    }
+
+    // ─── DELETE MODAL ───
+    function openDelete(id) {
+        modalTarget = { type: 'delete', id };
+        const acc = getAccounts().find(a => a.id === id);
+        document.getElementById('deleteModalUser').innerText =
+            `"${acc.username}" (${acc.fullname || ''}) — இந்த கணக்கை நிரந்தரமாக நீக்கவா?`;
+        document.getElementById('deleteModal').classList.add('open');
+    }
+
+    function confirmDelete() {
+        let acc = getAccounts();
+        acc = acc.filter(a => a.id !== modalTarget.id);
+        saveAccounts(acc);
+        toast('🗑 கணக்கு நீக்கப்பட்டது.');
+        closeModal(); refreshStats(); renderTable();
+    }
+
+    // ─── CHANGE ADMIN PASSWORD ───
+    document.getElementById('changePwForm').onsubmit = (e) => {
+        e.preventDefault();
+        const current = document.getElementById('cp_current').value;
+        const newpw   = document.getElementById('cp_new').value;
+        const confirm = document.getElementById('cp_confirm').value;
+        const cred = getAdminCred();
+
+        if (current !== cred.password) { toast('தற்போதைய கடவுச்சொல் தவறானது.', true); return; }
+        if (newpw.length < 6) { toast('புதிய கடவுச்சொல் குறைந்தது 6 எழுத்துக்கள் வேண்டும்.', true); return; }
+        if (newpw !== confirm) { toast('கடவுச்சொல்கள் பொருந்தவில்லை.', true); return; }
+
+        saveAdminCred({ username: cred.username, password: newpw });
+        toast('✅ Admin கடவுச்சொல் வெற்றிகரமாக மாற்றப்பட்டது!');
+        document.getElementById('changePwForm').reset();
+    };
+
+    // Real-time update when user registers in another tab
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'smcsc_accounts' && adminSession) {
+            refreshStats();
+            renderTable();
+            const acc = getAccounts();
+            const pending = acc.filter(a => !a.active && !a.rejected).length;
+            if (pending > 0) toast('🔔 புதிய பதிவு கோரிக்கை வந்தது!');
+        }
+    });
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', (e) => { if (e.target === m) closeModal(); });
+    });
+</script>
+</body>
+</html>
