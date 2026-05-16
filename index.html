@@ -380,9 +380,9 @@
 
         <!-- TAB BAR -->
         <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('login')">🔐 உள்நுழை</button>
-            <button class="tab-btn" onclick="switchTab('register')">📝 பதிவு</button>
-            <button class="tab-btn" onclick="switchTab('reset')">🔄 மீட்டமை</button>
+            <button class="tab-btn active" onclick="switchTab('login')">🔐 LOGIN</button>
+            <button class="tab-btn" onclick="switchTab('register')">📝 REGISTER</button>
+            <button class="tab-btn" onclick="switchTab('reset')">🔄 PASSWORD RESET</button>
         </div>
 
         <!-- ===== LOGIN PANEL ===== -->
@@ -412,15 +412,15 @@
             <form id="registerForm">
                 <div class="input-group">
                     <span class="input-icon">👤</span>
-                    <input type="text" id="reg_username" placeholder="பயனர் பெயர் (Username)" required autocomplete="off" maxlength="30">
+                    <input type="text" id="reg_username" placeholder="Username" required autocomplete="off" maxlength="30">
                 </div>
                 <div class="input-group">
                     <span class="input-icon">📛</span>
-                    <input type="text" id="reg_fullname" placeholder="முழு பெயர் (Full Name)" required autocomplete="off" maxlength="60">
+                    <input type="text" id="reg_fullname" placeholder="Full Name" required autocomplete="off" maxlength="60">
                 </div>
                 <div class="input-group">
                     <span class="input-icon">📱</span>
-                    <input type="tel" id="reg_mobile" placeholder="கைபேசி எண் (Mobile)" required autocomplete="off" maxlength="10" pattern="[0-9]{10}">
+                    <input type="tel" id="reg_mobile" placeholder="Mobile" required autocomplete="off" maxlength="10" pattern="[0-9]{10}">
                 </div>
                 <div class="input-group">
                     <span class="input-icon">🏢</span>
@@ -442,7 +442,7 @@
                     <span class="input-icon">🔁</span>
                     <input type="password" id="reg_confirm" placeholder="கடவுச்சொல் உறுதி" required autocomplete="off">
                 </div>
-                <button type="submit" class="main-btn">கணக்கு உருவாக்கு</button>
+                <button type="submit" class="main-btn">ACCOUNT CREATE</button>
             </form>
             <p id="regMessage"></p>
         </div>
