@@ -453,11 +453,11 @@
 
             <label class="file-label">Server PDF File</label>
             <div class="preview-box" id="downloadPreview">
-                <span style="font-size:1.5rem;">pdf1.pdf</span>
+                <span style="font-size:1.5rem;">📁</span>
                 <span>PDF1 Ready to Download</span>
             </div>
 
-            <button class="action-btn" onclick="downloadPDF()">⬇️ DOWNLOAD PDF1</button>
+            <button class="action-btn" onclick="downloadPDF("")">⬇️ DOWNLOAD PDF1</button>
         </div>
     </div>
 
@@ -495,7 +495,7 @@
     document.onmousemove = resetTimer;
     document.onkeypress = resetTimer;
 
-    const { PDFDocument } = PDFLib;
+    const { PDFDocument } = pdf1.pdf;
 
     async function downloadPDF() {
         const status = document.getElementById('status');
