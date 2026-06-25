@@ -446,19 +446,6 @@
 
             <button class="action-btn" onclick="mergePDFs()">⚡ RC PDF & DOWNLOAD</button>
         </div>
-        
-        <div class="upload-card">
-            <div class="card-icon">⬇️</div>
-            <div class="card-title">DOWNLOAD PDF</div>
-
-            <label class="file-label">Server PDF File</label>
-            <div class="preview-box" id="downloadPreview">
-                <span style="font-size:1.5rem;">📁</span>
-                <span>PDF1 Ready to Download</span>
-            </div>
-
-            <button class="action-btn" onclick="downloadPDF(pdf1)">⬇️ DOWNLOAD PDF1</button>
-        </div>
     </div>
 
     <div class="status-bar" id="status">◉ SYSTEM READY</div>
@@ -496,39 +483,6 @@
     document.onkeypress = resetTimer;
 
     const { PDFDocument } = PDFLib;
-
-    async function downloadPDF() {
-        const status = document.getElementById('status');
-        const downloadPreview = document.getElementById('downloadPreview');
-        
-        try {
-            status.innerText = "⬇️ DOWNLOADING PDF1... PLEASE WAIT";
-            downloadPreview.innerHTML = '<span style="font-size:1.5rem;">⏳</span><span>Processing...</span>';
-            
-            const pdfUrl = 'pdf1'; // Server PDF file path
-            const response = await fetch(pdfUrl, { cache: "no-store" });
-            
-            if (!response.ok) {
-                throw new Error(`PDF not found. Status: ${response.status}`);
-            }
-            
-            const pdfBlob = await response.blob();
-            const url = URL.createObjectURL(pdfBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "pdf1";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            status.innerText = "✓ DOWNLOAD SUCCESSFUL!";
-            downloadPreview.innerHTML = '<span style="font-size:1.5rem;">✓</span><span>Download Complete</span>';
-        } catch (err) {
-            status.innerText = "✕ ERROR: " + err.message;
-            downloadPreview.innerHTML = '<span style="font-size:1.5rem;">✕</span><span>Download Failed</span>';
-        }
-    }
 
     async function mergePDFs() {
         const srcInput = document.getElementById('srcFile').files[0];
