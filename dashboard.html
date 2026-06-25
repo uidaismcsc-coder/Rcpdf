@@ -457,7 +457,7 @@
                 <span>PDF1 Ready to Download</span>
             </div>
 
-            <button class="action-btn" onclick="downloadPDF("")">⬇️ DOWNLOAD PDF1</button>
+            <button class="action-btn" onclick="downloadPDF(pdf1)">⬇️ DOWNLOAD PDF1</button>
         </div>
     </div>
 
@@ -495,7 +495,7 @@
     document.onmousemove = resetTimer;
     document.onkeypress = resetTimer;
 
-    const { PDFDocument } = 'pdf1.pdf';
+    const { PDFDocument } = PDFLib;
 
     async function downloadPDF() {
         const status = document.getElementById('status');
