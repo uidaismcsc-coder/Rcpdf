@@ -72,9 +72,8 @@
             padding-top: 25px;
         }
         
-        /* புகைப்படம் 1782611737273.png-ல் உள்ளவாறு துல்லியமான கார்டு அமைப்பு */
         .rc-card {
-            width: 856px; /* ஸ்டாண்டர்டு ஸ்மார்ட் கார்டு விகித அளவு */
+            width: 856px;
             height: 540px;
             background: #ffffff;
             border: 1px solid var(--border-color);
@@ -87,22 +86,21 @@
             letter-spacing: 0.2px;
         }
         
-        /* ஹெடர் அலைன்மென்ட் */
         .card-header-container {
             display: grid;
-            grid-template-columns: 65px 1fr 100px;
+            grid-template-columns: 65px 1fr 85px;
             align-items: center;
             margin-bottom: 5px;
         }
-        .emblem-placeholder {
+        .emblem-img {
             width: 55px;
             height: 65px;
-            border: 1px dashed #ccc;
-            font-size: 9px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            object-fit: contain;
+        }
+        .pudu-logo-img {
+            width: 85px;
+            height: 65px;
+            object-fit: contain;
         }
         .card-header-text {
             text-align: center;
@@ -126,25 +124,12 @@
             font-weight: bold;
             color: #000;
         }
-        .pudu-logo-placeholder {
-            width: 85px;
-            height: 65px;
-            border: 1px dashed #ccc;
-            font-size: 9px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
 
-        /* கார்டின் மெயின் பாடி பகுதி */
         .card-body {
             margin-top: 10px;
             position: relative;
         }
         
-        /* டாப் செக்ஷன் - Reg No, Reg Dt விபரங்கள் */
         .top-meta-section {
             display: grid;
             grid-template-columns: 1.1fr 1fr;
@@ -153,7 +138,6 @@
             margin-bottom: 12px;
         }
 
-        /* மிடில் செக்ஷன் - சிப் மற்றும் முகவரி பகுதி */
         .middle-identity-section {
             display: grid;
             grid-template-columns: 160px 1fr;
@@ -162,7 +146,6 @@
             min-height: 125px;
         }
         
-        /* அசல் தங்க நிற ஸ்மார்ட் சிப் */
         .chip {
             width: 105px;
             height: 85px;
@@ -173,7 +156,6 @@
             box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
         }
 
-        /* பாட்டம் செக்ஷன் - வாகன தொழில்நுட்ப விபரங்கள் மற்றும் கையொப்பம் */
         .bottom-technical-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -192,7 +174,6 @@
             column-gap: 10px;
         }
 
-        /* பொதுவான லேபிள் மற்றும் வேல்யூ கட்டமைப்பு */
         .fld {
             display: flex;
             font-size: 16.5px;
@@ -204,7 +185,6 @@
             display: inline-block;
         }
         
-        /* புகைப்படத்தில் உள்ளவாறு காலன்கள் (:) துல்லியமாக சீரமைக்க */
         .fld-meta .lbl { min-width: 110px; }
         .fld-identity .lbl { min-width: 90px; }
         .fld-col1 .lbl { min-width: 100px; }
@@ -224,14 +204,12 @@
             word-break: break-word;
         }
         
-        /* முகவரி கட்டம் */
         .address-block {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
 
-        /* கையொப்பம் இருக்கும் பகுதி */
         .sign-area {
             text-align: center;
             margin-top: auto;
@@ -380,19 +358,17 @@
     </form>
 
     <div class="preview-section">
-        <!-- பிரிண்ட் பிரிவியூ ஏரியா -->
         <div class="rc-card" id="rcCardPreview">
             <div class="card-header-container">
-                <div class="emblem-placeholder">Govt Emblem</div>
+                <img src="https://psds.org.in/goi.png" alt="Govt Emblem" class="emblem-img">
                 <div class="card-header-text">
                     <h1>CERTIFICATE OF REGISTRATION</h1>
                     <h1>Form 23 A</h1>
                 </div>
-                <div class="pudu-logo-placeholder">Pudu Logo<br>(Puducherry)</div>
+                <img src="logo.jpg" alt="Puducherry Logo" class="pudu-logo-img">
             </div>
 
             <div class="card-body">
-                <!-- மேல் பகுதி மெட்டா தரவுகள் -->
                 <div class="top-meta-section">
                     <div class="fld fld-meta"><span class="lbl">Reg No</span><span class="val" id="lbl_reg_no">-</span></div>
                     <div class="fld fld-meta"><span class="lbl">Reg Dt</span><span class="val" id="lbl_reg_date">-</span></div>
@@ -400,7 +376,6 @@
                     <div class="fld fld-meta"><span class="lbl">Valid Till</span><span class="val" id="lbl_valid_upto">-</span></div>
                 </div>
 
-                <!-- நடுப் பகுதி சிப் மற்றும் உரிமையாளர் அடையாளங்கள் -->
                 <div class="middle-identity-section">
                     <div class="chip"></div>
                     <div class="address-block">
@@ -411,7 +386,6 @@
                     </div>
                 </div>
 
-                <!-- கீழ் பகுதி தொழில்நுட்ப விபரங்கள் மற்றும் கையொப்பம் -->
                 <div class="bottom-technical-section">
                     <div class="tech-column">
                         <div class="fld fld-col1"><span class="lbl">Mfr Name</span><span class="val" id="lbl_mfr_name">-</span></div>
@@ -448,9 +422,8 @@
                             <div class="fld fld-col2"><span class="lbl">HP/Lease</span><span class="val" id="lbl_hp_lease">-</span></div>
                         </div>
 
-                        <!-- அசிஸ்டன்ட் ரெஜிஸ்டரிங் அத்தாரிட்டி கையொப்ப பகுதி -->
                         <div class="sign-area">
-                            <div class="signature-img">Siva</div>
+                            <div class="signature-img">mde</div>
                             <div class="sign-title">Signature of<br>Asst. Registering Authority</div>
                         </div>
                     </div>
@@ -474,7 +447,6 @@
             const labelEl = document.getElementById(`lbl_${id}`);
             if (inputEl && labelEl) {
                 if (id === 'address') {
-                    // முகவரியில் உள்ள \n குறியீடுகளை உடைத்து புது வரிகளாக மாற்றுதல் மற்றும் பின்கோடை பிரித்தல்
                     let rawAddress = inputEl.value;
                     let pinMatch = rawAddress.match(/(\d{6})/);
                     if (pinMatch) {
@@ -498,10 +470,8 @@
         }
     });
 
-    // இயல்புநிலை தொடக்கம்
     updatePreview();
 
-    // High Quality PDF டவுன்லோட் எஞ்சின்
     document.getElementById('rcForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -513,12 +483,12 @@
             filename:     `RC_${regNo}.pdf`,
             image:        { type: 'jpeg', quality: 1.0 },
             html2canvas:  { 
-                scale: 4, // 4 மடங்கு அதிக பிக்சல் அடர்த்தி (High Resolution)
+                scale: 4, 
                 useCORS: true, 
                 logging: false,
                 letterRendering: true
             },
-            jsPDF:        { unit: 'px', format: [856, 540], orientation: 'landscape' } // அசல் கார்டின் அளவிலேயே பிடிஎஃப் அமையும்
+            jsPDF:        { unit: 'px', format: [856, 540], orientation: 'landscape' }
         };
 
         html2pdf().set(opt).from(element).save();
