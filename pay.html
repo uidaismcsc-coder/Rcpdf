@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RC Smart Card Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --rc-blue: #00469b;
+            --rc-dark: #000000;
+            --border-color: #bcbcbc;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1250px;
+            width: 100%;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        .form-section {
+            flex: 1.2;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .form-section h2 {
+            grid-column: span 3;
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            color: var(--rc-blue);
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .input-group.full { grid-column: span 3; }
+        .input-group.span-2 { grid-column: span 2; }
+        label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        input {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 10px;
+        }
+        .preview-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 25px;
+        }
+        
+        /* புகைப்படம் 1782611737273.png-ல் உள்ளவாறு துல்லியமான கார்டு அமைப்பு */
+        .rc-card {
+            width: 856px; /* ஸ்டாண்டர்டு ஸ்மார்ட் கார்டு விகித அளவு */
+            height: 540px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            box-sizing: border-box;
+            padding: 15px 20px;
+            letter-spacing: 0.2px;
+        }
+        
+        /* ஹெடர் அலைன்மென்ட் */
+        .card-header-container {
+            display: grid;
+            grid-template-columns: 65px 1fr 100px;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .emblem-placeholder {
+            width: 55px;
+            height: 65px;
+            border: 1px dashed #ccc;
+            font-size: 9px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-header-text {
+            text-align: center;
+            width: 100%;
+        }
+        .card-header-text h1 {
+            background-color: var(--rc-blue);
+            color: white;
+            margin: 0 auto;
+            padding: 5px 15px;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: bold;
+            display: inline-block;
+            width: 82%;
+        }
+        .card-header-text p {
+            margin: 4px 0 0 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+        }
+        .pudu-logo-placeholder {
+            width: 85px;
+            height: 65px;
+            border: 1px dashed #ccc;
+            font-size: 9px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* கார்டின் மெயின் பாடி பகுதி */
+        .card-body {
+            margin-top: 10px;
+            position: relative;
+        }
+        
+        /* டாப் செக்ஷன் - Reg No, Reg Dt விபரங்கள் */
+        .top-meta-section {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            row-gap: 4px;
+            column-gap: 20px;
+            margin-bottom: 12px;
+        }
+
+        /* மிடில் செக்ஷன் - சிப் மற்றும் முகவரி பகுதி */
+        .middle-identity-section {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            min-height: 125px;
+        }
+        
+        /* அசல் தங்க நிற ஸ்மார்ட் சிப் */
+        .chip {
+            width: 105px;
+            height: 85px;
+            background: linear-gradient(135deg, #ebd087 0%, #b88d21 100%);
+            border-radius: 12px;
+            border: 1px solid #967012;
+            margin-top: 5px;
+            box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
+        }
+
+        /* பாட்டம் செக்ஷன் - வாகன தொழில்நுட்ப விபரங்கள் மற்றும் கையொப்பம் */
+        .bottom-technical-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 15px;
+        }
+        
+        .tech-column {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .tech-sub-row {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            column-gap: 10px;
+        }
+
+        /* பொதுவான லேபிள் மற்றும் வேல்யூ கட்டமைப்பு */
+        .fld {
+            display: flex;
+            font-size: 16.5px;
+            color: #000;
+            line-height: 1.25;
+        }
+        .fld .lbl {
+            font-weight: normal;
+            display: inline-block;
+        }
+        
+        /* புகைப்படத்தில் உள்ளவாறு காலன்கள் (:) துல்லியமாக சீரமைக்க */
+        .fld-meta .lbl { min-width: 110px; }
+        .fld-identity .lbl { min-width: 90px; }
+        .fld-col1 .lbl { min-width: 100px; }
+        .fld-col2 .lbl { min-width: 115px; }
+        .fld-sub .lbl { min-width: 115px; }
+
+        .fld .lbl::after {
+            content: " :";
+            float: right;
+            padding-right: 8px;
+        }
+        .fld .val {
+            font-weight: bold;
+            color: var(--rc-dark);
+            text-transform: uppercase;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        /* முகவரி கட்டம் */
+        .address-block {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        /* கையொப்பம் இருக்கும் பகுதி */
+        .sign-area {
+            text-align: center;
+            margin-top: auto;
+            align-self: flex-end;
+            padding-right: 15px;
+            padding-bottom: 5px;
+        }
+        .signature-img {
+            font-style: italic;
+            font-family: 'Georgia', serif;
+            font-size: 20px;
+            color: #000;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .sign-title {
+            font-size: 13.5px;
+            font-weight: normal;
+            color: #000;
+            line-height: 1.3;
+        }
+
+        .btn-submit {
+            grid-column: span 3;
+            padding: 12px;
+            background: var(--rc-blue);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-submit:hover { background: #002752; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <form class="form-section" id="rcForm">
+        <h2>Vehicle Registration Details (Full Fields)</h2>
+        
+        <div class="input-group">
+            <label>Reg No</label>
+            <input type="text" id="in_reg_no" value="PY01CW9056" required>
+        </div>
+        <div class="input-group">
+            <label>Reg Date (Reg Dt)</label>
+            <input type="text" id="in_reg_date" value="30/09/2020" required>
+        </div>
+        <div class="input-group">
+            <label>Form Type</label>
+            <input type="text" id="in_form_type" value="Form 23 A" required>
+        </div>
+        <div class="input-group">
+            <label>Tax Paid Upto</label>
+            <input type="text" id="in_tax_paid" value="One Time Tax" required>
+        </div>
+        <div class="input-group">
+            <label>Valid Till</label>
+            <input type="text" id="in_valid_upto" value="29/09/2035" required>
+        </div>
+        <div class="input-group">
+            <label>Mfg. Date</label>
+            <input type="text" id="in_mfg_date" value="08/2020" required>
+        </div>
+
+        <div class="input-group span-2">
+            <label>Owner Name</label>
+            <input type="text" id="in_owner_name" value="XXXXXXXXXXXXXXX" required>
+        </div>
+        <div class="input-group">
+            <label>S/W/D of</label>
+            <input type="text" id="in_swd_name" value="XXXXXXXXXX" required>
+        </div>
+        
+        <div class="input-group full">
+            <label>Address & Pincode</label>
+            <input type="text" id="in_address" value="XXXXXXXXXXXXX\nXXXXXXXXXXXXXXXXXXXX\nXXXXXXXXXXXXXXXXXXXX" required>
+        </div>
+
+        <div class="input-group">
+            <label>Mfr Name (Maker)</label>
+            <input type="text" id="in_mfr_name" value="HONDA" required>
+        </div>
+        <div class="input-group span-2">
+            <label>Chassis No</label>
+            <input type="text" id="in_chassis_no" value="ME4JF914HLG102109" required>
+        </div>
+        <div class="input-group">
+            <label>Colour</label>
+            <input type="text" id="in_colour" value="PEARL PRECIOUS WHITE" required>
+        </div>
+        <div class="input-group span-2">
+            <label>Engine No</label>
+            <input type="text" id="in_engine_no" value="JF91EG1101545" required>
+        </div>
+
+        <div class="input-group">
+            <label>Fuel Type</label>
+            <input type="text" id="in_fuel" value="PETROL" required>
+        </div>
+        <div class="input-group">
+            <label>Unladen Wt. (kg)</label>
+            <input type="text" id="in_unladen_wt" value="107" required>
+        </div>
+        <div class="input-group">
+            <label>HP/Lease</label>
+            <input type="text" id="in_hp_lease" value="">
+        </div>
+        <div class="input-group">
+            <label>Vehicle Class</label>
+            <input type="text" id="in_v_class" value="M-Cycl" required>
+        </div>
+        <div class="input-group">
+            <label>C.C.</label>
+            <input type="text" id="in_cc" value="109" required>
+        </div>
+        <div class="input-group">
+            <label>Wheel Base</label>
+            <input type="text" id="in_wheel_base" value="1260" required>
+        </div>
+        <div class="input-group">
+            <label>Body Type</label>
+            <input type="text" id="in_body_type" value="FULL B" required>
+        </div>
+        <div class="input-group">
+            <label>No. of Cyl</label>
+            <input type="text" id="in_no_cyl" value="1" required>
+        </div>
+        <div class="input-group">
+            <label>Owner Sl</label>
+            <input type="text" id="in_owner_sl" value="1" required>
+        </div>
+        <div class="input-group">
+            <label>Seat Cap</label>
+            <input type="text" id="in_seat_cap" value="2" required>
+        </div>
+        <div class="input-group">
+            <label>Stand Cap</label>
+            <input type="text" id="in_stand_cap" value="0" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Download Complete Smart Card PDF</button>
+    </form>
+
+    <div class="preview-section">
+        <!-- பிரிண்ட் பிரிவியூ ஏரியா -->
+        <div class="rc-card" id="rcCardPreview">
+            <div class="card-header-container">
+                <div class="emblem-placeholder">Govt Emblem</div>
+                <div class="card-header-text">
+                    <h1>CERTIFICATE OF REGISTRATION</h1>
+                    <h1>Form 23 A</h1>
+                </div>
+                <div class="pudu-logo-placeholder">Pudu Logo<br>(Puducherry)</div>
+            </div>
+
+            <div class="card-body">
+                <!-- மேல் பகுதி மெட்டா தரவுகள் -->
+                <div class="top-meta-section">
+                    <div class="fld fld-meta"><span class="lbl">Reg No</span><span class="val" id="lbl_reg_no">-</span></div>
+                    <div class="fld fld-meta"><span class="lbl">Reg Dt</span><span class="val" id="lbl_reg_date">-</span></div>
+                    <div class="fld fld-meta"><span class="lbl">Tax paid upto</span><span class="val" id="lbl_tax_paid">-</span></div>
+                    <div class="fld fld-meta"><span class="lbl">Valid Till</span><span class="val" id="lbl_valid_upto">-</span></div>
+                </div>
+
+                <!-- நடுப் பகுதி சிப் மற்றும் உரிமையாளர் அடையாளங்கள் -->
+                <div class="middle-identity-section">
+                    <div class="chip"></div>
+                    <div class="address-block">
+                        <div class="fld fld-identity"><span class="lbl">Name</span><span class="val" id="lbl_owner_name">-</span></div>
+                        <div class="fld fld-identity"><span class="lbl">S/W/D of</span><span class="val" id="lbl_swd_name">-</span></div>
+                        <div class="fld fld-identity" style="align-items: flex-start;"><span class="lbl">Address</span><span class="val" id="lbl_address">-</span></div>
+                        <div class="fld fld-identity"><span class="lbl">Pincode</span><span class="val" id="lbl_pincode"></span></div>
+                    </div>
+                </div>
+
+                <!-- கீழ் பகுதி தொழில்நுட்ப விபரங்கள் மற்றும் கையொப்பம் -->
+                <div class="bottom-technical-section">
+                    <div class="tech-column">
+                        <div class="fld fld-col1"><span class="lbl">Mfr Name</span><span class="val" id="lbl_mfr_name">-</span></div>
+                        <div class="fld fld-col1"><span class="lbl">Colour</span><span class="val" id="lbl_colour">-</span></div>
+                        
+                        <div class="tech-sub-row">
+                            <div class="fld fld-sub"><span class="lbl">Fuel</span><span class="val" id="lbl_fuel">-</span></div>
+                            <div class="fld fld-sub"><span class="lbl">Unladen Wt.</span><span class="val" id="lbl_unladen_wt">-</span></div>
+                        </div>
+                        <div class="tech-sub-row">
+                            <div class="fld fld-sub"><span class="lbl">Class</span><span class="val" id="lbl_v_class">-</span></div>
+                            <div class="fld fld-sub"><span class="lbl">C.C</span><span class="val" id="lbl_cc">-</span></div>
+                        </div>
+                        <div class="tech-sub-row">
+                            <div class="fld fld-sub"><span class="lbl">Body</span><span class="val" id="lbl_body_type">-</span></div>
+                            <div class="fld fld-sub"><span class="lbl">Wheel Base</span><span class="val" id="lbl_wheel_base">-</span></div>
+                        </div>
+                        <div class="tech-sub-row">
+                            <div class="fld fld-sub"><span class="lbl">Seat Cap</span><span class="val" id="lbl_seat_cap">-</span></div>
+                            <div class="fld fld-sub"><span class="lbl">No. of Cyl</span><span class="val" id="lbl_no_cyl">-</span></div>
+                        </div>
+                        <div class="tech-sub-row">
+                            <div class="fld fld-sub"><span class="lbl">Stand Cap</span><span class="val" id="lbl_stand_cap">-</span></div>
+                            <div class="fld fld-sub"><span class="lbl">Owner Sl</span><span class="val" id="lbl_owner_sl">-</span></div>
+                        </div>
+                        
+                        <div class="fld fld-col1" style="margin-top: 10px;"><span class="lbl">Mfg.Date</span><span class="val" id="lbl_mfg_date">-</span></div>
+                    </div>
+                    
+                    <div class="tech-column" style="justify-content: space-between;">
+                        <div>
+                            <div class="fld fld-col2"><span class="lbl">Chassis No</span><span class="val" id="lbl_chassis_no">-</span></div>
+                            <div class="fld fld-col2"><span class="lbl">Engine No</span><span class="val" id="lbl_engine_no">-</span></div>
+                            <div class="fld fld-col2"><span class="lbl">HP/Lease</span><span class="val" id="lbl_hp_lease">-</span></div>
+                        </div>
+
+                        <!-- அசிஸ்டன்ட் ரெஜிஸ்டரிங் அத்தாரிட்டி கையொப்ப பகுதி -->
+                        <div class="sign-area">
+                            <div class="signature-img">mde</div>
+                            <div class="sign-title">Signature of<br>Asst. Registering Authority</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inputs = [
+        'reg_no', 'reg_date', 'form_type', 'tax_paid', 'valid_upto', 'mfg_date',
+        'owner_name', 'swd_name', 'address', 'mfr_name', 'chassis_no', 'colour',
+        'engine_no', 'fuel', 'unladen_wt', 'hp_lease', 'v_class', 'cc', 'wheel_base',
+        'body_type', 'no_cyl', 'owner_sl', 'seat_cap', 'stand_cap'
+    ];
+    
+    function updatePreview() {
+        inputs.forEach(id => {
+            const inputEl = document.getElementById(`in_${id}`);
+            const labelEl = document.getElementById(`lbl_${id}`);
+            if (inputEl && labelEl) {
+                if (id === 'address') {
+                    // முகவரியில் உள்ள \n குறியீடுகளை உடைத்து புது வரிகளாக மாற்றுதல் மற்றும் பின்கோடை பிரித்தல்
+                    let rawAddress = inputEl.value;
+                    let pinMatch = rawAddress.match(/(\d{6})/);
+                    if (pinMatch) {
+                        document.getElementById('lbl_pincode').innerText = pinMatch[1];
+                        rawAddress = rawAddress.replace(/-\s*\d{6}|\b\d{6}\b/, "");
+                    } else {
+                        document.getElementById('lbl_pincode').innerText = "";
+                    }
+                    labelEl.innerText = rawAddress.replace(/\\n/g, '\n');
+                } else {
+                    labelEl.innerText = inputEl.value;
+                }
+            }
+        });
+    }
+
+    inputs.forEach(id => {
+        const inputEl = document.getElementById(`in_${id}`);
+        if (inputEl) {
+            inputEl.addEventListener('input', updatePreview);
+        }
+    });
+
+    // இயல்புநிலை தொடக்கம்
+    updatePreview();
+
+    // High Quality PDF டவுன்லோட் எஞ்சின்
+    document.getElementById('rcForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const element = document.getElementById('rcCardPreview');
+        const regNo = document.getElementById('in_reg_no').value || 'RC_Smart_Card';
+
+        const opt = {
+            margin:       0,
+            filename:     `RC_${regNo}.pdf`,
+            image:        { type: 'jpeg', quality: 1.0 },
+            html2canvas:  { 
+                scale: 4, // 4 மடங்கு அதிக பிக்சல் அடர்த்தி (High Resolution)
+                useCORS: true, 
+                logging: false,
+                letterRendering: true
+            },
+            jsPDF:        { unit: 'px', format: [856, 540], orientation: 'landscape' } // அசல் கார்டின் அளவிலேயே பிடிஎஃப் அமையும்
+        };
+
+        html2pdf().set(opt).from(element).save();
+    });
+</script>
+</body>
+</html>
