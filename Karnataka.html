@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RC Card Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1350px;
+            width: 100%;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        .form-section {
+            flex: 1.1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            align-content: start;
+        }
+        .form-section h2 {
+            grid-column: span 3;
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            color: #000;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .input-group.full { grid-column: span 3; }
+        .input-group.span-2 { grid-column: span 2; }
+        label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        input {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 11px;
+        }
+        .preview-section {
+            flex: 1.3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        
+        /* பிடிஎஃப் எடுக்கும்போது கட் ஆகாமல் இருக்க பாக்ஸ் அளவுகள் சரி செய்யப்பட்டுள்ளது */
+        .rc-card {
+            width: 856px;
+            height: 540px;
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 35px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            padding: 35px 40px;
+            position: relative;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        /* Header Setup */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            position: relative;
+            height: 45px;
+        }
+        .reg-no-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #000;
+            margin: 0;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        .form-type-title {
+            text-align: right;
+            margin-left: auto;
+            font-weight: bold;
+            color: #000;
+            font-size: 16px;
+            line-height: 1.3;
+        }
+
+        /* Body Content Structure */
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .section-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            column-gap: 30px;
+        }
+        
+        .fld-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Field Alignment & Typography */
+        .fld {
+            display: flex;
+            font-size: 18px;
+            color: #000;
+            font-weight: bold;
+            line-height: 1.25;
+        }
+        .fld .lbl {
+            width: 145px;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .fld-col-right .lbl {
+            width: 115px;
+        }
+        .fld .lbl::after {
+            content: " :";
+            float: right;
+        }
+        .fld .val {
+            padding-left: 10px;
+            text-transform: uppercase;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Footer & Authority Signature */
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: absolute;
+            bottom: 35px;
+            right: 40px;
+            left: 40px;
+        }
+        .sign-area {
+            text-align: center;
+            margin-left: auto;
+        }
+        .signature-container {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2px;
+        }
+        .signature-img {
+            font-style: italic;
+            font-family: 'Georgia', serif;
+            font-size: 24px;
+            color: #000;
+            font-weight: bold;
+        }
+        .sign-title {
+            font-size: 17px;
+            font-weight: bold;
+            color: #000;
+            line-height: 1.2;
+        }
+
+        .btn-submit {
+            grid-column: span 3;
+            padding: 12px;
+            background: #00469b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-submit:hover { background: #002752; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <form class="form-section" id="rcForm">
+        <h2>Vehicle Registration Details Form</h2>
+        
+        <div class="input-group">
+            <label>Registration No</label>
+            <input type="text" id="in_reg_no" value="KA13TD2669" required>
+        </div>
+        <div class="input-group">
+            <label>Form Type</label>
+            <input type="text" id="in_form_type" value="FORM-23A" required>
+        </div>
+        <div class="input-group">
+            <label>Rule Info</label>
+            <input type="text" id="in_rule_info" value="(See Rule 48)" required>
+        </div>
+        <div class="input-group">
+            <label>Registration Date</label>
+            <input type="text" id="in_reg_date" value="20/12/2023" required>
+        </div>
+        <div class="input-group">
+            <label>Chassis No</label>
+            <input type="text" id="in_chassis_no" value="1VY5045DEPM042742" required>
+        </div>
+        <div class="input-group">
+            <label>Engine No</label>
+            <input type="text" id="in_engine_no" value="PY3029D7*****" required>
+        </div>
+        <div class="input-group full">
+            <label>Manufacturer (MFR)</label>
+            <input type="text" id="in_mfr_name" value="JOHN DEERE INDIA PVT LTD" required>
+        </div>
+        <div class="input-group full">
+            <label>Owner Name</label>
+            <input type="text" id="in_owner_name" value="SHIVEGOWDA" required>
+        </div>
+        <div class="input-group">
+            <label>S/W/D Of</label>
+            <input type="text" id="in_swd_name" value="">
+        </div>
+        <div class="input-group span-2">
+            <label>Address</label>
+            <input type="text" id="in_address" value="Hassan, 573215" required>
+        </div>
+        <div class="input-group">
+            <label>O.SL.NO</label>
+            <input type="text" id="in_o_sl_no" value="1" required>
+        </div>
+        <div class="input-group">
+            <label>Class</label>
+            <input type="text" id="in_v_class" value="Agricultural Tr" required>
+        </div>
+        <div class="input-group">
+            <label>Colour</label>
+            <input type="text" id="in_colour" value="JOHN DEERE GREEN" required>
+        </div>
+        
+        <div class="input-group full">
+            <label>Model</label>
+            <input type="text" id="in_model" value="JOHN DEERE 5045D 4WD V3" required>
+        </div>
+        
+        <div class="input-group">
+            <label>Body Type</label>
+            <input type="text" id="in_body_type" value="NA" required>
+        </div>
+        <div class="input-group">
+            <label>Wheel Base</label>
+            <input type="text" id="in_wheel_base" value="1950" required>
+        </div>
+        <div class="input-group">
+            <label>Mfg Date</label>
+            <input type="text" id="in_mfg_date" value="10/2023" required>
+        </div>
+        <div class="input-group">
+            <label>Fuel</label>
+            <input type="text" id="in_fuel" value="DIESEL" required>
+        </div>
+        <div class="input-group">
+            <label>Ref/RC Upto</label>
+            <input type="text" id="in_ref_rc_upto" value="19/12/2038" required>
+        </div>
+        <div class="input-group">
+            <label>Tax Upto</label>
+            <input type="text" id="in_tax_upto" value="2038-12-19" required>
+        </div>
+        <div class="input-group">
+            <label>No Of Cyl</label>
+            <input type="text" id="in_no_cyl" value="3" required>
+        </div>
+        <div class="input-group">
+            <label>Unladen Wt</label>
+            <input type="text" id="in_unladen_wt" value="2010" required>
+        </div>
+        <div class="input-group">
+            <label>Seating</label>
+            <input type="text" id="in_seating" value="1" required>
+        </div>
+        <div class="input-group">
+            <label>STDG/SLPR</label>
+            <input type="text" id="in_stdg_slpr" value="0 / 0" required>
+        </div>
+        <div class="input-group">
+            <label>CC</label>
+            <input type="text" id="in_cc" value="2940.00" required>
+        </div>
+        <div class="input-group span-2">
+            <label>Registering Authority Place</label>
+            <input type="text" id="in_auth_place" value="Hassan Rto, Ka" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Download Document PDF</button>
+    </form>
+
+    <div class="preview-section">
+        <div class="rc-card" id="rcCardPreview">
+            <div class="card-header">
+                <div class="reg-no-title">REG NO : <span id="lbl_reg_no">-</span></div>
+                <div class="form-type-title">
+                    <span id="lbl_form_type">-</span><br>
+                    <span id="lbl_rule_info">-</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="section-row">
+                    <div class="fld-col">
+                        <div class="fld"><span class="lbl">REG DATE</span><span class="val" id="lbl_reg_date">-</span></div>
+                        <div class="fld"><span class="lbl">CHASSIS NO</span><span class="val" id="lbl_chassis_no">-</span></div>
+                        <div class="fld"><span class="lbl">ENGINE NO</span><span class="val" id="lbl_engine_no">-</span></div>
+                        <div class="fld"><span class="lbl">MFR</span><span class="val" id="lbl_mfr_name">-</span></div>
+                        <div class="fld"><span class="lbl">OWNER NAME</span><span class="val" id="lbl_owner_name">-</span></div>
+                        <div class="fld"><span class="lbl">S/W/D OF</span><span class="val" id="lbl_swd_name">-</span></div>
+                        <div class="fld"><span class="lbl">ADDRESS</span><span class="val" id="lbl_address">-</span></div>
+                    </div>
+                    <div class="fld-col fld-col-right">
+                        <div class="fld"><span class="lbl">O.SL.NO</span><span class="val" id="lbl_o_sl_no">-</span></div>
+                        <div class="fld"><span class="lbl">CLASS</span><span class="val" id="lbl_v_class">-</span></div>
+                        <div class="fld"><span class="lbl">COLOUR</span><span class="val" id="lbl_colour">-</span></div>
+                    </div>
+                </div>
+
+                <div class="section-row">
+                    <div class="fld-col">
+                        <div class="fld"><span class="lbl">MODEL</span><span class="val" id="lbl_model">-</span></div>
+                        <div class="fld"><span class="lbl">BODY</span><span class="val" id="lbl_body_type">-</span></div>
+                        <div class="fld"><span class="lbl">WHEEL BASE</span><span class="val" id="lbl_wheel_base">-</span></div>
+                        <div class="fld"><span class="lbl">MFG DATE</span><span class="val" id="lbl_mfg_date">-</span></div>
+                        <div class="fld"><span class="lbl">FUEL</span><span class="val" id="lbl_fuel">-</span></div>
+                        <div class="fld"><span class="lbl">REF/RC UPTO</span><span class="val" id="lbl_ref_rc_upto">-</span></div>
+                        <div class="fld"><span class="lbl">TAX UPTO</span><span class="val" id="lbl_tax_upto">-</span></div>
+                    </div>
+                    <div class="fld-col fld-col-right">
+                        <div class="fld"><span class="lbl">NO OF CYL</span><span class="val" id="lbl_no_cyl">-</span></div>
+                        <div class="fld"><span class="lbl">UNLADEN WT</span><span class="val" id="lbl_unladen_wt">-</span></div>
+                        <div class="fld"><span class="lbl">SEATING</span><span class="val" id="lbl_seating">-</span></div>
+                        <div class="fld"><span class="lbl">STDG/SLPR</span><span class="val" id="lbl_stdg_slpr">-</span></div>
+                        <div class="fld"><span class="lbl">CC</span><span class="val" id="lbl_cc">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="sign-area">
+                    <div class="signature-container">
+                        <span class="signature-img">Jflim</span>
+                    </div>
+                    <div class="sign-title">Registering Authority<br><span id="lbl_auth_place">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inputs = [
+        'reg_no', 'form_type', 'rule_info', 'reg_date', 'chassis_no', 'engine_no', 
+        'mfr_name', 'owner_name', 'swd_name', 'address', 'o_sl_no', 'v_class', 
+        'colour', 'model', 'body_type', 'wheel_base', 'mfg_date', 'fuel', 
+        'ref_rc_upto', 'tax_upto', 'no_cyl', 'unladen_wt', 'seating', 'stdg_slpr', 'cc', 'auth_place'
+    ];
+    
+    function updatePreview() {
+        inputs.forEach(id => {
+            const inputEl = document.getElementById(`in_${id}`);
+            const labelEl = document.getElementById(`lbl_${id}`);
+            if (inputEl && labelEl) {
+                labelEl.innerText = inputEl.value;
+            }
+        });
+    }
+
+    inputs.forEach(id => {
+        const inputEl = document.getElementById(`in_${id}`);
+        if (inputEl) {
+            inputEl.addEventListener('input', updatePreview);
+        }
+    });
+
+    // Run layout initially
+    updatePreview();
+
+    // ============================================================
+    // PDF டவுன்லோட் - முழு உள்ளடக்கமும் சரியான அளவில் கேப்சர் ஆக
+    // ============================================================
+    const submitBtn = document.querySelector('.btn-submit');
+    const originalBtnText = submitBtn.textContent;
+
+    function setBtnState(text, disabled) {
+        submitBtn.textContent = text;
+        submitBtn.disabled = disabled;
+        submitBtn.style.opacity = disabled ? '0.6' : '1';
+        submitBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+    }
+
+    // எழுத்துருக்கள் (fonts) முழுவதும் load ஆகும் வரை காத்திருக்க
+    function waitForFontsReady() {
+        if (document.fonts && document.fonts.ready) {
+            return document.fonts.ready;
+        }
+        return Promise.resolve();
+    }
+
+    // இரண்டு animation frame கடந்த பின் resolve செய்யும் - browser layout/paint
+    // முழுவதுமாக நிலைப்பட்டதை உறுதி செய்ய (இதுவே content missing ஆகும்
+    // பிரச்சினையின் முக்கிய காரணம்: capture, paint முடிவதற்கு முன் நடந்துவிடும்)
+    function waitForNextPaint() {
+        return new Promise(resolve => {
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+    }
+
+    document.getElementById('rcForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const element = document.getElementById('rcCardPreview');
+        const regNo = (document.getElementById('in_reg_no').value || 'Document').trim();
+
+        setBtnState('தயார் செய்கிறது... தயவு செய்து காத்திருக்கவும்', true);
+
+        try {
+            // படங்கள்/எழுத்துருக்கள் முழுவதும் தயாராகும் வரை காத்திருத்தல்
+            await waitForFontsReady();
+            await waitForNextPaint();
+
+            // கார்டின் சரியான பிக்சல் அளவை DOM-இலிருந்தே அளவெடுத்தல்
+            // (CSS அளவு 856x540 ஆனாலும், border/box-shadow உள்ளிட்டவை
+            // உண்மையான render box-ஐ பாதிக்கலாம் என்பதால் getBoundingClientRect
+            // பயன்படுத்தி உண்மையான அளவை உறுதி செய்கிறோம்)
+            const rect = element.getBoundingClientRect();
+            const cardWidthPx = Math.round(rect.width);
+            const cardHeightPx = Math.round(rect.height);
+
+            // பிவிசி கார்டு quality தரத்திற்கு உயர் தெளிவுத்திறன் (scale)
+            // scale 4 -> 6 ஆக உயர்த்தப்பட்டது, மேலும் தெளிவான, கட் ஆகாத output-க்காக
+            const RENDER_SCALE = 6;
+
+            const opt = {
+                margin: 0,
+                filename: `${regNo}_RC_Card.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: {
+                    scale: RENDER_SCALE,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                    letterRendering: true,
+                    backgroundColor: '#ffffff',
+                    // element-ஐ அதன் உண்மையான அளவில் (scroll/clip இல்லாமல்) முழுமையாக கேப்சர் செய்ய
+                    width: cardWidthPx,
+                    height: cardHeightPx,
+                    windowWidth: cardWidthPx,
+                    windowHeight: cardHeightPx,
+                    scrollX: 0,
+                    scrollY: 0,
+                    x: 0,
+                    y: 0,
+                    removeContainer: true
+                },
+                jsPDF: {
+                    unit: 'pt',
+                    // PDF பக்க அளவை, கார்டின் CSS அளவான 856x540-ஐயே
+                    // பிவிசி கார்டு போல exact-ஆக பயன்படுத்துகிறோம்
+                    format: [856, 540],
+                    orientation: 'landscape',
+                    compress: false
+                },
+                pagebreak: { mode: ['avoid-all'] }
+            };
+
+            await html2pdf().set(opt).from(element).save();
+            setBtnState(originalBtnText, false);
+        } catch (err) {
+            console.error('PDF generation failed:', err);
+            setBtnState('தோல்வி - மீண்டும் முயற்சிக்கவும்', false);
+            setTimeout(() => setBtnState(originalBtnText, false), 2500);
+            alert('PDF உருவாக்குவதில் சிக்கல் ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.');
+        }
+    });
+</script>
+</body>
+</html>
