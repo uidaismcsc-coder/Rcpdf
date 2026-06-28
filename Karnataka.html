@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RC Card Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     
     <style>
         body {
@@ -42,6 +43,34 @@
             border-bottom: 2px solid #000;
             padding-bottom: 5px;
         }
+        
+        /* புதிய PDF அப்லோட் பகுதி வடிவமைப்பு */
+        .upload-section {
+            grid-column: span 3;
+            background: #eef4fc;
+            border: 2px dashed #00469b;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .upload-section label {
+            font-size: 13px;
+            color: #00469b;
+            cursor: pointer;
+            display: block;
+            font-weight: bold;
+        }
+        .upload-section input {
+            display: none;
+        }
+        .status-msg {
+            font-size: 11px;
+            color: #555;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
         .input-group {
             display: flex;
             flex-direction: column;
@@ -213,6 +242,12 @@
     <form class="form-section" id="rcForm">
         <h2>Vehicle Registration Details Form</h2>
         
+        <div class="upload-section">
+            <label for="pdf_uploader">📂 இங்கே அசல் RC PDF பைலை அப்லோட் செய்யவும் (Auto Fill)</label>
+            <input type="file" id="pdf_uploader" accept="application/pdf">
+            <div id="upload_status" class="status-msg">மாற்றங்களை செய்ய PDF கோப்பை தேர்ந்தெடுக்கவும்</div>
+        </div>
+
         <div class="input-group">
             <label>Registration No</label>
             <input type="text" id="in_reg_no" value="KA13TD2669" required>
@@ -384,6 +419,9 @@
 </div>
 
 <script>
+    // PDFJS setup worker path
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
     const inputs = [
         'reg_no', 'form_type', 'rule_info', 'reg_date', 'chassis_no', 'engine_no', 
         'mfr_name', 'owner_name', 'swd_name', 'address', 'o_sl_no', 'v_class', 
@@ -412,6 +450,87 @@
     updatePreview();
 
     // ============================================================
+    // புதிய வசதி: PDF-லிருந்து தகவல்களைப் பிரித்தெடுத்தல் (Auto Fill)
+    // ============================================================
+    document.getElementById('pdf_uploader').addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const statusEl = document.getElementById('upload_status');
+        statusEl.textContent = "PDF வாசிக்கப்படுகிறது... தயவுசெய்து காத்திருக்கவும்...";
+        statusEl.style.color = "#00469b";
+
+        try {
+            const fileReader = new FileReader();
+            fileReader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = "";
+
+                // அனைத்து பக்கங்களிலிருந்தும் உரையை எடுக்க
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    fullText += " " + pageText;
+                }
+
+                // உரையை ஒழுங்குபடுத்தல் (Clean up text space)
+                fullText = fullText.replace(/\s+/g, ' ');
+
+                // Regex Patterns - PDF-ல் உள்ள கீவேர்டுகளைப் பொறுத்து மேட்ச் செய்யும்
+                const extractField = (regex) => {
+                    const match = fullText.match(regex);
+                    return match && match[1] ? match[1].trim() : null;
+                };
+
+                // வாகனங்களின் பொதுவான RC அமைப்பிற்கான தரவு மேப்பிங் விதிகள்
+                const extractedData = {
+                    reg_no: extractField(/(?:Reg\s*No|Registration\s*No|REGN\s*NO)[:\s]*([A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4})/i),
+                    reg_date: extractField(/(?:Reg\s*Date|Registration\s*Date|REGN\s*DT)[:\s]*(\d{2}\/\d{2}\/\d{4})/i),
+                    chassis_no: extractField(/(?:Chassis\s*No|CHAS\s*NO)[:\s]*([A-Z0-9]{17,21})/i),
+                    engine_no: extractField(/(?:Engine\s*No|ENG\s*NO)[:\s]*([A-Z0-9\s\*]{5,15})/i),
+                    owner_name: extractField(/(?:Owner\s*Name|Name\s*of\s*Owner)[:\s]*([^:]+?)(?=\s*(?:S\/W\/D|Father|Son|Address|Reg))/i),
+                    swd_name: extractField(/(?:S\/W\/D\s*of|Father's\s*Name)[:\s]*([^:]+?)(?=\s*(?:Address|Class|Model))/i),
+                    address: extractField(/(?:Address)[:\s]*([^:]+?)(?=\s*(?:O\.SL|Class|Pin|State))/i),
+                    v_class: extractField(/(?:Vehicle\s*Class|Class\s*of\s*Vehicle)[:\s]*([^:]+?)(?=\s*(?:Model|Maker|Colour))/i),
+                    colour: extractField(/(?:Colour|Color)[:\s]*([^:]+?)(?=\s*(?:Model|Fuel|Body))/i),
+                    model: extractField(/(?:Model\s*Name|Model)[:\s]*([^:]+?)(?=\s*(?:Body|Fuel|Mfr))/i),
+                    mfr_name: extractField(/(?:Manufacturer|Maker|MFR)[:\s]*([^:]+?)(?=\s*(?:Owner|Model))/i),
+                    fuel: extractField(/(?:Fuel)[:\s]*([A-Z]+)/i),
+                    wheel_base: extractField(/(?:Wheel\s*Base)[:\s]*(\d+)/i),
+                    mfg_date: extractField(/(?:Mfg\s*Date|Month\/Year)[:\s]*(\d{2}\/\d{4})/i),
+                    ref_rc_upto: extractField(/(?:RC\s*Expiry|Fitness\s*Upto|RC\s*Upto)[:\s]*(\d{2}\/\d{2}\/\d{4})/i),
+                    tax_upto: extractField(/(?:Tax\s*Upto)[:\s]*([\d\-\/]+)/i),
+                    no_cyl: extractField(/(?:No\s*of\s*Cyl|Cylinders)[:\s]*(\d+)/i),
+                    unladen_wt: extractField(/(?:Unladen\s*Wt|Unladen\s*Weight)[:\s]*(\d+)/i),
+                    seating: extractField(/(?:Seating\s*Capacity|Seating)[:\s]*(\d+)/i),
+                    cc: extractField(/(?:Cubic\s*Capacity|CC)[:\s]*([\d\.]+)/i),
+                    auth_place: extractField(/(?:Registering\s*Authority|RTO)[:\s]*([^:]+?)(?=\$|\s)/i)
+                };
+
+                // ஃபார்மில் உள்ள இன்புட்களுக்கு மதிப்புகளை வழங்குதல் (ஏதேனும் கண்டறியப்பட்டால் மட்டும்)
+                let filledCount = 0;
+                inputs.forEach(id => {
+                    if (extractedData[id]) {
+                        document.getElementById(`in_${id}`).value = extractedData[id];
+                        filledCount++;
+                    }
+                });
+
+                updatePreview();
+                statusEl.textContent = `வெற்றி: PDF-லிருந்து தகுந்த தரவுகள் எடுக்கப்பட்டு ஃபார்ம் நிரப்பப்பட்டது!`;
+                statusEl.style.color = "green";
+            };
+            fileReader.readAsArrayBuffer(file);
+        } catch (error) {
+            console.error(error);
+            statusEl.textContent = "மன்னிக்கவும்! PDF கோப்பிலிருந்து விபரங்களை எடுப்பதில் சிக்கல்.";
+            statusEl.style.color = "red";
+        }
+    });
+
+    // ============================================================
     // PDF டவுன்லோட் - முழு உள்ளடக்கமும் சரியான அளவில் கேப்சர் ஆக
     // ============================================================
     const submitBtn = document.querySelector('.btn-submit');
@@ -424,7 +543,6 @@
         submitBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
     }
 
-    // எழுத்துருக்கள் (fonts) முழுவதும் load ஆகும் வரை காத்திருக்க
     function waitForFontsReady() {
         if (document.fonts && document.fonts.ready) {
             return document.fonts.ready;
@@ -432,9 +550,6 @@
         return Promise.resolve();
     }
 
-    // இரண்டு animation frame கடந்த பின் resolve செய்யும் - browser layout/paint
-    // முழுவதுமாக நிலைப்பட்டதை உறுதி செய்ய (இதுவே content missing ஆகும்
-    // பிரச்சினையின் முக்கிய காரணம்: capture, paint முடிவதற்கு முன் நடந்துவிடும்)
     function waitForNextPaint() {
         return new Promise(resolve => {
             requestAnimationFrame(() => requestAnimationFrame(resolve));
@@ -449,20 +564,13 @@
         setBtnState('தயார் செய்கிறது... தயவு செய்து காத்திருக்கவும்', true);
 
         try {
-            // படங்கள்/எழுத்துருக்கள் முழுவதும் தயாராகும் வரை காத்திருத்தல்
             await waitForFontsReady();
             await waitForNextPaint();
 
-            // கார்டின் சரியான பிக்சல் அளவை DOM-இலிருந்தே அளவெடுத்தல்
-            // (CSS அளவு 856x540 ஆனாலும், border/box-shadow உள்ளிட்டவை
-            // உண்மையான render box-ஐ பாதிக்கலாம் என்பதால் getBoundingClientRect
-            // பயன்படுத்தி உண்மையான அளவை உறுதி செய்கிறோம்)
             const rect = element.getBoundingClientRect();
             const cardWidthPx = Math.round(rect.width);
             const cardHeightPx = Math.round(rect.height);
 
-            // பிவிசி கார்டு quality தரத்திற்கு உயர் தெளிவுத்திறன் (scale)
-            // scale 4 -> 6 ஆக உயர்த்தப்பட்டது, மேலும் தெளிவான, கட் ஆகாத output-க்காக
             const RENDER_SCALE = 6;
 
             const opt = {
@@ -476,7 +584,6 @@
                     logging: false,
                     letterRendering: true,
                     backgroundColor: '#ffffff',
-                    // element-ஐ அதன் உண்மையான அளவில் (scroll/clip இல்லாமல்) முழுமையாக கேப்சர் செய்ய
                     width: cardWidthPx,
                     height: cardHeightPx,
                     windowWidth: cardWidthPx,
@@ -489,8 +596,6 @@
                 },
                 jsPDF: {
                     unit: 'pt',
-                    // PDF பக்க அளவை, கார்டின் CSS அளவான 856x540-ஐயே
-                    // பிவிசி கார்டு போல exact-ஆக பயன்படுத்துகிறோம்
                     format: [856, 540],
                     orientation: 'landscape',
                     compress: false
