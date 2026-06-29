@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puducherry RC Card Customizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef2f7; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app-container { display: flex; flex-direction: row; max-width: 1400px; width: 100%; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .form-panel { flex: 1; padding: 20px; background: #fafbfc; border-right: 1px solid #e1e8ed; max-height: 95vh; overflow-y: auto; }
+        .preview-panel { flex: 1.2; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; background: #eef2f7; overflow-y: auto; }
+        h2 { margin: 0 0 15px 0; color: #0288d1; font-size: 16px; border-bottom: 2px solid #0288d1; padding-bottom: 5px; text-transform: uppercase; }
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .full-width { grid-column: span 3; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        label { font-size: 10px; font-weight: 700; color: #546e7a; text-transform: uppercase; }
+        input { padding: 8px; border: 1px solid #cfd8dc; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        input:focus { border-color: #0288d1; outline: none; }
+        .btn-download { background: #0288d1; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; transition: 0.2s; }
+        .btn-download:hover { background: #0277bd; }
+        
+        /* New Tools Section Styling */
+        .tools-section { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #0288d1; }
+        .tools-section label { display: block; margin-bottom: 5px; color: #01579b; }
+        .tools-section input[type="file"] { margin-bottom: 10px; font-size: 11px; padding: 5px; width: 100%; }
+
+        /* High Fidelity Smart Card CSS */
+        .pvc-card {
+            width: 480px; height: 302px; min-height: 302px; min-width: 480px;
+            background: linear-gradient(180deg, #3bb4e5 0%, #81d4fa 25%, #e1f5fe 100%);
+            border-radius: 14px; border: 1px solid #90a4ae;
+            position: relative; overflow: hidden; color: #111;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .card-back { background: linear-gradient(180deg, #0ba0e0 0%, #b3e5fc 15%, #e1f5fe 100%); }
+        .abs { position: absolute; }
+        .lbl { font-size: 10px; color: #37474f; font-weight: 500; }
+        .val { font-size: 11px; font-weight: 700; color: #000; letter-spacing: 0.2px; }
+        
+        .circle-badge {
+            width: 22px; height: 22px; border-radius: 50%; border: 1px solid #000;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: bold;
+        }
+        .smart-chip {
+            width: 46px; height: 34px; background: linear-gradient(135deg, #e6c27a 0%, #c49a45 100%);
+            border-radius: 6px; border: 1px solid #785a1a;
+            background-image: linear-gradient(transparent 30%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.2) 35%, transparent 35%, transparent 65%, rgba(0,0,0,0.2) 65%, rgba(0,0,0,0.2) 70%, transparent 70%), linear-gradient(90deg, transparent 30%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.2) 35%, transparent 35%, transparent 65%, rgba(0,0,0,0.2) 65%, rgba(0,0,0,0.2) 70%, transparent 70%);
+        }
+        .emblem-placeholder {
+            width: 45px; height: 60px; text-align: center;
+            font-size: 8px; font-weight: bold; line-height: 1.1; color: #555;
+        }
+        .qr-code { width: 75px; height: 75px; border: 1px solid #555; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; background: #fff; overflow: hidden; }
+        .vertical-text { transform: rotate(-90deg); transform-origin: right bottom; font-size: 10px; color: #37474f; font-weight: 500; }
+        .signature { font-family: 'Brush Script MT', cursive; font-size: 18px; transform: rotate(-5deg); margin-bottom: -5px; color: #000; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="form-panel">
+        
+        <div class="tools-section">
+            <h2>Smart Tools</h2>
+            <label>1. Auto-Fill from PDF (RC PDF பதிவேற்றவும்)</label>
+            <input type="file" id="pdfUpload" accept="application/pdf" onchange="processPDF(event)">
+            
+            <label>2. Upload QR Code (QR இமேஜ் பதிவேற்றவும்)</label>
+            <input type="file" id="qrUpload" accept="image/*" onchange="processQR(event)">
+        </div>
+
+        <h2>Front Card Details</h2>
+        <div class="form-grid">
+            <div class="form-group full-width"><label>Registration Number</label><input type="text" id="in_reg_no" value=""></div>
+            <div class="form-group"><label>Date of Regn.</label><input type="text" id="in_reg_date" value=""></div>
+            <div class="form-group"><label>Regn. Validity</label><input type="text" id="in_validity" value=""></div>
+            <div class="form-group"><label>Owner Serial</label><input type="text" id="in_owner_serial" value=""></div>
+            <div class="form-group full-width"><label>Chassis Number</label><input type="text" id="in_chassis" value=""></div>
+            <div class="form-group full-width"><label>Engine / Motor Number</label><input type="text" id="in_engine" value=""></div>
+            <div class="form-group full-width"><label>Owner Name</label><input type="text" id="in_owner_name" value=""></div>
+            <div class="form-group full-width"><label>Son/Wife/Daughter of</label><input type="text" id="in_relative" value=""></div>
+            <div class="form-group full-width"><label>Address</label><input type="text" id="in_address" value=""></div>
+            <div class="form-group"><label>Fuel</label><input type="text" id="in_fuel" value="PETROL"></div>
+            <div class="form-group full-width"><label>Emission Norms</label><input type="text" id="in_emission" value="BHARAT STAGE VI"></div>
+            <div class="form-group"><label>Card Issue Date</label><input type="text" id="in_issue_date" value="09-04-2025"></div>
+        </div>
+
+        <h2 style="margin-top: 20px;">Back Card Details</h2>
+        <div class="form-grid">
+            <div class="form-group"><label>Vehicle Class</label><input type="text" id="in_v_class" value="Motor Car"></div>
+            <div class="form-group"><label>PR Number</label><input type="text" id="in_pr_no" value="PR00126179"></div>
+            <div class="form-group"><label>Month-Year of Mfg.</label><input type="text" id="in_mfg_date" value="02-2025"></div>
+            <div class="form-group"><label>Number of Cylinders</label><input type="text" id="in_cylinders" value="4"></div>
+            <div class="form-group"><label>Number of Axle</label><input type="text" id="in_axles" value=""></div>
+            <div class="form-group full-width"><label>Maker's Name</label><input type="text" id="in_maker" value="MARUTI SUZUKI INDIA LTD"></div>
+            <div class="form-group full-width"><label>Model Name</label><input type="text" id="in_model" value="FRONX SIGMA"></div>
+            <div class="form-group full-width"><label>Colour</label><input type="text" id="in_color" value="PRME GRANDEUR GREY"></div>
+            <div class="form-group full-width"><label>Body Type</label><input type="text" id="in_body_type" value="RIGID (PASSENGER CAR)"></div>
+            
+            <div class="form-group"><label>Seating Cap</label><input type="text" id="in_seat" value="5"></div>
+            <div class="form-group"><label>Standing Cap</label><input type="text" id="in_stand" value="0"></div>
+            <div class="form-group"><label>Sleeper Cap</label><input type="text" id="in_sleep" value="0"></div>
+            
+            <div class="form-group"><label>Unladen Wt</label><input type="text" id="in_unladen" value="965"></div>
+            <div class="form-group"><label>Laden Wt</label><input type="text" id="in_laden" value="1450"></div>
+            <div class="form-group"><label>Gross Wt</label><input type="text" id="in_gross" value="0"></div>
+            
+            <div class="form-group"><label>Cubic Capacity</label><input type="text" id="in_cc" value="1197"></div>
+            <div class="form-group"><label>Horse Power</label><input type="text" id="in_hp" value="89.65"></div>
+            <div class="form-group"><label>Wheel Base</label><input type="text" id="in_wb" value="2520"></div>
+            
+            <div class="form-group full-width"><label>Financer Name</label><input type="text" id="in_financer" value="PUNJAB NATIONAL BANK"></div>
+            <div class="form-group full-width"><label>Registering Authority</label><input type="text" id="in_auth" value="PY02 KARAIKAL RTO"></div>
+        </div>
+
+        <button class="btn-download" onclick="downloadCard('front-card', 'Card_Front.png')">Download Front PNG</button>
+        <button class="btn-download" style="background-color: #0277bd;" onclick="downloadCard('back-card', 'Card_Back.png')">Download Back PNG</button>
+        <button class="btn-download" style="background-color: #d32f2f;" onclick="downloadAsPDF()">Download as Full PDF</button>
+    </div>
+
+    <div class="preview-panel">
+        <h2>Live Previews</h2>
+        
+        <div class="pvc-card" id="front-card">
+            <div class="abs emblem-placeholder" style="top: 15px; left: 15px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/800px-Emblem_of_India.svg.png" style="width: 30px; opacity:0.6; margin-bottom:2px;" onerror="this.style.display='none'">
+                <br>सत्यमेव जयते
+            </div>
+            <div class="abs" style="top: 15px; left: 75px; font-size: 13px; font-weight: bold; line-height: 1.3;">
+                Indian Union Vehicle Registration Certificate<br>Issued by Government of Puducherry
+            </div>
+            <div class="abs circle-badge" style="top: 15px; right: 45px; background: transparent;">NT</div>
+            <div class="abs circle-badge" style="top: 15px; right: 15px; background: #e65100; color: #fff; border:none;">PY</div>
+            
+            <div class="abs lbl" style="top: 55px; left: 140px;">Regn. Number</div>
+            <div class="abs val" style="top: 70px; left: 140px; font-size: 13px;" id="lbl_reg_no">-</div>
+            
+            <div class="abs lbl" style="top: 55px; left: 270px;">Date of Regn.</div>
+            <div class="abs val" style="top: 70px; left: 270px;" id="lbl_reg_date">-</div>
+            
+            <div class="abs lbl" style="top: 55px; left: 370px;">Regn. Validity</div>
+            <div class="abs val" style="top: 70px; left: 370px;" id="lbl_validity">-</div>
+            
+            <div class="abs lbl" style="top: 85px; left: 140px;">Chassis Number</div>
+            <div class="abs val" style="top: 100px; left: 140px;" id="lbl_chassis">-</div>
+            
+            <div class="abs lbl" style="top: 85px; left: 370px;">Owner</div>
+            <div class="abs lbl" style="top: 100px; left: 370px;">Serial</div>
+            <div class="abs val" style="top: 100px; left: 420px;" id="lbl_owner_serial">-</div>
+            
+            <div class="abs smart-chip" style="top: 100px; left: 50px;"></div>
+            
+            <div class="abs lbl" style="top: 120px; left: 140px;">Engine / Motor Number</div>
+            <div class="abs val" style="top: 135px; left: 140px;" id="lbl_engine">-</div>
+            
+            <div class="abs lbl" style="top: 155px; left: 140px;">Owner Name</div>
+            <div class="abs val" style="top: 170px; left: 140px;" id="lbl_owner_name">-</div>
+            
+            <div class="abs lbl" style="top: 190px; left: 140px;">Son / Wife / Daughter of ( In case of Individual Owner )</div>
+            <div class="abs val" style="top: 205px; left: 140px;" id="lbl_relative">-</div>
+            
+            <div class="abs lbl" style="top: 225px; left: 140px;">Address</div>
+            <div class="abs val" style="top: 240px; left: 140px; width: 280px; line-height: 1.3;" id="lbl_address">-</div>
+            
+            <div class="abs lbl" style="top: 210px; left: 20px;">Fuel</div>
+            <div class="abs val" style="top: 225px; left: 20px;" id="lbl_fuel">-</div>
+            
+            <div class="abs lbl" style="top: 240px; left: 20px;">Emission Norms</div>
+            <div class="abs val" style="top: 255px; left: 20px;" id="lbl_emission">-</div>
+            
+            <div class="abs vertical-text" style="right: 5px; bottom: 15px; height: 150px; text-align: left;">
+                Card Issue Date &nbsp;&nbsp;&nbsp; <span id="lbl_issue_date"></span>
+            </div>
+        </div>
+
+        <div class="pvc-card card-back" id="back-card">
+            <div class="abs circle-badge" style="top: 15px; left: 15px; background: transparent;">NT</div>
+            <div class="abs circle-badge" style="top: 15px; left: 40px; background: #e65100; color: #fff; border:none;">PY</div>
+            
+            <div class="abs lbl" style="top: 20px; left: 125px; font-size: 11px;">Vehicle Class:</div>
+            <div class="abs val" style="top: 20px; left: 200px; font-size: 12px; font-weight: 800;" id="lbl_v_class">-</div>
+            
+            <div class="abs val" style="top: 20px; right: 20px; font-size: 12px;" id="lbl_pr_no">-</div>
+            
+            <div class="abs lbl" style="top: 45px; left: 25px;">Regn. Number</div>
+            <div class="abs val" style="top: 60px; left: 25px; font-size: 12px;" id="lbl_back_reg">-</div>
+            
+            <div class="abs qr-code" id="qr-display" style="top: 80px; left: 25px;">QR CODE</div>
+            
+            <div class="abs lbl" style="top: 175px; left: 25px;">Month - Year of Mfg.</div>
+            <div class="abs val" style="top: 190px; left: 25px;" id="lbl_mfg_date">-</div>
+            
+            <div class="abs lbl" style="top: 210px; left: 25px;">Number of Cylinders</div>
+            <div class="abs val" style="top: 225px; left: 25px;" id="lbl_cylinders">-</div>
+            
+            <div class="abs lbl" style="top: 245px; left: 25px;">Number of Axle</div>
+            <div class="abs val" style="top: 260px; left: 25px;" id="lbl_axles">-</div>
+            
+            <div class="abs lbl" style="top: 45px; left: 135px;">Maker's Name</div>
+            <div class="abs val" style="top: 58px; left: 140px;" id="lbl_maker">-</div>
+            
+            <div class="abs lbl" style="top: 73px; left: 135px;">Model Name</div>
+            <div class="abs val" style="top: 86px; left: 140px;" id="lbl_model">-</div>
+            
+            <div class="abs lbl" style="top: 101px; left: 135px;">Colour</div>
+            <div class="abs val" style="top: 114px; left: 140px;" id="lbl_color">-</div>
+            
+            <div class="abs lbl" style="top: 129px; left: 135px;">Body Type</div>
+            <div class="abs val" style="top: 142px; left: 140px;" id="lbl_body_type">-</div>
+            
+            <div class="abs lbl" style="top: 157px; left: 135px;">Seating(in all) / Standing / Sleeper Capacity</div>
+            <div class="abs val" style="top: 170px; left: 145px;" id="lbl_seat">-</div>
+            <div class="abs val" style="top: 170px; left: 205px;" id="lbl_stand">-</div>
+            <div class="abs val" style="top: 170px; left: 265px;" id="lbl_sleep">-</div>
+            
+            <div class="abs lbl" style="top: 185px; left: 135px;">Unladen / Laden / Gross Combination Weight (kg)</div>
+            <div class="abs val" style="top: 198px; left: 145px;" id="lbl_unladen">-</div>
+            <div class="abs val" style="top: 198px; left: 205px;" id="lbl_laden">-</div>
+            <div class="abs val" style="top: 198px; left: 265px;" id="lbl_gross">-</div>
+            
+            <div class="abs lbl" style="top: 213px; left: 135px;">Cubic Capacity / Horse Power (BHP/Kw) &nbsp;&nbsp;&nbsp;Wheel Base(mm)</div>
+            <div class="abs val" style="top: 226px; left: 145px;" id="lbl_cc">-</div>
+            <div class="abs val" style="top: 226px; left: 245px;" id="lbl_hp">-</div>
+            <div class="abs val" style="top: 226px; left: 345px;" id="lbl_wb">-</div>
+            
+            <div class="abs lbl" style="top: 241px; left: 135px;">Financer Name</div>
+            <div class="abs val" style="top: 254px; left: 135px;" id="lbl_financer">-</div>
+            
+            <div class="abs vertical-text" style="right: 5px; top: 120px; font-weight: bold;">Form 23A</div>
+            
+            <div class="abs" style="bottom: 10px; right: 20px; text-align: center; line-height: 1.2;">
+                <div class="signature">Authority</div>
+                <div class="lbl">Registering Authority</div>
+                <div class="val" style="font-size: 9px;" id="lbl_auth">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. EXISTING SYNC LOGIC ---
+    const fields = [
+        'reg_no', 'reg_date', 'validity', 'owner_serial', 'chassis', 'engine', 'owner_name', 
+        'relative', 'address', 'fuel', 'emission', 'issue_date', 'v_class', 'pr_no', 'mfg_date', 
+        'cylinders', 'axles', 'maker', 'model', 'color', 'body_type', 'seat', 'stand', 'sleep', 
+        'unladen', 'laden', 'gross', 'cc', 'hp', 'wb', 'financer', 'auth'
+    ];
+
+    function sync() {
+        fields.forEach(f => {
+            const i = document.getElementById('in_'+f);
+            const l = document.getElementById('lbl_'+f);
+            if(i && l) l.innerText = i.value.toUpperCase();
+        });
+        document.getElementById('lbl_back_reg').innerText = document.getElementById('in_reg_no').value.toUpperCase();
+    }
+
+    fields.forEach(f => {
+        const i = document.getElementById('in_'+f);
+        if(i) i.addEventListener('input', sync);
+    });
+    sync();
+
+    // --- 2. EXISTING PNG DOWNLOAD ---
+    function downloadCard(id, fname) {
+        html2canvas(document.getElementById(id), { scale: 3, useCORS: true, backgroundColor: null }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = fname;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
+    // --- 3. NEW: QR CODE UPLOAD LOGIC ---
+    function processQR(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const qrDiv = document.getElementById('qr-display');
+                // Replace text with uploaded QR image
+                qrDiv.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: contain;">`;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // --- 4. NEW: PDF AUTO-FILL LOGIC ---
+    // Initialize PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    async function processPDF(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+
+        // Extract text from all pages
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const text = content.items.map(item => item.str).join(" ");
+            fullText += text + " ";
+        }
+        
+        // Auto-fill logic (These Regex patterns might need adjusting based on the exact PDF format)
+        extractAndFill(fullText);
+    }
+
+    function extractAndFill(text) {
+        // Helper function to match Regex and set value
+        const setVal = (id, regex) => {
+            const match = text.match(regex);
+            if(match && match[1]) {
+                document.getElementById(id).value = match[1].trim();
+            }
+        };
+
+        // Example Regex matching (You can modify these based on the actual words in the RC PDF)
+        setVal('in_reg_no', /Registration No[^\w]*([A-Z0-9]{9,10})/i);
+        setVal('in_chassis', /Chassis No[^\w]*([A-Z0-9]+)/i);
+        setVal('in_engine', /Engine No[^\w]*([A-Z0-9]+)/i);
+        setVal('in_owner_name', /Owner Name[^\w]*([A-Za-z\s]+)(?=Son|Wife|Daughter|Address)/i);
+        setVal('in_color', /Colour[^\w]*([A-Za-z\s]+)(?=Body|Mfg|Class)/i);
+        setVal('in_maker', /Maker's Name[^\w]*([A-Za-z\s]+)(?=Model|Month)/i);
+        setVal('in_model', /Model Name[^\w]*([A-Za-z0-9\s]+)(?=Colour|Body)/i);
+        
+        // After extracting, sync the UI
+        sync();
+        alert("PDF Data Processed! Please verify the details before downloading.");
+    }
+
+    // --- 5. NEW: DOWNLOAD AS FULL PDF LOGIC ---
+    async function downloadAsPDF() {
+        const { jsPDF } = window.jspdf;
+        // Create A4 PDF
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        // Capture Cards via HTML2Canvas
+        const frontCanvas = await html2canvas(document.getElementById('front-card'), { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+        const backCanvas = await html2canvas(document.getElementById('back-card'), { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+
+        const fData = frontCanvas.toDataURL('image/jpeg', 1.0);
+        const bData = backCanvas.toDataURL('image/jpeg', 1.0);
+
+        // Smart Card standard size is approx 85.6 mm x 54 mm
+        const cardWidth = 86; 
+        const cardHeight = 54;
+
+        // Add Front Card image to PDF
+        pdf.addImage(fData, 'JPEG', 15, 15, cardWidth, cardHeight);
+        
+        // Add Back Card image to PDF (placed below the front card)
+        pdf.addImage(bData, 'JPEG', 15, 15 + cardHeight + 10, cardWidth, cardHeight);
+
+        // Save PDF
+        pdf.save(document.getElementById('in_reg_no').value + '_RC_Card.pdf');
+    }
+</script>
+</body>
+</html>
