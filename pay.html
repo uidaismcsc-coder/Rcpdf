@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RC Smart Card - ID Size Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     
     <style>
         :root {
@@ -83,6 +84,17 @@
             transition: background 0.3s;
         }
         .btn-submit:hover { background: #218838; }
+
+        /* PDF Auto-Fill Uploader Design */
+        .pdf-upload-box {
+            grid-column: span 3;
+            background: #e6f7ff;
+            padding: 15px;
+            border: 1px dashed #00469b;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
 
         /* --- PREVIEW SECTION --- */
         .preview-section {
@@ -220,6 +232,13 @@
 
 <div class="container">
     <form class="form-section" id="rcForm">
+        <div class="pdf-upload-box">
+            <label style="color: #00469b; font-size: 14px; font-weight: bold; margin-bottom: 8px; display: block;">
+                📄 Auto-Fill Details from RC PDF
+            </label>
+            <input type="file" id="pdf_uploader" accept="application/pdf" style="background: white; padding: 5px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">
+        </div>
+
         <h2>Vehicle Registration Details</h2>
         
         <div class="input-group">
@@ -319,7 +338,7 @@
             <input type="text" id="in_stand_cap" value="0" required>
         </div>
 
-        <button type="submit" class="btn-submit">📥 Download</button>
+        <button type="submit" class="btn-submit">📥 Download ID Size PDF (85.6mm x 54mm)</button>
     </form>
 
     <div class="preview-section">
@@ -384,7 +403,7 @@
                                 <div class="fld fld-col2"><span class="lbl">HP/Lease</span><span class="val" id="lbl_hp_lease">-</span></div>
                             </div>
                             <div class="sign-area">
-                                <div class="signature-img"></div>
+                                <div class="signature-img">Signature</div>
                                 <div class="sign-title">Signature of<br>Asst. Registering Authority</div>
                             </div>
                         </div>
@@ -392,7 +411,6 @@
                 </div>
             </div>
 
-            <!-- Page Break -->
             <div class="html2pdf__page-break"></div>
 
             <div class="pvc-card pvc-back" id="back-card" style="margin-top: 20px;">
@@ -487,6 +505,99 @@
     });
 
     updatePreview();
+
+    // --- NEW: PDF AUTO-FILL EXTRACTION LOGIC ---
+    document.getElementById('pdf_uploader').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+            const typedarray = new Uint8Array(this.result);
+            
+            // Initiate PDF.js worker
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+            
+            pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                let promises = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    promises.push(pdf.getPage(i).then(page => {
+                        return page.getTextContent().then(textContent => {
+                            return textContent.items.map(item => item.str).join(" ");
+                        });
+                    }));
+                }
+                
+                Promise.all(promises).then(pages => {
+                    const fullText = pages.join(" ");
+                    
+                    // Regex Extract Helper
+                    const extract = (regex) => {
+                        const match = fullText.match(regex);
+                        return match ? match[1].trim() : "";
+                    };
+
+                    // Data Mapping from your sample PDF Format
+                    const regNoMatch = fullText.match(/([A-Z]{2}\d{2}[A-Z]{1,2}\d{4})/);
+                    if(regNoMatch) document.getElementById('in_reg_no').value = regNoMatch[1];
+                    
+                    const dates = fullText.match(/(\d{2}\/\d{2}\/\d{4})/g);
+                    if(dates && dates.length >= 2) {
+                        document.getElementById('in_reg_date').value = dates[0]; // Reg Date
+                        document.getElementById('in_valid_upto').value = dates[1]; // Valid Till
+                    }
+                    
+                    const chassis = extract(/Chassis\s*Number\s*([A-Z0-9]+)/i);
+                    if(chassis) document.getElementById('in_chassis_no').value = chassis;
+                    
+                    const engine = extract(/Engine.*?Number\s*([A-Z0-9]+)/i);
+                    if(engine) document.getElementById('in_engine_no').value = engine;
+                    
+                    const owner = extract(/Owner\s*Name\s*(.*?)(?=\d{2}\/\d{2}\/\d{4}|Son|\bAddress\b)/i);
+                    if(owner) document.getElementById('in_owner_name').value = owner;
+                    
+                    const address = extract(/Address\s*(.*?)(?=Serial|Regn|Maker|The following table)/i);
+                    if(address) document.getElementById('in_address').value = address.replace(/\s\s+/g, ' '); // Clean extra spaces
+                    
+                    const maker = extract(/Maker:\s*(.*?)\s*Model:/i);
+                    const model = extract(/Model:\s*(.*?)\s*Card/i);
+                    if(maker || model) {
+                        document.getElementById('in_mfr_name').value = (maker + " " + model).trim();
+                    }
+                    
+                    const mfgDate = extract(/(?:Mfg\.|Mfg)\s*(\d{2}\/\d{4})/i);
+                    if(mfgDate) document.getElementById('in_mfg_date').value = mfgDate;
+                    
+                    const cyl = extract(/Cylinders:\s*(\d+)/i);
+                    if(cyl) document.getElementById('in_no_cyl').value = cyl;
+                    
+                    const color = extract(/Color:\s*([A-Za-z\s]+)\s*Seating/i);
+                    if(color) document.getElementById('in_colour').value = color;
+                    
+                    const seat = extract(/Capacity\s*(\d+)/i);
+                    if(seat) document.getElementById('in_seat_cap').value = seat;
+                    
+                    const unladen = extract(/Unladen\s*Weight.*?(\d+)/i);
+                    if(unladen) document.getElementById('in_unladen_wt').value = unladen;
+                    
+                    const ccAndWbData = fullText.match(/Base\(mm\)\s*(\d+)/i) || fullText.match(/\)\s*(\d+)\s*The following/i);
+                    if(ccAndWbData) document.getElementById('in_cc').value = ccAndWbData[1];
+
+                    const body = extract(/Body\s*Type\s*(.*)/i);
+                    if(body) document.getElementById('in_body_type').value = body;
+                    
+                    const fuel = extract(/Fuel\s*([A-Za-z]+)/i);
+                    if(fuel) document.getElementById('in_fuel').value = fuel;
+                    
+                    // Instantly refresh the visual ID Card Preview
+                    updatePreview();
+                    
+                    alert("✅ PDF-லிருந்து தகவல்கள் வெற்றிகரமாக எடுக்கப்பட்டன! தயவுசெய்து உறுதிப்படுத்திக் கொள்ளவும்.");
+                });
+            });
+        };
+        fileReader.readAsArrayBuffer(file);
+    });
 
     // PDF DOWNLOAD - STRICT A4 PAPER FIX (Direct formatting to prevent blank page)
     document.getElementById('rcForm').addEventListener('submit', function(e) {
