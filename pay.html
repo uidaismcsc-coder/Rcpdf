@@ -132,6 +132,8 @@
             align-items: center;
             margin-bottom: 5px;
         }
+        
+        /* --- LOGO SIZES FIXED HERE --- */
         .emblem-placeholder, .pudu-logo-placeholder {
             border: 1px dashed #ccc;
             font-size: 9px;
@@ -140,8 +142,10 @@
             align-items: center;
             justify-content: center;
         }
-        .emblem-placeholder { width: 55px; height: 65px; }
-        .pudu-logo-placeholder { width: 85px; height: 65px; }
+        .emblem-placeholder, .emblem-img { width: 55px; height: 65px; object-fit: contain; }
+        .pudu-logo-placeholder, .pudu-logo-img { width: 85px; height: 65px; object-fit: contain; }
+        .chip-img { width: 105px; height: 85px; object-fit: contain; margin-top: 5px; }
+
         .card-header-text { text-align: center; width: 100%; }
         .card-header-text h1 {
             background-color: var(--rc-blue);
@@ -159,6 +163,7 @@
         .card-body { margin-top: 10px; }
         .top-meta-section { display: grid; grid-template-columns: 1.1fr 1fr; gap: 4px 20px; margin-bottom: 12px; }
         .middle-identity-section { display: grid; grid-template-columns: 160px 1fr; align-items: start; margin-bottom: 10px; min-height: 125px; }
+        
         .chip {
             width: 105px; height: 85px;
             background: linear-gradient(135deg, #ebd087, #b88d21);
