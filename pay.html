@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RC Smart Card</title>
+    <title>RC Smart Card - ID Size Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     
@@ -156,7 +156,9 @@
         }
         .emblem-placeholder, .emblem-img { width: 55px; height: 65px; object-fit: contain; }
         .pudu-logo-placeholder, .pudu-logo-img { width: 85px; height: 65px; object-fit: contain; }
-        .chip-img { width: 105px; height: 85px; object-fit: contain; margin-top: 5px; }
+        
+        /* Smart Card Chip 3px right move */
+        .chip-img { width: 105px; height: 85px; object-fit: contain; margin-top: 5px; margin-left: 3px; }
 
         .card-header-text { text-align: center; width: 100%; }
         .card-header-text h1 {
@@ -173,6 +175,8 @@
         .card-header-text p { margin: 4px 0 0 0; font-size: 18px; font-weight: bold; color: #000; }
         
         .card-body { margin-top: 10px; }
+        
+        /* Alignment fixed: Removed margin-left so it starts at Chip edge */
         .top-meta-section { display: grid; grid-template-columns: 1.1fr 1fr; gap: 4px 20px; margin-bottom: 12px; }
         .middle-identity-section { display: grid; grid-template-columns: 160px 1fr; align-items: start; margin-bottom: 10px; min-height: 125px; }
         
@@ -188,8 +192,13 @@
         
         .fld { display: flex; font-size: 16.5px; color: #000; line-height: 1.25; }
         .fld .lbl { font-weight: normal; display: inline-block; }
-        .fld-meta .lbl { min-width: 110px; }
-        .fld-identity .lbl { min-width: 90px; }
+        
+        /* Odd fields (Reg No, Tax paid) width exactly 160px to align values with Name */
+        .fld-meta:nth-child(odd) .lbl { min-width: 160px; }
+        /* Even fields (Reg Dt, Valid till) original width */
+        .fld-meta:nth-child(even) .lbl { min-width: 110px; }
+        
+        .fld-identity .lbl { min-width: 110px; }
         .fld-col1 .lbl { min-width: 100px; }
         .fld-col2 .lbl { min-width: 115px; }
         .fld-sub .lbl { min-width: 115px; }
@@ -198,7 +207,7 @@
         
         .address-block { display: flex; flex-direction: column; gap: 2px; }
         .sign-area { text-align: center; margin-top: auto; align-self: flex-end; padding-right: 15px; padding-bottom: 5px; }
-        .signature-img { font-style: italic; font-family: 'Georgia', serif; font-size: 20px; color: #000; font-weight: bold; margin-bottom: 4px; }
+        .signature-img { font-style: italic; font-family: 'Georgia', serif; font-size: 20px; color: #000; font-weight: bold; margin-bottom: 4px; display: flex; justify-content: center; align-items: center; min-height: 30px; }
         .sign-title { font-size: 13.5px; color: #000; line-height: 1.3; }
 
 
@@ -338,7 +347,12 @@
             <input type="text" id="in_stand_cap" value="0" required>
         </div>
 
-        <button type="submit" class="btn-submit">📥 Download RC</button>
+        <div class="input-group span-2" style="margin-top: 5px;">
+            <label style="color: #d9534f;">Upload Signature (PNG Only)</label>
+            <input type="file" id="in_sign_upload" accept="image/png" style="cursor: pointer;">
+        </div>
+
+        <button type="submit" class="btn-submit">📥 Download ID Size PDF (85.6mm x 54mm)</button>
     </form>
 
     <div class="preview-section">
@@ -403,7 +417,10 @@
                                 <div class="fld fld-col2"><span class="lbl">HP/Lease</span><span class="val" id="lbl_hp_lease">-</span></div>
                             </div>
                             <div class="sign-area">
-                                <div class="signature-img">Signature</div>
+                                <div class="signature-img">
+                                    <span id="sig-text">Signature</span>
+                                    <img id="sig-preview" src="" alt="Signature" style="display: none; max-width: 140px; height: 30px; object-fit: contain;">
+                                </div>
                                 <div class="sign-title">Signature of<br>Asst. Registering Authority</div>
                             </div>
                         </div>
@@ -597,6 +614,23 @@
             });
         };
         fileReader.readAsArrayBuffer(file);
+    });
+
+    // --- NEW: PNG SIGNATURE UPLOADER PREVIEW LOGIC ---
+    document.getElementById('in_sign_upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file && file.type === 'image/png') {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                document.getElementById('sig-preview').src = evt.target.result;
+                document.getElementById('sig-preview').style.display = 'inline-block';
+                document.getElementById('sig-text').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        } else if (file) {
+            alert('தயவுசெய்து PNG ஃபார்மேட்டில் உள்ள சிக்னேச்சர் இமேஜை மட்டும் அப்லோட் செய்யவும்.');
+            e.target.value = ''; // Reset invalid file
+        }
     });
 
     // PDF DOWNLOAD - STRICT A4 PAPER FIX (Direct formatting to prevent blank page)
