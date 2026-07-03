@@ -83,7 +83,7 @@
 
         /* Elements Exact Positioning (Images Replaced) */
         .chip {
-            position: absolute; top: 195px; left: 60px;
+            position: absolute; top: 220px; left: 70px;
             width: 95px; height: 75px; 
             object-fit: contain;
         }
@@ -98,6 +98,7 @@
             position: absolute; top: 190px; left: 50%; transform: translateX(-50%);
             width: 380px; height: 230px;
             object-fit: contain;
+            transition: transform 0.1s ease;
         }
 
         .emblem-left {
@@ -113,21 +114,23 @@
         }
 
         .transport-text {
-            /* Shifted downwards by changing bottom from 85px to 65px */
-            position: absolute; bottom: 65px; left: 240px; right: 240px;
-            text-align: center; color: #000080; font-size: 20px; font-weight: bold; line-height: 1.2;
+            /* Text Moved Lower down to avoid overlap */
+            position: absolute; bottom: 26px; left: 240px; right: 240px;
+            text-align: center; color: #39394b; font-size: 20px; font-weight: bold; line-height: 1.2;
         }
         .transport-en { font-size: 22px; letter-spacing: 2px; }
-        .barcode {
-            position: absolute; bottom: 40px; left: 250px; right: 250px; height: 35px;
-            background: repeating-linear-gradient(90deg, #001f5c, #001f5c 5px, #fff 5px, #fff 10px);
+        
+        /* Bottom logo shifted slightly to accommodate text drop */
+        .bottom-logo {
+            position: absolute; bottom: -15px; left: 250px; right: 250px; height: 60px; width: 356px;
+            object-fit: contain;
         }
 
         /* ----- பின்பக்கம் (BACK CARD) ----- */
         .back-content { padding: 35px 40px; font-size: 15.5px; color: #000; font-family: Arial, Helvetica, sans-serif; position: relative; height: 100%; box-sizing: border-box; }
         
         .back-top-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
-        .reg-no-text { font-size: 26px; font-weight: 900; margin-left: 100px; }
+        .reg-no-text { font-size: 26px; font-weight: 900; margin-left: -50px; }
         .form-text { text-align: center; font-size: 14px; font-weight: bold; line-height: 1.3; }
 
         /* Perfect Grid alignment for colons avoiding overlaps */
@@ -157,6 +160,12 @@
         <button class="download-btn" onclick="generatePDF()">📥 Download Corrected HD PDF</button>
         <h3>RC Details Entry</h3>
         
+        <!-- Center Logo Size Slider -->
+        <div class="inp-group">
+            <label>CENTER LOGO SIZE</label>
+            <input type="range" min="0.3" max="2.5" step="0.1" value="1" oninput="document.querySelector('.center-img').style.transform = 'translateX(-50%) scale(' + this.value + ')'">
+        </div>
+
         <div class="inp-group"><label>REG NO</label><input type="text" id="in_reg" value="KA13TD2669" oninput="updateUI()"></div>
         <div class="inp-group"><label>REG DATE</label><input type="text" id="in_date" value="20/12/2023" oninput="updateUI()"></div>
         <div class="inp-group"><label>CHASSIS NO</label><input type="text" id="in_chassis" value="1VY5045DEPM042742" oninput="updateUI()"></div>
@@ -206,11 +215,13 @@
                 <img src="chipp.png" class="chip" alt="SIPCOT Chip">
                 <img src="flg.jpg" class="flag" alt="Flag Image">
                 <img src="he.png" class="center-img" alt="Center Logo">
-                <img src="goi.png" class="emblem-left" alt="Lion Capital">
+                <img src="c.png" class="emblem-left" alt="Lion Capital">
                 <img src="c.png" class="emblem-right" alt="Govt Emblem">
                 
                 <div class="transport-text">ಸಾರಿಗೆ ಇಲಾಖೆ<br><span class="transport-en">TRANSPORT DEPARTMENT</span></div>
-                <div class="barcode"></div>
+                
+                <!-- Replaced Barcode with Logo here -->
+                <img src="b.png" class="bottom-logo" alt="Bottom Logo replacing Barcode">
             </div>
 
             <!-- Back Card -->
