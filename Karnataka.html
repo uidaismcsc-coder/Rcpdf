@@ -1,617 +1,343 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ta">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RC Card Generator</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <title>Perfect Exact RC Card Generator</title>
     
+    <!-- High Quality PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-        .container {
-            display: flex;
-            gap: 30px;
-            max-width: 1350px;
-            width: 100%;
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        .form-section {
-            flex: 1.1;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            align-content: start;
-        }
-        .form-section h2 {
-            grid-column: span 3;
-            margin: 0 0 5px 0;
-            font-size: 18px;
-            color: #000;
-            border-bottom: 2px solid #000;
-            padding-bottom: 5px;
-        }
-        
-        /* புதிய PDF அப்லோட் பகுதி வடிவமைப்பு */
-        .upload-section {
-            grid-column: span 3;
-            background: #eef4fc;
-            border: 2px dashed #00469b;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .upload-section label {
-            font-size: 13px;
-            color: #00469b;
-            cursor: pointer;
-            display: block;
-            font-weight: bold;
-        }
-        .upload-section input {
-            display: none;
-        }
-        .status-msg {
-            font-size: 11px;
-            color: #555;
-            margin-top: 5px;
-            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #e2e8f0;
+            margin: 0; padding: 20px;
+            display: flex; gap: 30px;
         }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
+        /* --- இன்புட் பகுதி --- */
+        .input-section {
+            width: 350px; background: #fff; padding: 15px;
+            border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            height: 90vh; overflow-y: auto; font-size: 13px;
         }
-        .input-group.full { grid-column: span 3; }
-        .input-group.span-2 { grid-column: span 2; }
-        label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 2px;
+        .input-section h3 { margin-top: 0; color: #1a5c28; text-align: center; border-bottom: 2px solid #1a5c28; padding-bottom: 5px; }
+        .inp-group { display: flex; flex-direction: column; margin-bottom: 8px; }
+        .inp-group label { font-weight: bold; margin-bottom: 3px; color: #444; font-size: 11px; }
+        .inp-group input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif; }
+        
+        .download-btn {
+            background-color: #d32f2f; color: white; border: none;
+            padding: 12px; width: 100%; font-size: 16px; font-weight: bold;
+            border-radius: 5px; cursor: pointer; margin-bottom: 15px;
         }
-        input {
-            padding: 6px 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 11px;
+        .download-btn:hover { background-color: #b71c1c; }
+
+        /* --- கார்டு வெளியீட்டுப் பகுதி --- */
+        .preview-wrapper {
+            /* பிரிவியூ திரையில் சுருக்கி காட்ட மட்டுமே, html2canvas எடுக்கும்போது இது 100% ஆக மாறும் (தவிர்க்கOverlap) */
+            transform: scale(0.85); transform-origin: top left;
+            transition: transform 0.1s ease;
         }
+        
         .preview-section {
-            flex: 1.3;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+            display: flex; flex-direction: column; gap: 25px;
+        }
+
+        /* EXACT CR80 Proportion (Scale 10x for HD rendering) 
+           85.6mm x 54mm -> 856px x 540px */
+        .card {
+            width: 856px; height: 540px;
+            background-color: #ffffff; border-radius: 25px;
+            position: relative; overflow: hidden;
+            box-sizing: border-box; border: 2px solid #d1d1d1;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            /* எழுத்துக்கள் ஒன்றின்மீது ஒன்றாகாமல் தடுக்க */
+            line-height: 1.4; letter-spacing: normal;
+        }
+
+        /* ----- முன்பக்கம் (FRONT CARD) ----- */
+        
+        /* அசல் புகைப்படத்தில் உள்ளபடியே பச்சை நிற பாக்ஸ் மற்றும் எழுத்துக்கள் */
+        .front-header {
+            position: absolute; top: 0; left: 0; width: 100%; height: 145px;
+            background-color: #125725; /* கரும் பச்சை */
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .header-top-text {
+            display: flex; gap: 15px; align-items: baseline; margin-bottom: 12px;
+        }
+        .title-kn { color: #fdd835; font-size: 38px; font-weight: bold; margin: 0; }
+        .title-en { color: #fdd835; font-size: 42px; font-weight: bold; margin: 0; }
+        
+        .header-divider {
+            width: 90%; height: 4px; background-color: #92b847; /* லேசான பச்சை/மஞ்சள் கோடு */
+            margin-bottom: 12px;
+        }
+
+        .sub-title {
+            color: #d0e447; font-size: 34px; font-weight: bold; margin: 0; letter-spacing: 1px;
+        }
+
+        /* Elements Exact Positioning (Images Replaced) */
+        .chip {
+            position: absolute; top: 195px; left: 60px;
+            width: 95px; height: 75px; 
+            object-fit: contain;
         }
         
-        /* பிடிஎஃப் எடுக்கும்போது கட் ஆகாமல் இருக்க பாக்ஸ் அளவுகள் சரி செய்யப்பட்டுள்ளது */
-        .rc-card {
-            width: 856px;
-            height: 540px;
-            background: #ffffff;
-            border: 3px solid #000000;
-            border-radius: 35px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-            padding: 35px 40px;
-            position: relative;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
+        .flag {
+            position: absolute; top: 185px; right: 60px;
+            width: 125px; height: 85px; 
+            object-fit: contain;
+        }
+
+        .center-img {
+            position: absolute; top: 190px; left: 50%; transform: translateX(-50%);
+            width: 380px; height: 230px;
+            object-fit: contain;
+        }
+
+        .emblem-left {
+            position: absolute; bottom: 60px; left: 55px;
+            width: 95px; height: 130px; 
+            object-fit: contain;
         }
         
-        /* Header Setup */
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 25px;
-            position: relative;
-            height: 45px;
-        }
-        .reg-no-title {
-            font-size: 32px;
-            font-weight: 900;
-            color: #000;
-            margin: 0;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-        }
-        .form-type-title {
-            text-align: right;
-            margin-left: auto;
-            font-weight: bold;
-            color: #000;
-            font-size: 16px;
-            line-height: 1.3;
+        .emblem-right {
+            position: absolute; bottom: 65px; right: 55px;
+            width: 115px; height: 125px; 
+            object-fit: contain;
         }
 
-        /* Body Content Structure */
-        .card-body {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
+        .transport-text {
+            /* Shifted downwards by changing bottom from 85px to 65px */
+            position: absolute; bottom: 65px; left: 240px; right: 240px;
+            text-align: center; color: #000080; font-size: 20px; font-weight: bold; line-height: 1.2;
+        }
+        .transport-en { font-size: 22px; letter-spacing: 2px; }
+        .barcode {
+            position: absolute; bottom: 40px; left: 250px; right: 250px; height: 35px;
+            background: repeating-linear-gradient(90deg, #001f5c, #001f5c 5px, #fff 5px, #fff 10px);
         }
 
-        .section-row {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            column-gap: 30px;
-        }
+        /* ----- பின்பக்கம் (BACK CARD) ----- */
+        .back-content { padding: 35px 40px; font-size: 15.5px; color: #000; font-family: Arial, Helvetica, sans-serif; position: relative; height: 100%; box-sizing: border-box; }
         
-        .fld-col {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .back-top-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+        .reg-no-text { font-size: 26px; font-weight: 900; margin-left: 100px; }
+        .form-text { text-align: center; font-size: 14px; font-weight: bold; line-height: 1.3; }
 
-        /* Field Alignment & Typography */
-        .fld {
-            display: flex;
-            font-size: 18px;
-            color: #000;
-            font-weight: bold;
-            line-height: 1.25;
+        /* Perfect Grid alignment for colons avoiding overlaps */
+        .info-grid {
+            display: grid; grid-template-columns: 145px 15px auto;
+            margin-bottom: 5px; font-weight: bold; align-items: center;
         }
-        .fld .lbl {
-            width: 145px;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-        .fld-col-right .lbl {
-            width: 115px;
-        }
-        .fld .lbl::after {
-            content: " :";
-            float: right;
-        }
-        .fld .val {
-            padding-left: 10px;
-            text-transform: uppercase;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
+        .val { text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Footer & Authority Signature */
-        .card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            position: absolute;
-            bottom: 35px;
-            right: 40px;
-            left: 40px;
-        }
-        .sign-area {
-            text-align: center;
-            margin-left: auto;
-        }
-        .signature-container {
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 2px;
-        }
-        .signature-img {
-            font-style: italic;
-            font-family: 'Georgia', serif;
-            font-size: 24px;
-            color: #000;
-            font-weight: bold;
-        }
-        .sign-title {
-            font-size: 17px;
-            font-weight: bold;
-            color: #000;
-            line-height: 1.2;
-        }
+        .split-section { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .left-col { width: 62%; }
+        .right-col { width: 35%; }
 
-        .btn-submit {
-            grid-column: span 3;
-            padding: 12px;
-            background: #00469b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 10px;
+        .signature-box {
+            position: absolute; bottom: 35px; right: 40px; text-align: center;
+            font-size: 15px; font-weight: bold; font-family: "Segoe Script", cursive, Arial; line-height: 1.3;
         }
-        .btn-submit:hover { background: #002752; }
+        .sig-img { width: 130px; height: 40px; border-bottom: 1.5px solid #000; margin-bottom: 5px; display: inline-block; }
+        .sig-text { font-family: Arial, sans-serif; }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <form class="form-section" id="rcForm">
-        <h2>Vehicle Registration Details Form</h2>
+    <!-- இன்புட் ஃபார்ம் -->
+    <div class="input-section">
+        <button class="download-btn" onclick="generatePDF()">📥 Download Corrected HD PDF</button>
+        <h3>RC Details Entry</h3>
         
-        <div class="upload-section">
-            <label for="pdf_uploader">📂 இங்கே அசல் RC PDF பைலை அப்லோட் செய்யவும் (Auto Fill)</label>
-            <input type="file" id="pdf_uploader" accept="application/pdf">
-            <div id="upload_status" class="status-msg">மாற்றங்களை செய்ய PDF கோப்பை தேர்ந்தெடுக்கவும்</div>
-        </div>
-
-        <div class="input-group">
-            <label>Registration No</label>
-            <input type="text" id="in_reg_no" value="KA13TD2669" required>
-        </div>
-        <div class="input-group">
-            <label>Form Type</label>
-            <input type="text" id="in_form_type" value="FORM-23A" required>
-        </div>
-        <div class="input-group">
-            <label>Rule Info</label>
-            <input type="text" id="in_rule_info" value="(See Rule 48)" required>
-        </div>
-        <div class="input-group">
-            <label>Registration Date</label>
-            <input type="text" id="in_reg_date" value="20/12/2023" required>
-        </div>
-        <div class="input-group">
-            <label>Chassis No</label>
-            <input type="text" id="in_chassis_no" value="1VY5045DEPM042742" required>
-        </div>
-        <div class="input-group">
-            <label>Engine No</label>
-            <input type="text" id="in_engine_no" value="PY3029D7*****" required>
-        </div>
-        <div class="input-group full">
-            <label>Manufacturer (MFR)</label>
-            <input type="text" id="in_mfr_name" value="JOHN DEERE INDIA PVT LTD" required>
-        </div>
-        <div class="input-group full">
-            <label>Owner Name</label>
-            <input type="text" id="in_owner_name" value="SHIVEGOWDA" required>
-        </div>
-        <div class="input-group">
-            <label>S/W/D Of</label>
-            <input type="text" id="in_swd_name" value="">
-        </div>
-        <div class="input-group span-2">
-            <label>Address</label>
-            <input type="text" id="in_address" value="Hassan, 573215" required>
-        </div>
-        <div class="input-group">
-            <label>O.SL.NO</label>
-            <input type="text" id="in_o_sl_no" value="1" required>
-        </div>
-        <div class="input-group">
-            <label>Class</label>
-            <input type="text" id="in_v_class" value="Agricultural Tr" required>
-        </div>
-        <div class="input-group">
-            <label>Colour</label>
-            <input type="text" id="in_colour" value="JOHN DEERE GREEN" required>
-        </div>
+        <div class="inp-group"><label>REG NO</label><input type="text" id="in_reg" value="KA13TD2669" oninput="updateUI()"></div>
+        <div class="inp-group"><label>REG DATE</label><input type="text" id="in_date" value="20/12/2023" oninput="updateUI()"></div>
+        <div class="inp-group"><label>CHASSIS NO</label><input type="text" id="in_chassis" value="1VY5045DEPM042742" oninput="updateUI()"></div>
+        <div class="inp-group"><label>ENGINE NO</label><input type="text" id="in_engine" value="PY3029D7*****" oninput="updateUI()"></div>
+        <div class="inp-group"><label>MFR</label><input type="text" id="in_mfr" value="JOHN DEERE INDIA PVT LTD" oninput="updateUI()"></div>
+        <div class="inp-group"><label>OWNER NAME</label><input type="text" id="in_owner" value="SHIVEGOWDA" oninput="updateUI()"></div>
+        <div class="inp-group"><label>S/W/D OF</label><input type="text" id="in_swd" value="" oninput="updateUI()"></div>
+        <div class="inp-group"><label>ADDRESS</label><input type="text" id="in_add" value="Hassan, 573215" oninput="updateUI()"></div>
         
-        <div class="input-group full">
-            <label>Model</label>
-            <input type="text" id="in_model" value="JOHN DEERE 5045D 4WD V3" required>
-        </div>
+        <div class="inp-group"><label>O.SL.NO</label><input type="text" id="in_sl" value="1" oninput="updateUI()"></div>
+        <div class="inp-group"><label>CLASS</label><input type="text" id="in_class" value="Agricultural Tr" oninput="updateUI()"></div>
+        <div class="inp-group"><label>COLOUR</label><input type="text" id="in_col" value="JOHN DEERE GREEN" oninput="updateUI()"></div>
         
-        <div class="input-group">
-            <label>Body Type</label>
-            <input type="text" id="in_body_type" value="NA" required>
-        </div>
-        <div class="input-group">
-            <label>Wheel Base</label>
-            <input type="text" id="in_wheel_base" value="1950" required>
-        </div>
-        <div class="input-group">
-            <label>Mfg Date</label>
-            <input type="text" id="in_mfg_date" value="10/2023" required>
-        </div>
-        <div class="input-group">
-            <label>Fuel</label>
-            <input type="text" id="in_fuel" value="DIESEL" required>
-        </div>
-        <div class="input-group">
-            <label>Ref/RC Upto</label>
-            <input type="text" id="in_ref_rc_upto" value="19/12/2038" required>
-        </div>
-        <div class="input-group">
-            <label>Tax Upto</label>
-            <input type="text" id="in_tax_upto" value="2038-12-19" required>
-        </div>
-        <div class="input-group">
-            <label>No Of Cyl</label>
-            <input type="text" id="in_no_cyl" value="3" required>
-        </div>
-        <div class="input-group">
-            <label>Unladen Wt</label>
-            <input type="text" id="in_unladen_wt" value="2010" required>
-        </div>
-        <div class="input-group">
-            <label>Seating</label>
-            <input type="text" id="in_seating" value="1" required>
-        </div>
-        <div class="input-group">
-            <label>STDG/SLPR</label>
-            <input type="text" id="in_stdg_slpr" value="0 / 0" required>
-        </div>
-        <div class="input-group">
-            <label>CC</label>
-            <input type="text" id="in_cc" value="2940.00" required>
-        </div>
-        <div class="input-group span-2">
-            <label>Registering Authority Place</label>
-            <input type="text" id="in_auth_place" value="Hassan Rto, Ka" required>
-        </div>
+        <div class="inp-group"><label>MODEL</label><input type="text" id="in_mod" value="JOHN DEERE 5045D 4WD V3" oninput="updateUI()"></div>
+        <div class="inp-group"><label>BODY</label><input type="text" id="in_body" value="NA" oninput="updateUI()"></div>
+        <div class="inp-group"><label>WHEEL BASE</label><input type="text" id="in_wheel" value="1950" oninput="updateUI()"></div>
+        <div class="inp-group"><label>MFG DATE</label><input type="text" id="in_mfg" value="10/2023" oninput="updateUI()"></div>
+        <div class="inp-group"><label>FUEL</label><input type="text" id="in_fuel" value="DIESEL" oninput="updateUI()"></div>
+        <div class="inp-group"><label>REF/RC UPTO</label><input type="text" id="in_rc_upto" value="19/12/2038" oninput="updateUI()"></div>
+        <div class="inp-group"><label>TAX UPTO</label><input type="text" id="in_tax" value="2038-12-19" oninput="updateUI()"></div>
+        
+        <div class="inp-group"><label>NO OF CYL</label><input type="text" id="in_cyl" value="3" oninput="updateUI()"></div>
+        <div class="inp-group"><label>UNLADEN WT</label><input type="text" id="in_wt" value="2010" oninput="updateUI()"></div>
+        <div class="inp-group"><label>SEATING</label><input type="text" id="in_seat" value="1" oninput="updateUI()"></div>
+        <div class="inp-group"><label>STDG/SLPR</label><input type="text" id="in_stdg" value="0 / 0" oninput="updateUI()"></div>
+        <div class="inp-group"><label>CC</label><input type="text" id="in_cc" value="2940.00" oninput="updateUI()"></div>
+        <div class="inp-group"><label>RTO OFFICE</label><input type="text" id="in_rto" value="Hassan Rto, Ka" oninput="updateUI()"></div>
+    </div>
 
-        <button type="submit" class="btn-submit">Download Document PDF</button>
-    </form>
-
-    <div class="preview-section">
-        <div class="rc-card" id="rcCardPreview">
-            <div class="card-header">
-                <div class="reg-no-title">REG NO : <span id="lbl_reg_no">-</span></div>
-                <div class="form-type-title">
-                    <span id="lbl_form_type">-</span><br>
-                    <span id="lbl_rule_info">-</span>
+    <!-- பிரிவியூ பகுதி -->
+    <div class="preview-wrapper" id="pdf-wrapper">
+        <div class="preview-section">
+            
+            <!-- Front Card -->
+            <div class="card" id="front-card">
+                <!-- மாற்றப்பட்ட Header பகுதி -->
+                <div class="front-header">
+                    <div class="header-top-text">
+                        <span class="title-kn">ಕರ್ನಾಟಕ ರಾಜ್ಯ</span>
+                        <span class="title-en">KARNATAKA STATE</span>
+                    </div>
+                    <div class="header-divider"></div>
+                    <p class="sub-title">CERTIFICATE OF REGISTRATION</p>
                 </div>
+                
+                <!-- Linked PNG Images replacing drawn CSS -->
+                <img src="chipp.png" class="chip" alt="SIPCOT Chip">
+                <img src="flg.jpg" class="flag" alt="Flag Image">
+                <img src="he.png" class="center-img" alt="Center Logo">
+                <img src="c.png" class="emblem-left" alt="Lion Capital">
+                <img src="c.png" class="emblem-right" alt="Govt Emblem">
+                
+                <div class="transport-text">ಸಾರಿಗೆ ಇಲಾಖೆ<br><span class="transport-en">TRANSPORT DEPARTMENT</span></div>
+                <div class="barcode"></div>
             </div>
 
-            <div class="card-body">
-                <div class="section-row">
-                    <div class="fld-col">
-                        <div class="fld"><span class="lbl">REG DATE</span><span class="val" id="lbl_reg_date">-</span></div>
-                        <div class="fld"><span class="lbl">CHASSIS NO</span><span class="val" id="lbl_chassis_no">-</span></div>
-                        <div class="fld"><span class="lbl">ENGINE NO</span><span class="val" id="lbl_engine_no">-</span></div>
-                        <div class="fld"><span class="lbl">MFR</span><span class="val" id="lbl_mfr_name">-</span></div>
-                        <div class="fld"><span class="lbl">OWNER NAME</span><span class="val" id="lbl_owner_name">-</span></div>
-                        <div class="fld"><span class="lbl">S/W/D OF</span><span class="val" id="lbl_swd_name">-</span></div>
-                        <div class="fld"><span class="lbl">ADDRESS</span><span class="val" id="lbl_address">-</span></div>
+            <!-- Back Card -->
+            <div class="card" id="back-card">
+                <div class="back-content">
+                    <div class="back-top-row">
+                        <div style="width: 150px;"></div> <!-- Spacer -->
+                        <div class="reg-no-text">REG NO : <span id="out_reg">KA13TD2669</span></div>
+                        <div class="form-text">FORM-23A<br>(See Rule 48)</div>
                     </div>
-                    <div class="fld-col fld-col-right">
-                        <div class="fld"><span class="lbl">O.SL.NO</span><span class="val" id="lbl_o_sl_no">-</span></div>
-                        <div class="fld"><span class="lbl">CLASS</span><span class="val" id="lbl_v_class">-</span></div>
-                        <div class="fld"><span class="lbl">COLOUR</span><span class="val" id="lbl_colour">-</span></div>
-                    </div>
-                </div>
 
-                <div class="section-row">
-                    <div class="fld-col">
-                        <div class="fld"><span class="lbl">MODEL</span><span class="val" id="lbl_model">-</span></div>
-                        <div class="fld"><span class="lbl">BODY</span><span class="val" id="lbl_body_type">-</span></div>
-                        <div class="fld"><span class="lbl">WHEEL BASE</span><span class="val" id="lbl_wheel_base">-</span></div>
-                        <div class="fld"><span class="lbl">MFG DATE</span><span class="val" id="lbl_mfg_date">-</span></div>
-                        <div class="fld"><span class="lbl">FUEL</span><span class="val" id="lbl_fuel">-</span></div>
-                        <div class="fld"><span class="lbl">REF/RC UPTO</span><span class="val" id="lbl_ref_rc_upto">-</span></div>
-                        <div class="fld"><span class="lbl">TAX UPTO</span><span class="val" id="lbl_tax_upto">-</span></div>
+                    <!-- Top Section -->
+                    <div class="split-section">
+                        <div class="left-col">
+                            <div class="info-grid"><div>REG DATE</div><div>:</div><div class="val" id="out_date"></div></div>
+                            <div class="info-grid"><div>CHASSIS NO</div><div>:</div><div class="val" id="out_chassis"></div></div>
+                            <div class="info-grid"><div>ENGINE NO</div><div>:</div><div class="val" id="out_engine"></div></div>
+                            <div class="info-grid"><div>MFR</div><div>:</div><div class="val" id="out_mfr"></div></div>
+                            <div class="info-grid"><div>OWNER NAME</div><div>:</div><div class="val" id="out_owner"></div></div>
+                            <div class="info-grid"><div>S/W/D OF</div><div>:</div><div class="val" id="out_swd"></div></div>
+                            <div class="info-grid"><div>ADDRESS</div><div>:</div><div class="val" id="out_add" style="text-transform:none; white-space:normal;"></div></div>
+                        </div>
+                        <div class="right-col">
+                            <div class="info-grid" style="grid-template-columns: 80px 10px auto;"><div>O.SL.NO</div><div>:</div><div class="val" id="out_sl"></div></div>
+                            <div class="info-grid" style="grid-template-columns: 80px 10px auto;"><div>CLASS</div><div>:</div><div class="val" id="out_class" style="text-transform:none;"></div></div>
+                            <div class="info-grid" style="grid-template-columns: 80px 10px auto;"><div>COLOUR</div><div>:</div><div class="val" id="out_col"></div></div>
+                        </div>
                     </div>
-                    <div class="fld-col fld-col-right">
-                        <div class="fld"><span class="lbl">NO OF CYL</span><span class="val" id="lbl_no_cyl">-</span></div>
-                        <div class="fld"><span class="lbl">UNLADEN WT</span><span class="val" id="lbl_unladen_wt">-</span></div>
-                        <div class="fld"><span class="lbl">SEATING</span><span class="val" id="lbl_seating">-</span></div>
-                        <div class="fld"><span class="lbl">STDG/SLPR</span><span class="val" id="lbl_stdg_slpr">-</span></div>
-                        <div class="fld"><span class="lbl">CC</span><span class="val" id="lbl_cc">-</span></div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="card-footer">
-                <div class="sign-area">
-                    <div class="signature-container">
-                        <span class="signature-img">Jflim</span>
+                    <div style="margin-top: 30px;"></div>
+
+                    <!-- Bottom Section -->
+                    <div class="split-section">
+                        <div class="left-col" style="width: 58%;">
+                            <div class="info-grid"><div>MODEL</div><div>:</div><div class="val" id="out_mod"></div></div>
+                            <div class="info-grid"><div>BODY</div><div>:</div><div class="val" id="out_body"></div></div>
+                            <div class="info-grid"><div>WHEEL BASE</div><div>:</div><div class="val" id="out_wheel"></div></div>
+                            <div class="info-grid"><div>MFG DATE</div><div>:</div><div class="val" id="out_mfg"></div></div>
+                            <div class="info-grid"><div>FUEL</div><div>:</div><div class="val" id="out_fuel"></div></div>
+                            <div class="info-grid"><div>REF/RC UPTO</div><div>:</div><div class="val" id="out_rc_upto"></div></div>
+                            <div class="info-grid"><div>TAX UPTO</div><div>:</div><div class="val" id="out_tax"></div></div>
+                        </div>
+                        <div class="right-col" style="width: 40%;">
+                            <div class="info-grid" style="grid-template-columns: 110px 10px auto;"><div>NO OF CYL</div><div>:</div><div class="val" id="out_cyl"></div></div>
+                            <div class="info-grid" style="grid-template-columns: 110px 10px auto;"><div>UNLADEN WT</div><div>:</div><div class="val" id="out_wt"></div></div>
+                            <div class="info-grid" style="grid-template-columns: 110px 10px auto;"><div>SEATING</div><div>:</div><div class="val" id="out_seat"></div></div>
+                            <div class="info-grid" style="grid-template-columns: 110px 10px auto;"><div>STDG/SLPR</div><div>:</div><div class="val" id="out_stdg"></div></div>
+                            <div class="info-grid" style="grid-template-columns: 110px 10px auto;"><div>CC</div><div>:</div><div class="val" id="out_cc"></div></div>
+                        </div>
                     </div>
-                    <div class="sign-title">Registering Authority<br><span id="lbl_auth_place">-</span></div>
+
+                    <div class="signature-box">
+                        <span class="sig-img"></span><br>
+                        <span class="sig-text">Registering Authority<br><span id="out_rto"></span></span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // PDFJS setup worker path
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    <script>
+        // Data Sync Script
+        const ids = ['reg','date','chassis','engine','mfr','owner','swd','add','sl','class','col','mod','body','wheel','mfg','fuel','rc_upto','tax','cyl','wt','seat','stdg','cc','rto'];
+        function updateUI() {
+            ids.forEach(id => {
+                document.getElementById('out_' + id).innerText = document.getElementById('in_' + id).value;
+            });
+        }
+        updateUI(); // Init call
 
-    const inputs = [
-        'reg_no', 'form_type', 'rule_info', 'reg_date', 'chassis_no', 'engine_no', 
-        'mfr_name', 'owner_name', 'swd_name', 'address', 'o_sl_no', 'v_class', 
-        'colour', 'model', 'body_type', 'wheel_base', 'mfg_date', 'fuel', 
-        'ref_rc_upto', 'tax_upto', 'no_cyl', 'unladen_wt', 'seating', 'stdg_slpr', 'cc', 'auth_place'
-    ];
-    
-    function updatePreview() {
-        inputs.forEach(id => {
-            const inputEl = document.getElementById(`in_${id}`);
-            const labelEl = document.getElementById(`lbl_${id}`);
-            if (inputEl && labelEl) {
-                labelEl.innerText = inputEl.value;
+        // Modified and Fixed PDF Export for A4 Layout
+        async function generatePDF() {
+            const btn = document.querySelector('.download-btn');
+            btn.innerText = "⏳ Processing A4 PDF...";
+            
+            const wrapper = document.getElementById('pdf-wrapper');
+            wrapper.style.transform = 'scale(1)'; 
+            
+            window.scrollTo(0, 0); 
+            
+            await new Promise(r => setTimeout(r, 200));
+
+            const { jsPDF } = window.jspdf;
+            // A4 Layout-ஆக மாற்றப்பட்டுள்ளது (Portrait mode)
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            
+            const opt = { 
+                scale: 3.5, 
+                useCORS: true, 
+                allowTaint: true, // Local இமேஜ் எரரை தவிர்க்க சேர்க்கப்பட்டுள்ளது
+                backgroundColor: '#ffffff'
+            };
+
+            try {
+                // Front Card
+                const front = await html2canvas(document.getElementById('front-card'), opt);
+                const frontImgData = front.toDataURL('image/jpeg', 1.0);
+                
+                // Back Card
+                const back = await html2canvas(document.getElementById('back-card'), opt);
+                const backImgData = back.toDataURL('image/jpeg', 1.0);
+                
+                // A4 சீட்டின் அகலம் 210mm. கார்டை நடுவில் வைக்க X position கணக்கீடு:
+                const cardWidth = 85.6;
+                const cardHeight = 54;
+                const xPos = (210 - cardWidth) / 2; // தோராயமாக 62.2mm
+                
+                // முன் பக்கம் (Front) A4 சீட்டின் மேல்பகுதியில்
+                pdf.addImage(frontImgData, 'JPEG', xPos, 20, cardWidth, cardHeight);
+                
+                // பின் பக்கம் (Back) சிறிது இடைவெளி விட்டு கீழே
+                pdf.addImage(backImgData, 'JPEG', xPos, 80, cardWidth, cardHeight);
+                
+                // A4 சைஸில் டவுன்லோட்
+                pdf.save('RC_Smart_Card_A4.pdf');
+                
+                btn.innerText = "✅ Downloaded Successfully!";
+                setTimeout(() => btn.innerText = "📥 Download A4 PDF", 3000);
+            } catch (err) {
+                console.error(err);
+                // எரர் வந்தால் அதற்கான காரணத்தை காட்டும்
+                alert("Error in PDF generation: " + (err.message || err) + "\n\nகுறிப்பு: உங்கள் HTML-ல் உள்ள இமேஜ்கள் (chipp.png, flg.jpg) லோக்கல் ஃபைல்களாக இருப்பதால் பிரவுசர் செக்யூரிட்டி எரர் வரலாம். தயவுசெய்து VS Code Live Server மூலம் ரன் செய்யவும்.");
+                btn.innerText = "📥 Download A4 PDF";
+            } finally {
+                wrapper.style.transform = 'scale(0.85)';
             }
-        });
-    }
-
-    inputs.forEach(id => {
-        const inputEl = document.getElementById(`in_${id}`);
-        if (inputEl) {
-            inputEl.addEventListener('input', updatePreview);
         }
-    });
-
-    // Run layout initially
-    updatePreview();
-
-    // ============================================================
-    // புதிய வசதி: PDF-லிருந்து தகவல்களைப் பிரித்தெடுத்தல் (Auto Fill)
-    // ============================================================
-    document.getElementById('pdf_uploader').addEventListener('change', async function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const statusEl = document.getElementById('upload_status');
-        statusEl.textContent = "PDF வாசிக்கப்படுகிறது... தயவுசெய்து காத்திருக்கவும்...";
-        statusEl.style.color = "#00469b";
-
-        try {
-            const fileReader = new FileReader();
-            fileReader.onload = async function() {
-                const typedarray = new Uint8Array(this.result);
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                let fullText = "";
-
-                // அனைத்து பக்கங்களிலிருந்தும் உரையை எடுக்க
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(" ");
-                    fullText += " " + pageText;
-                }
-
-                // உரையை ஒழுங்குபடுத்தல் (Clean up text space)
-                fullText = fullText.replace(/\s+/g, ' ');
-
-                // Regex Patterns - PDF-ல் உள்ள கீவேர்டுகளைப் பொறுத்து மேட்ச் செய்யும்
-                const extractField = (regex) => {
-                    const match = fullText.match(regex);
-                    return match && match[1] ? match[1].trim() : null;
-                };
-
-                // வாகனங்களின் பொதுவான RC அமைப்பிற்கான தரவு மேப்பிங் விதிகள்
-                const extractedData = {
-                    reg_no: extractField(/(?:Reg\s*No|Registration\s*No|REGN\s*NO)[:\s]*([A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4})/i),
-                    reg_date: extractField(/(?:Reg\s*Date|Registration\s*Date|REGN\s*DT)[:\s]*(\d{2}\/\d{2}\/\d{4})/i),
-                    chassis_no: extractField(/(?:Chassis\s*No|CHAS\s*NO)[:\s]*([A-Z0-9]{17,21})/i),
-                    engine_no: extractField(/(?:Engine\s*No|ENG\s*NO)[:\s]*([A-Z0-9\s\*]{5,15})/i),
-                    owner_name: extractField(/(?:Owner\s*Name|Name\s*of\s*Owner)[:\s]*([^:]+?)(?=\s*(?:S\/W\/D|Father|Son|Address|Reg))/i),
-                    swd_name: extractField(/(?:S\/W\/D\s*of|Father's\s*Name)[:\s]*([^:]+?)(?=\s*(?:Address|Class|Model))/i),
-                    address: extractField(/(?:Address)[:\s]*([^:]+?)(?=\s*(?:O\.SL|Class|Pin|State))/i),
-                    v_class: extractField(/(?:Vehicle\s*Class|Class\s*of\s*Vehicle)[:\s]*([^:]+?)(?=\s*(?:Model|Maker|Colour))/i),
-                    colour: extractField(/(?:Colour|Color)[:\s]*([^:]+?)(?=\s*(?:Model|Fuel|Body))/i),
-                    model: extractField(/(?:Model\s*Name|Model)[:\s]*([^:]+?)(?=\s*(?:Body|Fuel|Mfr))/i),
-                    mfr_name: extractField(/(?:Manufacturer|Maker|MFR)[:\s]*([^:]+?)(?=\s*(?:Owner|Model))/i),
-                    fuel: extractField(/(?:Fuel)[:\s]*([A-Z]+)/i),
-                    wheel_base: extractField(/(?:Wheel\s*Base)[:\s]*(\d+)/i),
-                    mfg_date: extractField(/(?:Mfg\s*Date|Month\/Year)[:\s]*(\d{2}\/\d{4})/i),
-                    ref_rc_upto: extractField(/(?:RC\s*Expiry|Fitness\s*Upto|RC\s*Upto)[:\s]*(\d{2}\/\d{2}\/\d{4})/i),
-                    tax_upto: extractField(/(?:Tax\s*Upto)[:\s]*([\d\-\/]+)/i),
-                    no_cyl: extractField(/(?:No\s*of\s*Cyl|Cylinders)[:\s]*(\d+)/i),
-                    unladen_wt: extractField(/(?:Unladen\s*Wt|Unladen\s*Weight)[:\s]*(\d+)/i),
-                    seating: extractField(/(?:Seating\s*Capacity|Seating)[:\s]*(\d+)/i),
-                    cc: extractField(/(?:Cubic\s*Capacity|CC)[:\s]*([\d\.]+)/i),
-                    auth_place: extractField(/(?:Registering\s*Authority|RTO)[:\s]*([^:]+?)(?=\$|\s)/i)
-                };
-
-                // ஃபார்மில் உள்ள இன்புட்களுக்கு மதிப்புகளை வழங்குதல் (ஏதேனும் கண்டறியப்பட்டால் மட்டும்)
-                let filledCount = 0;
-                inputs.forEach(id => {
-                    if (extractedData[id]) {
-                        document.getElementById(`in_${id}`).value = extractedData[id];
-                        filledCount++;
-                    }
-                });
-
-                updatePreview();
-                statusEl.textContent = `வெற்றி: PDF-லிருந்து தகுந்த தரவுகள் எடுக்கப்பட்டு ஃபார்ம் நிரப்பப்பட்டது!`;
-                statusEl.style.color = "green";
-            };
-            fileReader.readAsArrayBuffer(file);
-        } catch (error) {
-            console.error(error);
-            statusEl.textContent = "மன்னிக்கவும்! PDF கோப்பிலிருந்து விபரங்களை எடுப்பதில் சிக்கல்.";
-            statusEl.style.color = "red";
-        }
-    });
-
-    // ============================================================
-    // PDF டவுன்லோட் - முழு உள்ளடக்கமும் சரியான அளவில் கேப்சர் ஆக
-    // ============================================================
-    const submitBtn = document.querySelector('.btn-submit');
-    const originalBtnText = submitBtn.textContent;
-
-    function setBtnState(text, disabled) {
-        submitBtn.textContent = text;
-        submitBtn.disabled = disabled;
-        submitBtn.style.opacity = disabled ? '0.6' : '1';
-        submitBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
-    }
-
-    function waitForFontsReady() {
-        if (document.fonts && document.fonts.ready) {
-            return document.fonts.ready;
-        }
-        return Promise.resolve();
-    }
-
-    function waitForNextPaint() {
-        return new Promise(resolve => {
-            requestAnimationFrame(() => requestAnimationFrame(resolve));
-        });
-    }
-
-    document.getElementById('rcForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const element = document.getElementById('rcCardPreview');
-        const regNo = (document.getElementById('in_reg_no').value || 'Document').trim();
-
-        setBtnState('தயார் செய்கிறது... தயவு செய்து காத்திருக்கவும்', true);
-
-        try {
-            await waitForFontsReady();
-            await waitForNextPaint();
-
-            const rect = element.getBoundingClientRect();
-            const cardWidthPx = Math.round(rect.width);
-            const cardHeightPx = Math.round(rect.height);
-
-            const RENDER_SCALE = 6;
-
-            const opt = {
-                margin: 0,
-                filename: `${regNo}_RC_Card.pdf`,
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: {
-                    scale: RENDER_SCALE,
-                    useCORS: true,
-                    allowTaint: true,
-                    logging: false,
-                    letterRendering: true,
-                    backgroundColor: '#ffffff',
-                    width: cardWidthPx,
-                    height: cardHeightPx,
-                    windowWidth: cardWidthPx,
-                    windowHeight: cardHeightPx,
-                    scrollX: 0,
-                    scrollY: 0,
-                    x: 0,
-                    y: 0,
-                    removeContainer: true
-                },
-                jsPDF: {
-                    unit: 'pt',
-                    format: [856, 540],
-                    orientation: 'landscape',
-                    compress: false
-                },
-                pagebreak: { mode: ['avoid-all'] }
-            };
-
-            await html2pdf().set(opt).from(element).save();
-            setBtnState(originalBtnText, false);
-        } catch (err) {
-            console.error('PDF generation failed:', err);
-            setBtnState('தோல்வி - மீண்டும் முயற்சிக்கவும்', false);
-            setTimeout(() => setBtnState(originalBtnText, false), 2500);
-            alert('PDF உருவாக்குவதில் சிக்கல் ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.');
-        }
-    });
-</script>
+    </script>
 </body>
 </html>
