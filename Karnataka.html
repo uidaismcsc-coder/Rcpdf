@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1250">
-    <title>Perfect Exact RC Card Generator - Digital Print Portal</title>
+    <title>RC Card Generator</title>
     
     <!-- High Quality PDF Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -28,14 +28,14 @@
 
         html, body { height: 100%; }
 
-        /* ---------- திரை அளவு STABLE (Computer & Mobile இரண்டிலும் ஒரே Layout) ---------- */
+        
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0; padding: 20px;
             display: flex; justify-content: center; align-items: flex-start;
             position: relative;
             overflow-x: auto; overflow-y: auto;
-            width: 1250px;      /* நிலையான அகலம் - meta viewport இதை device-க்கேற்ப auto-scale செய்யும் */
+            width: 1250px;      
             min-width: 1250px;
             box-sizing: border-box;
             background:
@@ -50,7 +50,7 @@
             flex-shrink: 0;
         }
 
-        /* ---------- காட்டு விலங்குகள் அசையும் பேக்கிரவுண்ட் லேயர் ---------- */
+       
         .jungle-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
         .jungle-bg::before {
             content: "🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿";
@@ -90,7 +90,7 @@
 
         .input-section, .preview-wrapper { position: relative; z-index: 1; }
 
-        /* --- இன்புட் பகுதி --- */
+       
         .input-section {
             width: 350px;
             background: linear-gradient(180deg, #fdf6e8 0%, #f5ecd7 100%);
@@ -103,7 +103,7 @@
         .input-section::-webkit-scrollbar { width: 8px; }
         .input-section::-webkit-scrollbar-thumb { background: var(--jungle-mid); border-radius: 8px; }
 
-        /* New Buttons Styling */
+        
         .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .action-btn { flex: 1; padding: 10px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; color: white; font-size: 13px; transition: transform 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 3px 0 rgba(0,0,0,0.25); }
         .action-btn:hover { transform: translateY(-2px); }
@@ -144,7 +144,7 @@
         .download-btn:hover { background: linear-gradient(180deg, var(--savanna-dark), #7a4d15); transform: translateY(-2px); }
         .download-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #7a4d15; }
 
-        /* --- கார்டு வெளியீட்டுப் பகுதி --- */
+       
         .preview-wrapper {
             transform: scale(0.85); transform-origin: top left;
             transition: transform 0.1s ease;
@@ -155,7 +155,7 @@
         }
         .preview-section .card { box-shadow: 0 10px 25px rgba(0,0,0,0.45), 0 5px 15px rgba(0,0,0,0.2); }
 
-        /* EXACT CR80 Proportion */
+       
         .card {
             width: 856px; height: 540px;
             background-color: #ffffff; border-radius: 25px;
@@ -165,7 +165,7 @@
             line-height: 1.4; letter-spacing: normal;
         }
 
-        /* ----- முன்பக்கம் (FRONT CARD) ----- */
+        
         .front-header {
             position: absolute; top: 0; left: 0; width: 100%; height: 145px;
             background-color: #125725; 
@@ -189,7 +189,7 @@
         
         .bottom-logo { position: absolute; bottom: -15px; left: 250px; right: 250px; height: 60px; width: 356px; object-fit: contain; }
 
-        /* ----- பின்பக்கம் (BACK CARD) ----- */
+        
         .back-content { padding: 35px 40px; font-size: 15.5px; color: #000; font-family: Arial, Helvetica, sans-serif; position: relative; height: 100%; box-sizing: border-box; }
         
         .back-top-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
@@ -211,10 +211,10 @@
 </head>
 <body>
 
-    <!-- ===== அலங்கார REAL-STYLE விலங்குகள் பேக்கிரவுண்ட் (UI மட்டும் - எந்த லாஜிக்கும் இல்லை) ===== -->
+    
     <div class="jungle-bg" aria-hidden="true"></div>
 
-    <!-- 🦁 சிங்கம் -->
+    
     <span class="animal-track a1" aria-hidden="true">
     <svg viewBox="0 0 200 120"><g>
         <ellipse cx="145" cy="60" rx="30" ry="27" fill="#8a5a2b"/>
@@ -230,7 +230,7 @@
     </g></svg>
     </span>
 
-    <!-- 🐘 யானை -->
+    
     <span class="animal-track a2" aria-hidden="true">
     <svg viewBox="0 0 200 120"><g>
         <ellipse cx="100" cy="65" rx="58" ry="32" fill="#9a9a9a"/>
@@ -244,7 +244,7 @@
     </g></svg>
     </span>
 
-    <!-- 🦓 வரிக்குதிரை (ஜீப்ரா) -->
+   
     <span class="animal-track a3" aria-hidden="true">
     <svg viewBox="0 0 200 120"><g>
         <ellipse cx="100" cy="65" rx="50" ry="24" fill="#f5f5f0"/>
@@ -259,7 +259,7 @@
     </g></svg>
     </span>
 
-    <!-- 🐆 சிறுத்தை -->
+    
     <span class="animal-track a4" aria-hidden="true">
     <svg viewBox="0 0 200 120"><g>
         <ellipse cx="100" cy="68" rx="52" ry="22" fill="#e0a860"/>
@@ -277,7 +277,7 @@
     </g></svg>
     </span>
 
-    <!-- 🦒 ஒட்டகச்சிவிங்கி -->
+   
     <span class="animal-track a5" aria-hidden="true">
     <svg viewBox="0 0 200 140"><g>
         <ellipse cx="90" cy="95" rx="45" ry="20" fill="#e8c48a"/>
@@ -295,7 +295,7 @@
     </g></svg>
     </span>
 
-    <!-- 🐯 புலி -->
+    
     <span class="animal-track a6" aria-hidden="true">
     <svg viewBox="0 0 200 120"><g>
         <ellipse cx="100" cy="66" rx="52" ry="25" fill="#e8791f"/>
@@ -312,7 +312,7 @@
     </g></svg>
     </span>
 
-    <!-- 🦊 நரி -->
+   
     <span class="animal-track a7" aria-hidden="true">
     <svg viewBox="0 0 200 120"><g>
         <ellipse cx="105" cy="72" rx="42" ry="20" fill="#d2691e"/>
@@ -327,7 +327,7 @@
     </g></svg>
     </span>
 
-    <!-- 🐒 குரங்கு -->
+   
     <span class="animal-track a8" aria-hidden="true">
     <svg viewBox="0 0 200 120"><g>
         <ellipse cx="105" cy="72" rx="34" ry="20" fill="#7a5230"/>
@@ -340,13 +340,13 @@
     </g></svg>
     </span>
 
-    <!-- திரை அளவு stable-ஆக வைக்கும் நிலையான-அகல wrapper -->
+    
     <div class="app-shell">
 
-    <!-- இன்புட் ஃபார்ம் -->
+    
     <div class="input-section" id="form-container">
         
-        <!-- புதிய அப்லோட் மற்றும் லாக்-அவுட் பட்டன்கள் -->
+       
         <div class="btn-group">
             <input type="file" id="pdfFile" accept="application/pdf" style="display: none;" onchange="extractPDFText(event)">
             <button class="action-btn upload-btn" id="uploadBtn" onclick="document.getElementById('pdfFile').click()">📄 Upload PDF</button>
@@ -356,7 +356,7 @@
         <button class="download-btn" onclick="generatePDF()">📥 Download Corrected HD PDF</button>
         <h3>RC Details Entry</h3>
         
-        <!-- Center Logo Size Slider -->
+       
         <div class="inp-group">
             <label>CENTER LOGO SIZE</label>
             <input type="range" min="0.3" max="2.5" step="0.1" value="1" oninput="document.querySelector('.center-img').style.transform = 'translateX(-50%) scale(' + this.value + ')'">
@@ -391,11 +391,11 @@
         <div class="inp-group"><label>RTO OFFICE</label><input type="text" id="in_rto" value="Hassan Rto, Ka" oninput="updateUI()"></div>
     </div>
 
-    <!-- பிரிவியூ பகுதி -->
+    
     <div class="preview-wrapper" id="pdf-wrapper">
         <div class="preview-section">
             
-            <!-- Front Card -->
+            
             <div class="card" id="front-card">
                 <div class="front-header">
                     <div class="header-top-text">
@@ -416,7 +416,7 @@
                 <img src="b.png" class="bottom-logo" alt="Bottom Logo replacing Barcode">
             </div>
 
-            <!-- Back Card -->
+           
             <div class="card" id="back-card">
                 <div class="back-content">
                     <div class="back-top-row">
@@ -472,10 +472,10 @@
         </div>
     </div>
 
-    </div> <!-- /.app-shell -->
+    </div> 
 
     <script>
-        // Data Sync Script
+        
         const ids = ['reg','date','chassis','engine','mfr','owner','swd','add','sl','class','col','mod','body','wheel','mfg','fuel','rc_upto','tax','cyl','wt','seat','stdg','cc','rto'];
         function updateUI() {
             ids.forEach(id => {
@@ -484,7 +484,7 @@
         }
         updateUI();
 
-        // --- 1. ஆட்டோ லாக்-அவுட் வசதி (60 வினாடிகள்) ---
+        
         let logoutTimer;
         const IDLE_TIMEOUT = 60000; // 60 Seconds
 
@@ -494,7 +494,7 @@
         }
 
         function performLogout() {
-            // லாக்-அவுட் ஆகும்போது படிவங்கள் அழிக்கப்பட்டு திரை மறைக்கப்படும்
+           
             document.body.innerHTML = `
                 <div style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; flex-direction: column; background: #e2e8f0; font-family: Arial;">
                     <h1 style="color: #d32f2f;">🚪 Session Logged Out</h1>
@@ -509,13 +509,13 @@
             performLogout();
         }
 
-        // சுட்டி, விசைப்பலகை இயங்கும்போது டைமர் ரீசெட் செய்யப்படும்
+       
         window.onload = resetTimer;
         document.onmousemove = resetTimer;
         document.onkeypress = resetTimer;
         document.onclick = resetTimer;
 
-        // --- 2. PDF Auto Fill Script ---
+       
         async function extractPDFText(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -524,7 +524,7 @@
             const oldText = btn.innerText;
             btn.innerText = "⏳ Extracting...";
             
-            // செயல்பாடு நடக்கும்போது லாக்-அவுட் ஆகாமல் இருக்க டைமரை ரீசெட் செய்கிறோம்
+            
             resetTimer(); 
 
             try {
@@ -552,13 +552,13 @@
             }
         }
 
-        // PDF லிருந்து வார்த்தைகளை பிரித்தெடுக்கும் லாஜிக்
+        
         function parseAndFillData(text) {
             const setVal = (id, val) => {
                 if (val) document.getElementById(id).value = val.trim();
             };
 
-            // Reg Ex மூலம் முக்கிய டேட்டாக்களைக் கண்டுபிடிக்கிறோம்
+           
             let regMatch = text.match(/Regn\.?\s*Number\s*([A-Z0-9]+)/i) || text.match(/([A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4})/i);
             if (regMatch) setVal('in_reg', regMatch[1]);
 
@@ -594,15 +594,15 @@
 
             // Owner Name & Address க்கான எளிய தேடல்
             let ownerMatch = text.match(/Owner Name\s*(.+?)Son\/Daughter/i);
-            if (ownerMatch) setVal('in_owner', ownerMatch[1].replace(/[0-9\/]/g, '')); // தேதிகள் வராமல் தடுக்க
+            if (ownerMatch) setVal('in_owner', ownerMatch[1].replace(/[0-9\/]/g, '')); 
 
-            // தரவுகள் கிடைத்தவுடன் UI-ஐ அப்டேட் செய்கிறோம்
+           
             updateUI();
         }
 
-        // --- 3. அசல் PDF டவுன்லோட் செயல்பாடு ---
+        
         async function generatePDF() {
-            resetTimer(); // டவுன்லோட் செய்யும்போது டைமர் ரீசெட்
+            resetTimer(); 
             
             const btn = document.querySelector('.download-btn');
             btn.innerText = "⏳ Processing A4 PDF...";
