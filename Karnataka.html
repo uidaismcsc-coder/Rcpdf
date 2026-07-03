@@ -2,42 +2,150 @@
 <html lang="ta">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfect Exact RC Card Generator</title>
+    <meta name="viewport" content="width=1250">
+    <title>Perfect Exact RC Card Generator - Digital Print Portal</title>
     
     <!-- High Quality PDF Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- PDF.js Library for Auto-Fill -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        // Setup PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
 
     <style>
+        :root {
+            --jungle-dark: #1b4332;
+            --jungle-mid: #2d6a4f;
+            --jungle-light: #74c69d;
+            --savanna: #d8a24a;
+            --savanna-dark: #a9701f;
+            --paw-brown: #6b4226;
+        }
+
+        html, body { height: 100%; }
+
+        /* ---------- திரை அளவு STABLE (Computer & Mobile இரண்டிலும் ஒரே Layout) ---------- */
         body {
             font-family: Arial, Helvetica, sans-serif;
-            background-color: #e2e8f0;
             margin: 0; padding: 20px;
-            display: flex; gap: 30px;
+            display: flex; justify-content: center; align-items: flex-start;
+            position: relative;
+            overflow-x: auto; overflow-y: auto;
+            width: 1250px;      /* நிலையான அகலம் - meta viewport இதை device-க்கேற்ப auto-scale செய்யும் */
+            min-width: 1250px;
+            box-sizing: border-box;
+            background:
+                radial-gradient(circle at 15% 20%, rgba(255,255,255,0.10) 0px, transparent 45%),
+                radial-gradient(circle at 85% 75%, rgba(255,255,255,0.08) 0px, transparent 40%),
+                linear-gradient(160deg, #2d6a4f 0%, #1b4332 45%, #3a2a1a 100%);
         }
+
+        .app-shell {
+            display: flex; gap: 30px;
+            position: relative; z-index: 1;
+            flex-shrink: 0;
+        }
+
+        /* ---------- காட்டு விலங்குகள் அசையும் பேக்கிரவுண்ட் லேயர் ---------- */
+        .jungle-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .jungle-bg::before {
+            content: "🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿🌿";
+            position: absolute; top: 0; left: 0; right: 0;
+            font-size: 26px; letter-spacing: 40px; opacity: 0.25; white-space: nowrap;
+        }
+        .jungle-bg::after {
+            content: "🌴🌾🌴🌾🌴🌾🌴🌾🌴🌾🌴🌾🌴🌾🌴🌾🌴";
+            position: absolute; bottom: 0; left: 0; right: 0;
+            font-size: 30px; letter-spacing: 34px; opacity: 0.22; white-space: nowrap;
+        }
+
+        .animal-track {
+            position: fixed; left: -160px; width: 110px; height: auto;
+            filter: drop-shadow(0 6px 6px rgba(0,0,0,0.4));
+            animation-name: walkAcross; animation-timing-function: linear; animation-iteration-count: infinite;
+            z-index: 0; pointer-events: none; user-select: none;
+        }
+        .animal-track svg { display: block; width: 100%; height: 100%; animation: walkBob 0.6s ease-in-out infinite; }
+        @keyframes walkBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        .a1 { top: 8%;  animation-duration: 22s; animation-delay: 0s; }
+        .a2 { top: 22%; animation-duration: 30s; animation-delay: 3s; width: 130px; }
+        .a3 { top: 40%; animation-duration: 26s; animation-delay: 6s; }
+        .a4 { top: 58%; animation-duration: 34s; animation-delay: 1s; width: 90px; }
+        .a5 { top: 74%; animation-duration: 24s; animation-delay: 8s; width: 120px; }
+        .a6 { top: 88%; animation-duration: 28s; animation-delay: 4s; }
+        .a7 { top: 50%; animation-duration: 20s; animation-delay: 12s; width: 80px; }
+        .a8 { top: 15%; animation-duration: 40s; animation-delay: 2s; width: 75px; }
+
+        @keyframes walkAcross {
+            0%   { left: -160px; transform: scaleX(1); }
+            49%  { transform: scaleX(1); }
+            50%  { left: 1300px; transform: scaleX(-1); }
+            99%  { transform: scaleX(-1); }
+            100% { left: -160px; transform: scaleX(1); }
+        }
+
+        .input-section, .preview-wrapper { position: relative; z-index: 1; }
 
         /* --- இன்புட் பகுதி --- */
         .input-section {
-            width: 350px; background: #fff; padding: 15px;
-            border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 350px;
+            background: linear-gradient(180deg, #fdf6e8 0%, #f5ecd7 100%);
+            padding: 15px;
+            border-radius: 18px;
+            border: 3px solid var(--savanna-dark);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.35), inset 0 0 0 2px rgba(255,255,255,0.4);
             height: 90vh; overflow-y: auto; font-size: 13px;
         }
-        .input-section h3 { margin-top: 0; color: #1a5c28; text-align: center; border-bottom: 2px solid #1a5c28; padding-bottom: 5px; }
+        .input-section::-webkit-scrollbar { width: 8px; }
+        .input-section::-webkit-scrollbar-thumb { background: var(--jungle-mid); border-radius: 8px; }
+
+        /* New Buttons Styling */
+        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .action-btn { flex: 1; padding: 10px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; color: white; font-size: 13px; transition: transform 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 3px 0 rgba(0,0,0,0.25); }
+        .action-btn:hover { transform: translateY(-2px); }
+        .action-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.25); }
+        .upload-btn { background: linear-gradient(180deg, #4d8f6b, var(--jungle-mid)); }
+        .upload-btn:hover { background: linear-gradient(180deg, var(--jungle-mid), var(--jungle-dark)); }
+        .logout-btn { background: linear-gradient(180deg, #8a5a34, var(--paw-brown)); }
+        .logout-btn:hover { background: linear-gradient(180deg, var(--paw-brown), #4a2c17); }
+
+        .input-section h3 {
+            margin-top: 0; color: var(--jungle-dark); text-align: center;
+            border-bottom: 3px dashed var(--savanna-dark); padding-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        .input-section h3::before { content: "🐾 "; }
+        .input-section h3::after { content: " 🐾"; }
+
         .inp-group { display: flex; flex-direction: column; margin-bottom: 8px; }
-        .inp-group label { font-weight: bold; margin-bottom: 3px; color: #444; font-size: 11px; }
-        .inp-group input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif; }
+        .inp-group label { font-weight: bold; margin-bottom: 3px; color: var(--jungle-dark); font-size: 11px; }
+        .inp-group label::before { content: "🐆 "; }
+        .inp-group input {
+            padding: 6px 8px; border: 1.5px solid var(--savanna-dark); border-radius: 8px;
+            font-family: Arial, sans-serif; background: #fffdf6;
+        }
+        .inp-group input:focus {
+            outline: none; border-color: var(--jungle-mid);
+            box-shadow: 0 0 0 3px rgba(45,106,79,0.25);
+        }
         
         .download-btn {
-            background-color: #d32f2f; color: white; border: none;
+            background: linear-gradient(180deg, #e0913c, var(--savanna-dark));
+            color: white; border: none;
             padding: 12px; width: 100%; font-size: 16px; font-weight: bold;
-            border-radius: 5px; cursor: pointer; margin-bottom: 15px;
+            border-radius: 20px; cursor: pointer; margin-bottom: 15px;
+            box-shadow: 0 4px 0 #7a4d15;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
-        .download-btn:hover { background-color: #b71c1c; }
+        .download-btn:hover { background: linear-gradient(180deg, var(--savanna-dark), #7a4d15); transform: translateY(-2px); }
+        .download-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #7a4d15; }
 
         /* --- கார்டு வெளியீட்டுப் பகுதி --- */
         .preview-wrapper {
-            /* பிரிவியூ திரையில் சுருக்கி காட்ட மட்டுமே, html2canvas எடுக்கும்போது இது 100% ஆக மாறும் (தவிர்க்கOverlap) */
             transform: scale(0.85); transform-origin: top left;
             transition: transform 0.1s ease;
         }
@@ -45,86 +153,41 @@
         .preview-section {
             display: flex; flex-direction: column; gap: 25px;
         }
+        .preview-section .card { box-shadow: 0 10px 25px rgba(0,0,0,0.45), 0 5px 15px rgba(0,0,0,0.2); }
 
-        /* EXACT CR80 Proportion (Scale 10x for HD rendering) 
-           85.6mm x 54mm -> 856px x 540px */
+        /* EXACT CR80 Proportion */
         .card {
             width: 856px; height: 540px;
             background-color: #ffffff; border-radius: 25px;
             position: relative; overflow: hidden;
             box-sizing: border-box; border: 2px solid #d1d1d1;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            /* எழுத்துக்கள் ஒன்றின்மீது ஒன்றாகாமல் தடுக்க */
             line-height: 1.4; letter-spacing: normal;
         }
 
         /* ----- முன்பக்கம் (FRONT CARD) ----- */
-        
-        /* அசல் புகைப்படத்தில் உள்ளபடியே பச்சை நிற பாக்ஸ் மற்றும் எழுத்துக்கள் */
         .front-header {
             position: absolute; top: 0; left: 0; width: 100%; height: 145px;
-            background-color: #125725; /* கரும் பச்சை */
+            background-color: #125725; 
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-        .header-top-text {
-            display: flex; gap: 15px; align-items: baseline; margin-bottom: 12px;
-        }
+        .header-top-text { display: flex; gap: 15px; align-items: baseline; margin-bottom: 12px; }
         .title-kn { color: #fdd835; font-size: 38px; font-weight: bold; margin: 0; }
         .title-en { color: #fdd835; font-size: 42px; font-weight: bold; margin: 0; }
         
-        .header-divider {
-            width: 90%; height: 4px; background-color: #92b847; /* லேசான பச்சை/மஞ்சள் கோடு */
-            margin-bottom: 12px;
-        }
+        .header-divider { width: 90%; height: 4px; background-color: #92b847; margin-bottom: 12px; }
+        .sub-title { color: #d0e447; font-size: 34px; font-weight: bold; margin: 0; letter-spacing: 1px; }
 
-        .sub-title {
-            color: #d0e447; font-size: 34px; font-weight: bold; margin: 0; letter-spacing: 1px;
-        }
+        .chip { position: absolute; top: 220px; left: 70px; width: 95px; height: 75px; object-fit: contain; }
+        .flag { position: absolute; top: 185px; right: 60px; width: 125px; height: 85px; object-fit: contain; }
+        .center-img { position: absolute; top: 190px; left: 50%; transform: translateX(-50%); width: 380px; height: 230px; object-fit: contain; transition: transform 0.1s ease; }
+        .emblem-left { position: absolute; bottom: 60px; left: 55px; width: 95px; height: 130px; object-fit: contain; }
+        .emblem-right { position: absolute; bottom: 65px; right: 55px; width: 115px; height: 125px; object-fit: contain; }
 
-        /* Elements Exact Positioning (Images Replaced) */
-        .chip {
-            position: absolute; top: 220px; left: 70px;
-            width: 95px; height: 75px; 
-            object-fit: contain;
-        }
-        
-        .flag {
-            position: absolute; top: 185px; right: 60px;
-            width: 125px; height: 85px; 
-            object-fit: contain;
-        }
-
-        .center-img {
-            position: absolute; top: 190px; left: 50%; transform: translateX(-50%);
-            width: 380px; height: 230px;
-            object-fit: contain;
-            transition: transform 0.1s ease;
-        }
-
-        .emblem-left {
-            position: absolute; bottom: 60px; left: 55px;
-            width: 95px; height: 130px; 
-            object-fit: contain;
-        }
-        
-        .emblem-right {
-            position: absolute; bottom: 65px; right: 55px;
-            width: 115px; height: 125px; 
-            object-fit: contain;
-        }
-
-        .transport-text {
-            /* Text Moved Lower down to avoid overlap */
-            position: absolute; bottom: 26px; left: 240px; right: 240px;
-            text-align: center; color: #39394b; font-size: 20px; font-weight: bold; line-height: 1.2;
-        }
+        .transport-text { position: absolute; bottom: 26px; left: 240px; right: 240px; text-align: center; color: #39394b; font-size: 20px; font-weight: bold; line-height: 1.2; }
         .transport-en { font-size: 22px; letter-spacing: 2px; }
         
-        /* Bottom logo shifted slightly to accommodate text drop */
-        .bottom-logo {
-            position: absolute; bottom: -15px; left: 250px; right: 250px; height: 60px; width: 356px;
-            object-fit: contain;
-        }
+        .bottom-logo { position: absolute; bottom: -15px; left: 250px; right: 250px; height: 60px; width: 356px; object-fit: contain; }
 
         /* ----- பின்பக்கம் (BACK CARD) ----- */
         .back-content { padding: 35px 40px; font-size: 15.5px; color: #000; font-family: Arial, Helvetica, sans-serif; position: relative; height: 100%; box-sizing: border-box; }
@@ -133,21 +196,14 @@
         .reg-no-text { font-size: 26px; font-weight: 900; margin-left: -50px; }
         .form-text { text-align: center; font-size: 14px; font-weight: bold; line-height: 1.3; }
 
-        /* Perfect Grid alignment for colons avoiding overlaps */
-        .info-grid {
-            display: grid; grid-template-columns: 145px 15px auto;
-            margin-bottom: 5px; font-weight: bold; align-items: center;
-        }
+        .info-grid { display: grid; grid-template-columns: 145px 13px auto; margin-bottom: 5px; font-weight: bold; align-items: center; }
         .val { text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .split-section { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .left-col { width: 62%; }
         .right-col { width: 35%; }
 
-        .signature-box {
-            position: absolute; bottom: 35px; right: 40px; text-align: center;
-            font-size: 15px; font-weight: bold; font-family: "Segoe Script", cursive, Arial; line-height: 1.3;
-        }
+        .signature-box { position: absolute; bottom: 35px; right: 40px; text-align: center; font-size: 15px; font-weight: bold; font-family: "Segoe Script", cursive, Arial; line-height: 1.3; }
         .sig-img { width: 130px; height: 40px; border-bottom: 1.5px solid #000; margin-bottom: 5px; display: inline-block; }
         .sig-text { font-family: Arial, sans-serif; }
 
@@ -155,8 +211,148 @@
 </head>
 <body>
 
+    <!-- ===== அலங்கார REAL-STYLE விலங்குகள் பேக்கிரவுண்ட் (UI மட்டும் - எந்த லாஜிக்கும் இல்லை) ===== -->
+    <div class="jungle-bg" aria-hidden="true"></div>
+
+    <!-- 🦁 சிங்கம் -->
+    <span class="animal-track a1" aria-hidden="true">
+    <svg viewBox="0 0 200 120"><g>
+        <ellipse cx="145" cy="60" rx="30" ry="27" fill="#8a5a2b"/>
+        <ellipse cx="150" cy="35" rx="9" ry="7" fill="#8a5a2b"/>
+        <ellipse cx="128" cy="35" rx="9" ry="7" fill="#8a5a2b"/>
+        <ellipse cx="95" cy="70" rx="52" ry="26" fill="#d9a24b"/>
+        <circle cx="150" cy="55" r="16" fill="#d9a24b"/>
+        <ellipse cx="143" cy="50" rx="3" ry="4" fill="#c98a2f"/>
+        <circle cx="147" cy="53" r="1.6" fill="#2b1a0a"/>
+        <path d="M40 96 L38 118 M55 98 L53 118 M120 98 L118 118 M138 96 L136 118" stroke="#8a5a2b" stroke-width="8" stroke-linecap="round"/>
+        <path d="M45 70 Q15 78 12 60" stroke="#8a5a2b" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <circle cx="11" cy="58" r="5" fill="#8a5a2b"/>
+    </g></svg>
+    </span>
+
+    <!-- 🐘 யானை -->
+    <span class="animal-track a2" aria-hidden="true">
+    <svg viewBox="0 0 200 120"><g>
+        <ellipse cx="100" cy="65" rx="58" ry="32" fill="#9a9a9a"/>
+        <ellipse cx="155" cy="52" rx="22" ry="26" fill="#a3a3a3"/>
+        <path d="M170 45 Q192 55 178 78 Q168 92 158 82" fill="#8c8c8c"/>
+        <path d="M148 68 Q140 95 155 108 Q160 110 158 100 Q150 90 152 70 Z" fill="#9a9a9a"/>
+        <path d="M120 45 Q126 38 134 42" stroke="#efefef" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="150" cy="48" r="2" fill="#222"/>
+        <path d="M35 95 L33 118 M60 98 L58 118 M120 98 L118 118 L 145 118 L147 98" stroke="#9a9a9a" stroke-width="10" stroke-linecap="round"/>
+        <path d="M40 68 Q15 72 18 60" stroke="#9a9a9a" stroke-width="3" fill="none"/>
+    </g></svg>
+    </span>
+
+    <!-- 🦓 வரிக்குதிரை (ஜீப்ரா) -->
+    <span class="animal-track a3" aria-hidden="true">
+    <svg viewBox="0 0 200 120"><g>
+        <ellipse cx="100" cy="65" rx="50" ry="24" fill="#f5f5f0"/>
+        <circle cx="152" cy="48" r="16" fill="#f5f5f0"/>
+        <path d="M60 48 Q100 30 145 40 L145 36 Q100 24 58 44 Z" fill="#222"/>
+        <path d="M60 55 L70 42 M75 58 L85 44 M90 60 L100 46 M105 62 L115 48 M120 62 L128 50" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+        <path d="M145 40 L150 34 M155 42 L160 36 M148 55 L155 50" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+        <path d="M40 92 L38 118 M58 95 L56 118 M118 95 L116 118 M138 92 L136 118" stroke="#f5f5f0" stroke-width="9" stroke-linecap="round"/>
+        <path d="M42 88 L38 100 M60 90 L56 102 M120 90 L116 102 M140 88 L136 100" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+        <path d="M50 68 Q15 74 14 58" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="157" cy="45" r="1.8" fill="#111"/>
+    </g></svg>
+    </span>
+
+    <!-- 🐆 சிறுத்தை -->
+    <span class="animal-track a4" aria-hidden="true">
+    <svg viewBox="0 0 200 120"><g>
+        <ellipse cx="100" cy="68" rx="52" ry="22" fill="#e0a860"/>
+        <circle cx="150" cy="52" r="15" fill="#e0a860"/>
+        <ellipse cx="156" cy="40" rx="4" ry="6" fill="#e0a860"/>
+        <ellipse cx="140" cy="40" rx="4" ry="6" fill="#e0a860"/>
+        <g fill="none" stroke="#4a2e12" stroke-width="3">
+            <circle cx="65" cy="62" r="4"/><circle cx="80" cy="70" r="4"/><circle cx="95" cy="60" r="4"/>
+            <circle cx="112" cy="70" r="4"/><circle cx="128" cy="60" r="4"/><circle cx="145" cy="55" r="3.5"/>
+            <circle cx="70" cy="78" r="3.5"/><circle cx="100" cy="78" r="3.5"/><circle cx="120" cy="78" r="3.5"/>
+        </g>
+        <circle cx="147" cy="49" r="1.6" fill="#1a1a1a"/>
+        <path d="M40 88 L38 118 M60 90 L58 118 M118 90 L116 118 M138 88 L136 118" stroke="#e0a860" stroke-width="8" stroke-linecap="round"/>
+        <path d="M45 70 Q10 85 8 100" stroke="#e0a860" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </g></svg>
+    </span>
+
+    <!-- 🦒 ஒட்டகச்சிவிங்கி -->
+    <span class="animal-track a5" aria-hidden="true">
+    <svg viewBox="0 0 200 140"><g>
+        <ellipse cx="90" cy="95" rx="45" ry="20" fill="#e8c48a"/>
+        <path d="M115 90 Q150 40 150 15" stroke="#e8c48a" stroke-width="20" fill="none" stroke-linecap="round"/>
+        <circle cx="150" cy="12" r="13" fill="#e8c48a"/>
+        <circle cx="146" cy="2" r="3" fill="#8a5a2b"/><circle cx="154" cy="2" r="3" fill="#8a5a2b"/>
+        <g fill="#a9702f" opacity="0.85">
+            <ellipse cx="80" cy="88" rx="6" ry="5"/><ellipse cx="100" cy="92" rx="6" ry="5"/>
+            <ellipse cx="120" cy="85" rx="5" ry="5"/><ellipse cx="135" cy="60" rx="5" ry="6"/>
+            <ellipse cx="140" cy="40" rx="5" ry="6"/><ellipse cx="145" cy="20" rx="4" ry="5"/>
+            <ellipse cx="65" cy="95" rx="5" ry="4"/>
+        </g>
+        <circle cx="155" cy="10" r="1.6" fill="#222"/>
+        <path d="M55 108 L53 135 M75 112 L73 135 M105 112 L103 135 M125 108 L123 135" stroke="#e8c48a" stroke-width="8" stroke-linecap="round"/>
+    </g></svg>
+    </span>
+
+    <!-- 🐯 புலி -->
+    <span class="animal-track a6" aria-hidden="true">
+    <svg viewBox="0 0 200 120"><g>
+        <ellipse cx="100" cy="66" rx="52" ry="25" fill="#e8791f"/>
+        <circle cx="150" cy="50" r="16" fill="#e8791f"/>
+        <ellipse cx="156" cy="37" rx="4" ry="6" fill="#e8791f"/>
+        <ellipse cx="140" cy="37" rx="4" ry="6" fill="#e8791f"/>
+        <ellipse cx="95" cy="78" rx="30" ry="10" fill="#fdf3e2"/>
+        <path d="M55 55 L48 42 M70 52 L66 38 M85 52 L84 38 M100 54 L100 40 M115 56 L118 42 M130 58 L135 46" stroke="#161616" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <path d="M145 40 L150 32 M155 42 L160 35" stroke="#161616" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="147" cy="47" r="1.6" fill="#111"/>
+        <path d="M40 88 L38 118 M60 90 L58 118 M118 90 L116 118 M138 88 L136 118" stroke="#e8791f" stroke-width="8" stroke-linecap="round"/>
+        <path d="M45 65 Q10 72 12 92" stroke="#e8791f" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M18 78 L26 80 M14 88 L23 88" stroke="#161616" stroke-width="3" stroke-linecap="round"/>
+    </g></svg>
+    </span>
+
+    <!-- 🦊 நரி -->
+    <span class="animal-track a7" aria-hidden="true">
+    <svg viewBox="0 0 200 120"><g>
+        <ellipse cx="105" cy="72" rx="42" ry="20" fill="#d2691e"/>
+        <path d="M150 50 L172 40 L158 60 Z" fill="#d2691e"/>
+        <path d="M140 40 L150 22 L158 42 Z" fill="#d2691e"/>
+        <path d="M118 40 L108 22 L128 40 Z" fill="#d2691e"/>
+        <ellipse cx="70" cy="80" rx="22" ry="8" fill="#fff4e6"/>
+        <circle cx="152" cy="52" r="2" fill="#111"/>
+        <path d="M50 92 L48 118 M70 94 L68 118 M120 94 L118 118 M140 92 L138 118" stroke="#d2691e" stroke-width="7" stroke-linecap="round"/>
+        <path d="M55 70 Q15 68 15 88 Q15 100 30 96" fill="#d2691e"/>
+        <circle cx="26" cy="93" r="6" fill="#fff4e6"/>
+    </g></svg>
+    </span>
+
+    <!-- 🐒 குரங்கு -->
+    <span class="animal-track a8" aria-hidden="true">
+    <svg viewBox="0 0 200 120"><g>
+        <ellipse cx="105" cy="72" rx="34" ry="20" fill="#7a5230"/>
+        <circle cx="148" cy="55" r="17" fill="#7a5230"/>
+        <circle cx="135" cy="42" r="7" fill="#7a5230"/><circle cx="160" cy="42" r="7" fill="#7a5230"/>
+        <ellipse cx="149" cy="58" rx="9" ry="10" fill="#e8c39e"/>
+        <circle cx="145" cy="55" r="1.6" fill="#111"/><circle cx="154" cy="55" r="1.6" fill="#111"/>
+        <path d="M55 88 L53 115 M75 90 L73 115 M120 90 L118 115 M138 88 L136 115" stroke="#7a5230" stroke-width="7" stroke-linecap="round"/>
+        <path d="M75 65 Q30 55 25 30 Q22 15 35 18" stroke="#7a5230" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </g></svg>
+    </span>
+
+    <!-- திரை அளவு stable-ஆக வைக்கும் நிலையான-அகல wrapper -->
+    <div class="app-shell">
+
     <!-- இன்புட் ஃபார்ம் -->
-    <div class="input-section">
+    <div class="input-section" id="form-container">
+        
+        <!-- புதிய அப்லோட் மற்றும் லாக்-அவுட் பட்டன்கள் -->
+        <div class="btn-group">
+            <input type="file" id="pdfFile" accept="application/pdf" style="display: none;" onchange="extractPDFText(event)">
+            <button class="action-btn upload-btn" id="uploadBtn" onclick="document.getElementById('pdfFile').click()">📄 Upload PDF</button>
+            <button class="action-btn logout-btn" onclick="manualLogout()">🚪 Logout</button>
+        </div>
+
         <button class="download-btn" onclick="generatePDF()">📥 Download Corrected HD PDF</button>
         <h3>RC Details Entry</h3>
         
@@ -201,7 +397,6 @@
             
             <!-- Front Card -->
             <div class="card" id="front-card">
-                <!-- மாற்றப்பட்ட Header பகுதி -->
                 <div class="front-header">
                     <div class="header-top-text">
                         <span class="title-kn">ಕರ್ನಾಟಕ ರಾಜ್ಯ</span>
@@ -211,16 +406,13 @@
                     <p class="sub-title">CERTIFICATE OF REGISTRATION</p>
                 </div>
                 
-                <!-- Linked PNG Images replacing drawn CSS -->
                 <img src="chipp.png" class="chip" alt="SIPCOT Chip">
                 <img src="flg.jpg" class="flag" alt="Flag Image">
                 <img src="he.png" class="center-img" alt="Center Logo">
-                <img src="goi.png" class="emblem-left" alt="Lion Capital">
+                <img src="c.png" class="emblem-left" alt="Lion Capital">
                 <img src="c.png" class="emblem-right" alt="Govt Emblem">
                 
                 <div class="transport-text">ಸಾರಿಗೆ ಇಲಾಖೆ<br><span class="transport-en">TRANSPORT DEPARTMENT</span></div>
-                
-                <!-- Replaced Barcode with Logo here -->
                 <img src="b.png" class="bottom-logo" alt="Bottom Logo replacing Barcode">
             </div>
 
@@ -228,12 +420,11 @@
             <div class="card" id="back-card">
                 <div class="back-content">
                     <div class="back-top-row">
-                        <div style="width: 150px;"></div> <!-- Spacer -->
+                        <div style="width: 150px;"></div> 
                         <div class="reg-no-text">REG NO : <span id="out_reg">KA13TD2669</span></div>
                         <div class="form-text">FORM-23A<br>(See Rule 48)</div>
                     </div>
 
-                    <!-- Top Section -->
                     <div class="split-section">
                         <div class="left-col">
                             <div class="info-grid"><div>REG DATE</div><div>:</div><div class="val" id="out_date"></div></div>
@@ -253,7 +444,6 @@
 
                     <div style="margin-top: 30px;"></div>
 
-                    <!-- Bottom Section -->
                     <div class="split-section">
                         <div class="left-col" style="width: 58%;">
                             <div class="info-grid"><div>MODEL</div><div>:</div><div class="val" id="out_mod"></div></div>
@@ -282,6 +472,8 @@
         </div>
     </div>
 
+    </div> <!-- /.app-shell -->
+
     <script>
         // Data Sync Script
         const ids = ['reg','date','chassis','engine','mfr','owner','swd','add','sl','class','col','mod','body','wheel','mfg','fuel','rc_upto','tax','cyl','wt','seat','stdg','cc','rto'];
@@ -290,60 +482,168 @@
                 document.getElementById('out_' + id).innerText = document.getElementById('in_' + id).value;
             });
         }
-        updateUI(); // Init call
+        updateUI();
 
-        // Modified and Fixed PDF Export for A4 Layout
+        // --- 1. ஆட்டோ லாக்-அவுட் வசதி (60 வினாடிகள்) ---
+        let logoutTimer;
+        const IDLE_TIMEOUT = 60000; // 60 Seconds
+
+        function resetTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(performLogout, IDLE_TIMEOUT);
+        }
+
+        function performLogout() {
+            // லாக்-அவுட் ஆகும்போது படிவங்கள் அழிக்கப்பட்டு திரை மறைக்கப்படும்
+            document.body.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; flex-direction: column; background: #e2e8f0; font-family: Arial;">
+                    <h1 style="color: #d32f2f;">🚪 Session Logged Out</h1>
+                    <p style="color: #333; font-size: 18px; font-weight: bold;">60 வினாடிகள் முடிந்ததால் உங்கள் அமர்வு லாக்-அவுட் செய்யப்பட்டது.</p>
+                    <button onclick="location.reload()" style="padding: 12px 25px; font-size: 16px; cursor: pointer; background: #1976d2; color: white; border: none; border-radius: 5px; margin-top: 15px; font-weight: bold;">மீண்டும் உள்நுழைக</button>
+                </div>
+            `;
+        }
+
+        function manualLogout() {
+            clearTimeout(logoutTimer);
+            performLogout();
+        }
+
+        // சுட்டி, விசைப்பலகை இயங்கும்போது டைமர் ரீசெட் செய்யப்படும்
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+        document.onclick = resetTimer;
+
+        // --- 2. PDF Auto Fill Script ---
+        async function extractPDFText(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const btn = document.getElementById('uploadBtn');
+            const oldText = btn.innerText;
+            btn.innerText = "⏳ Extracting...";
+            
+            // செயல்பாடு நடக்கும்போது லாக்-அவுட் ஆகாமல் இருக்க டைமரை ரீசெட் செய்கிறோம்
+            resetTimer(); 
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const typedarray = new Uint8Array(e.target.result);
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(" ");
+                        fullText += pageText + " ";
+                    }
+                    
+                    parseAndFillData(fullText);
+                    
+                    btn.innerText = "✅ Filled Successfully!";
+                    setTimeout(() => btn.innerText = oldText, 3000);
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                alert("PDF கோப்பினை படிப்பதில் பிழை ஏற்பட்டது. சரியான கோப்பை தேர்ந்தெடுக்கவும்.");
+                btn.innerText = oldText;
+            }
+        }
+
+        // PDF லிருந்து வார்த்தைகளை பிரித்தெடுக்கும் லாஜிக்
+        function parseAndFillData(text) {
+            const setVal = (id, val) => {
+                if (val) document.getElementById(id).value = val.trim();
+            };
+
+            // Reg Ex மூலம் முக்கிய டேட்டாக்களைக் கண்டுபிடிக்கிறோம்
+            let regMatch = text.match(/Regn\.?\s*Number\s*([A-Z0-9]+)/i) || text.match(/([A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4})/i);
+            if (regMatch) setVal('in_reg', regMatch[1]);
+
+            let chassisMatch = text.match(/Chassis Number\s*([A-Z0-9]+)/i);
+            if (chassisMatch) setVal('in_chassis', chassisMatch[1]);
+
+            let engineMatch = text.match(/Engine \/ Motor Number\s*([A-Z0-9]+)/i) || text.match(/Engine No\s*([A-Z0-9]+)/i);
+            if (engineMatch) setVal('in_engine', engineMatch[1]);
+
+            let mfrMatch = text.match(/Maker:\s*(.+?)Model:/i);
+            if (mfrMatch) setVal('in_mfr', mfrMatch[1]);
+
+            let modelMatch = text.match(/Model:\s*(.+?)Month/i);
+            if (modelMatch) setVal('in_mod', modelMatch[1]);
+
+            let fuelMatch = text.match(/Fuel\s*([A-Z]+)/i);
+            if (fuelMatch) setVal('in_fuel', fuelMatch[1]);
+
+            let cylMatch = text.match(/Cylinders:\s*(\d+)/i);
+            if (cylMatch) setVal('in_cyl', cylMatch[1]);
+
+            let seatMatch = text.match(/Seating.*?Capacity\s*(\d+)/i);
+            if (seatMatch) setVal('in_seat', seatMatch[1]);
+
+            let wtMatch = text.match(/Unladen Weight.*?(\d+)/i);
+            if (wtMatch) setVal('in_wt', wtMatch[1]);
+
+            let ccMatch = text.match(/Cubic Cap.*?(\d+(\.\d+)?)/i);
+            if (ccMatch) setVal('in_cc', ccMatch[1]);
+
+            let mfgMatch = text.match(/Mfg\.\s*([\d-]+)/i);
+            if (mfgMatch) setVal('in_mfg', mfgMatch[1]);
+
+            // Owner Name & Address க்கான எளிய தேடல்
+            let ownerMatch = text.match(/Owner Name\s*(.+?)Son\/Daughter/i);
+            if (ownerMatch) setVal('in_owner', ownerMatch[1].replace(/[0-9\/]/g, '')); // தேதிகள் வராமல் தடுக்க
+
+            // தரவுகள் கிடைத்தவுடன் UI-ஐ அப்டேட் செய்கிறோம்
+            updateUI();
+        }
+
+        // --- 3. அசல் PDF டவுன்லோட் செயல்பாடு ---
         async function generatePDF() {
+            resetTimer(); // டவுன்லோட் செய்யும்போது டைமர் ரீசெட்
+            
             const btn = document.querySelector('.download-btn');
             btn.innerText = "⏳ Processing A4 PDF...";
             
             const wrapper = document.getElementById('pdf-wrapper');
             wrapper.style.transform = 'scale(1)'; 
-            
             window.scrollTo(0, 0); 
             
             await new Promise(r => setTimeout(r, 200));
 
             const { jsPDF } = window.jspdf;
-            // A4 Layout-ஆக மாற்றப்பட்டுள்ளது (Portrait mode)
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
             
             const opt = { 
                 scale: 3.5, 
                 useCORS: true, 
-                allowTaint: true, // Local இமேஜ் எரரை தவிர்க்க சேர்க்கப்பட்டுள்ளது
+                allowTaint: true, 
                 backgroundColor: '#ffffff'
             };
 
             try {
-                // Front Card
                 const front = await html2canvas(document.getElementById('front-card'), opt);
                 const frontImgData = front.toDataURL('image/jpeg', 1.0);
                 
-                // Back Card
                 const back = await html2canvas(document.getElementById('back-card'), opt);
                 const backImgData = back.toDataURL('image/jpeg', 1.0);
                 
-                // A4 சீட்டின் அகலம் 210mm. கார்டை நடுவில் வைக்க X position கணக்கீடு:
                 const cardWidth = 85.6;
                 const cardHeight = 54;
-                const xPos = (210 - cardWidth) / 2; // தோராயமாக 62.2mm
+                const xPos = (210 - cardWidth) / 2; 
                 
-                // முன் பக்கம் (Front) A4 சீட்டின் மேல்பகுதியில்
                 pdf.addImage(frontImgData, 'JPEG', xPos, 20, cardWidth, cardHeight);
-                
-                // பின் பக்கம் (Back) சிறிது இடைவெளி விட்டு கீழே
                 pdf.addImage(backImgData, 'JPEG', xPos, 80, cardWidth, cardHeight);
                 
-                // A4 சைஸில் டவுன்லோட்
                 pdf.save('RC_Smart_Card_A4.pdf');
                 
                 btn.innerText = "✅ Downloaded Successfully!";
                 setTimeout(() => btn.innerText = "📥 Download A4 PDF", 3000);
             } catch (err) {
                 console.error(err);
-                // எரர் வந்தால் அதற்கான காரணத்தை காட்டும்
-                alert("Error in PDF generation: " + (err.message || err) + "\n\nகுறிப்பு: உங்கள் HTML-ல் உள்ள இமேஜ்கள் (chipp.png, flg.jpg) லோக்கல் ஃபைல்களாக இருப்பதால் பிரவுசர் செக்யூரிட்டி எரர் வரலாம். தயவுசெய்து VS Code Live Server மூலம் ரன் செய்யவும்.");
+                alert("Error in PDF generation: " + (err.message || err));
                 btn.innerText = "📥 Download A4 PDF";
             } finally {
                 wrapper.style.transform = 'scale(0.85)';
