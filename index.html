@@ -124,7 +124,7 @@
         #cardCanvasBack { background-image: url('bg.jpg'); }
 
         /* Text Overlay Styles - Added user-select to prevent text selection during drag */
-        .card-text, #qr-preview {
+        .card-text, #qr-preview, #sig-preview {
             position: absolute;
             font-family: Arial, Helvetica, sans-serif;
             color: #000;
@@ -133,7 +133,7 @@
             user-select: none;
             touch-action: none; /* Helps with mobile dragging */
         }
-        .card-text:active, #qr-preview:active {
+        .card-text:active, #qr-preview:active, #sig-preview:active {
             cursor: grabbing;
         }
         .val-bold { font-weight: bold; }
@@ -159,6 +159,10 @@
         #out-bk-serial { top: 3.7%; right: 4%; font-size: 26px; color: #333; letter-spacing: 1px; }
         #out-bk-regNo { top: 24.7%; left: 5.5%; font-size: 26px; }
         #qr-preview { top: 31%; left: 5.5%; width: 190px; height: 190px; object-fit: contain; }
+        
+        /* Signature Preview Default Position */
+        #sig-preview { bottom: 12%; right: 5%; width: 160px; height: auto; object-fit: contain; z-index: 10; }
+        
         #out-bk-mfg { top: 67.2%; left: 5.5%; font-size: 21px; }
         #out-bk-cylinders { top: 76.2%; left: 5.5%; font-size: 21px; }
         #out-bk-axle { top: 85.7%; left: 5.5%; font-size: 21px; }
@@ -178,7 +182,6 @@
         #out-bk-wheelbase { top: 76.2%; left: 67.5%; font-size: 21px; }
         #out-bk-financer { top: 85.7%; left: 28.5%; font-size: 21px; }
         #out-bk-authority { bottom: 4.8%; right: 5%; font-size: 20px; text-align: right; line-height: 1.2; }
-        #out-bk-form { top: 49.2%; right: 0.5%; transform: rotate(-90deg); font-size: 18px; color: #333; }
 
         /* Action Buttons */
         .actions {
@@ -243,10 +246,14 @@
                 <label>Upload QR Code (Back)</label>
                 <input type="file" id="in-qrCode" accept="image/*" onchange="uploadImage('in-qrCode', 'qr-preview', false)">
             </div>
+            <!-- Added Signature Upload -->
+            <div class="input-group">
+                <label>Upload Signature (PNG)</label>
+                <input type="file" id="in-signature" accept="image/png" onchange="uploadImage('in-signature', 'sig-preview', false)">
+            </div>
         </div>
 
         <div class="section-title">Front Side Details</div>
-        <!-- Both front and back RegNo sync from here, but user can change back separately -->
         <div class="input-group"><label>Regn. Number</label><input type="text" id="in-regNo" value="TN03AQ7209" oninput="updateText('regNo'); document.getElementById('in-bk-regNo').value=this.value; updateText('bk-regNo')"></div>
         <div class="input-group"><label>Date of Regn.</label><input type="text" id="in-regDate" value="14-01-2026" oninput="updateText('regDate')"></div>
         <div class="input-group"><label>Regn. Validity</label><input type="text" id="in-validity" value="13-01-2041" oninput="updateText('validity')"></div>
@@ -263,9 +270,7 @@
         <div class="input-group"><label>Card Issue Date</label><input type="text" id="in-issueDate" value="30-01-2026" oninput="updateText('issueDate')"></div>
 
         <div class="section-title">Back Side Details</div>
-        <!-- New Back Registration Number Input Field -->
         <div class="input-group"><label>Back Regn. Number</label><input type="text" id="in-bk-regNo" value="TN03AQ7209" oninput="updateText('bk-regNo')"></div>
-        
         <div class="input-group"><label>Card Serial No.</label><input type="text" id="in-bk-serial" value="TNN17048710" oninput="updateText('bk-serial')"></div>
         <div class="input-group"><label>Vehicle Class</label><input type="text" id="in-bk-vehClass" value="M-Cycle/Scooter" oninput="updateText('bk-vehClass')"></div>
         <div class="input-group"><label>Maker's Name</label><input type="text" id="in-bk-maker" value="HERO MOTOCORP LTD" oninput="updateText('bk-maker')"></div>
@@ -338,6 +343,9 @@
                 <div class="card-text val-bold" id="out-bk-axle">1</div>
                 <div class="card-text val-bold" id="out-bk-financer"></div>
                 <div class="card-text val-bold" id="out-bk-authority">TN03 CHENNAI NE RTO</div>
+                
+                <!-- Added Signature Image Preview -->
+                <img id="sig-preview" src="" alt="Signature" style="display:none;">
             </div>
         </div>
 
@@ -476,7 +484,8 @@
             document.addEventListener('touchend', onMouseUp);
         }
 
-        document.querySelectorAll('.card-text, #qr-preview').forEach(element => {
+        // Added #sig-preview to the list of draggable elements
+        document.querySelectorAll('.card-text, #qr-preview, #sig-preview').forEach(element => {
             element.addEventListener('mousedown', dragStart);
             element.addEventListener('touchstart', dragStart, {passive: false}); // passive: false needed to prevent scroll
         });
