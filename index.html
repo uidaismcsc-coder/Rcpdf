@@ -8,6 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- jsPDF for PDF Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- PDF.js for PDF Data Extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -114,19 +116,24 @@
             overflow: hidden;
             transform-origin: top center;
             transform: scale(0.65); 
-            margin-bottom: -210px; /* Adjusting gap for CSS scaling */
+            margin-bottom: -210px; 
         }
 
         /* Default Server Backgrounds (Update your server links here) */
         #cardCanvasFront { background-image: url('bg2.jpg'); }
         #cardCanvasBack { background-image: url('bg.jpg'); }
 
-        /* Text Overlay Styles */
-        .card-text {
+        /* Text Overlay Styles - Added user-select to prevent text selection during drag */
+        .card-text, #qr-preview {
             position: absolute;
             font-family: Arial, Helvetica, sans-serif;
             color: #000;
             white-space: nowrap;
+            cursor: grab;
+            user-select: none;
+        }
+        .card-text:active, #qr-preview:active {
+            cursor: grabbing;
         }
         .val-bold { font-weight: bold; }
         .val-normal { font-weight: normal; }
@@ -147,39 +154,29 @@
         #out-emission { top: 89.5%; left: 3%; font-size: 20px; }
         #out-issueDate { top: 50%; right: -8.5%; font-size: 20px; transform: rotate(-90deg); transform-origin: center; }
 
-        /* --- BACK CARD POSITIONS (Adjusted Upwards slightly & QR Code Enalrged) --- */
+        /* --- BACK CARD POSITIONS --- */
         #out-bk-serial { top: 3.7%; right: 4%; font-size: 26px; color: #333; letter-spacing: 1px; }
         #out-bk-regNo { top: 24.7%; left: 5.5%; font-size: 26px; }
-        
-        /* QR Code exact size and position (Enlarged) */
-        #qr-preview { position: absolute; top: 31%; left: 5.5%; width: 190px; height: 190px; object-fit: contain; }
-        
+        #qr-preview { top: 31%; left: 5.5%; width: 190px; height: 190px; object-fit: contain; }
         #out-bk-mfg { top: 67.2%; left: 5.5%; font-size: 21px; }
         #out-bk-cylinders { top: 76.2%; left: 5.5%; font-size: 21px; }
         #out-bk-axle { top: 85.7%; left: 5.5%; font-size: 21px; }
-        
         #out-bk-vehClass { top: 11.2%; left: 42%; font-size: 21px; }
         #out-bk-maker { top: 21.2%; left: 28.5%; font-size: 21px; }
         #out-bk-model { top: 30.7%; left: 28.5%; font-size: 21px; }
         #out-bk-colour { top: 40.2%; left: 28.5%; font-size: 21px; }
         #out-bk-body { top: 49.7%; left: 28.5%; font-size: 21px; }
-        
         #out-bk-seat { top: 58.7%; left: 28.5%; font-size: 21px; }
         #out-bk-stand { top: 58.7%; left: 44.5%; font-size: 21px; }
         #out-bk-sleep { top: 58.7%; left: 55.5%; font-size: 21px; }
-        
         #out-bk-unladen { top: 67.2%; left: 28.5%; font-size: 21px; }
         #out-bk-laden { top: 67.2%; left: 41%; font-size: 21px; }
         #out-bk-gross { top: 67.2%; left: 51.5%; font-size: 21px; }
-        
         #out-bk-cubic { top: 76.2%; left: 28.5%; font-size: 21px; }
         #out-bk-hp { top: 76.2%; left: 45.5%; font-size: 21px; }
         #out-bk-wheelbase { top: 76.2%; left: 67.5%; font-size: 21px; }
-        
         #out-bk-financer { top: 85.7%; left: 28.5%; font-size: 21px; }
-        
         #out-bk-authority { bottom: 4.8%; right: 5%; font-size: 20px; text-align: right; line-height: 1.2; }
-        
         #out-bk-form { top: 49.2%; right: 0.5%; transform: rotate(-90deg); font-size: 18px; color: #333; }
 
         /* Action Buttons */
@@ -214,8 +211,12 @@
     <div class="input-sidebar">
         <h3>Digital Print Portal</h3>
         
-        <!-- QR Upload Only -->
+        <!-- Upload Section -->
         <div class="upload-section">
+            <div class="input-group">
+                <label style="color: #0d6efd;">Auto Fill PDF (RC PDF)</label>
+                <input type="file" id="in-pdfUpload" accept="application/pdf">
+            </div>
             <div class="input-group">
                 <label>Upload QR Code (Back)</label>
                 <input type="file" id="in-qrCode" accept="image/*" onchange="uploadImage('in-qrCode', 'qr-preview', false)">
@@ -339,10 +340,8 @@
             }
         }
         
-        // Initial setup for multiline Authority text
         updateText('bk-authority');
 
-        // QR Upload function
         function uploadImage(inputId, targetId) {
             const file = document.getElementById(inputId).files[0];
             if (file) {
@@ -356,18 +355,120 @@
             }
         }
 
-        // --- FIXED DOWNLOAD SCRIPT ---
-        
-        // Helper function to capture canvases reliably
+        // --- PDF EXTRACTION SCRIPT ---
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        document.getElementById('in-pdfUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file && file.type === 'application/pdf') {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const typedarray = new Uint8Array(evt.target.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                        let textPromises = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            textPromises.push(pdf.getPage(i).then(page => page.getTextContent()));
+                        }
+                        Promise.all(textPromises).then(contents => {
+                            let extractedText = contents.map(content => content.items.map(item => item.str).join(' ')).join(' ');
+                            autoFillForm(extractedText);
+                        });
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        function extractData(text, keyword, endKeyword = null) {
+            let startIndex = text.indexOf(keyword);
+            if (startIndex === -1) return "";
+            startIndex += keyword.length;
+            let endIndex = endKeyword ? text.indexOf(endKeyword, startIndex) : startIndex + 50;
+            if (endIndex === -1) endIndex = text.length;
+            return text.substring(startIndex, endIndex).trim();
+        }
+
+        function autoFillForm(text) {
+            // Mapping Regex / Index extraction based on the provided PDF format
+            
+            let regNo = extractData(text, "Regn. Number", "Maker:");
+            if(regNo) { document.getElementById('in-regNo').value = regNo.split(" ")[0]; updateText('regNo'); updateText('bk-regNo'); }
+            
+            let dateReg = extractData(text, "Date of Regn.", "Regn. Validity");
+            if(dateReg) { document.getElementById('in-regDate').value = dateReg.split(" ")[0]; updateText('regDate'); }
+            
+            let chassis = extractData(text, "Chassis Number", "Engine");
+            if(chassis) { document.getElementById('in-chassis').value = chassis.split(" ")[0]; updateText('chassis'); }
+            
+            let engine = extractData(text, "Engine / Motor Number", "Owner");
+            if(engine) { document.getElementById('in-engine').value = engine.split(" ")[0]; updateText('engine'); }
+            
+            let owner = extractData(text, "Owner Name", "Son /");
+            if(owner) { document.getElementById('in-ownerName').value = owner; updateText('ownerName'); }
+            
+            let fuel = extractData(text, "Fuel", "Emission");
+            if(fuel) { document.getElementById('in-fuel').value = fuel.split(" ")[0]; updateText('fuel'); }
+            
+            let maker = extractData(text, "Maker:", "Model:");
+            if(maker) { document.getElementById('in-bk-maker').value = maker; updateText('bk-maker'); }
+
+            let auth = extractData(text, "Registration Authority", "Form:");
+            if(auth) { document.getElementById('in-bk-authority').value = auth; updateText('bk-authority'); }
+
+            alert("PDF தகவல்கள் வெற்றிகரமாகப் பிரித்தெடுக்கப்பட்டு படிவத்தில் நிரப்பப்பட்டன!");
+        }
+
+        // --- DRAG AND DROP SCRIPT ---
+        const scaleFactor = 0.65;
+        let activeElement = null;
+        let startX, startY, initialLeft, initialTop;
+
+        document.querySelectorAll('.card-text, #qr-preview').forEach(element => {
+            element.addEventListener('mousedown', function(e) {
+                activeElement = e.target;
+                const style = window.getComputedStyle(activeElement);
+                
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                initialLeft = parseFloat(style.left) || 0;
+                initialTop = parseFloat(style.top) || 0;
+
+                // Disable pointer events temporarily on others if needed, but not strictly required
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        });
+
+        function onMouseMove(e) {
+            if (!activeElement) return;
+            e.preventDefault();
+
+            // Calculate movement factoring in CSS transform scale
+            const dx = (e.clientX - startX) / scaleFactor;
+            const dy = (e.clientY - startY) / scaleFactor;
+
+            // Set new position in pixels instead of percentage to lock exact mouse spot
+            activeElement.style.left = `${initialLeft + dx}px`;
+            activeElement.style.top = `${initialTop + dy}px`;
+        }
+
+        function onMouseUp() {
+            if (activeElement) {
+                activeElement = null;
+            }
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        // --- DOWNLOAD SCRIPT ---
         async function captureCards() {
             const frontCard = document.getElementById('cardCanvasFront');
             const backCard = document.getElementById('cardCanvasBack');
             
-            // Temporarily reset scaling for exact 1011x638 rendering
             frontCard.style.transform = 'scale(1)'; 
             backCard.style.transform = 'scale(1)'; 
             
-            // Wait slightly for DOM to reflow before capturing
             await new Promise(resolve => setTimeout(resolve, 150));
             
             const options = { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null };
@@ -381,25 +482,21 @@
                 console.error(err);
             }
             
-            // Restore UI scale
             frontCard.style.transform = 'scale(0.65)'; 
             backCard.style.transform = 'scale(0.65)'; 
 
             return { frontCanvas, backCanvas };
         }
 
-        // PNG Download Function
         async function downloadPNG() {
             const { frontCanvas, backCanvas } = await captureCards();
             if(!frontCanvas || !backCanvas) return;
 
-            // Trigger Front Download
             const linkFront = document.createElement('a');
             linkFront.download = 'RC_Card_Front.png';
             linkFront.href = frontCanvas.toDataURL('image/png');
             linkFront.click();
 
-            // Trigger Back Download (Delay slightly to prevent blocking)
             setTimeout(() => {
                 const linkBack = document.createElement('a');
                 linkBack.download = 'RC_Card_Back.png';
@@ -408,28 +505,23 @@
             }, 600);
         }
 
-        // PDF Download Function
         async function downloadPDF() {
             const { frontCanvas, backCanvas } = await captureCards();
             if(!frontCanvas || !backCanvas) return;
 
             const { jsPDF } = window.jspdf;
-            // A4 page setup
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-            // Standard CR80 PVC Card Dimensions in mm (85.6 x 54.0)
             const cardWidth = 85.6; 
             const cardHeight = 54.0;
             const pageWidth = 210; 
-            const marginX = (pageWidth - cardWidth) / 2; // Center horizontally
+            const marginX = (pageWidth - cardWidth) / 2; 
             
-            // Add Front Card
             doc.text("Front Side", marginX, 25);
             doc.addImage(frontCanvas.toDataURL('image/png'), 'PNG', marginX, 28, cardWidth, cardHeight);
             doc.setDrawColor(200);
-            doc.rect(marginX, 28, cardWidth, cardHeight); // Add subtle border
+            doc.rect(marginX, 28, cardWidth, cardHeight); 
 
-            // Add Back Card
             let backY = 28 + cardHeight + 20;
             doc.text("Back Side", marginX, backY - 3);
             doc.addImage(backCanvas.toDataURL('image/png'), 'PNG', marginX, backY, cardWidth, cardHeight);
