@@ -3,101 +3,440 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Follow Us on Instagram</title>
+    <title>Digital Print Portal - RC PVC Card Maker</title>
+    <!-- html2canvas for High Quality Image Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- jsPDF for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
         body {
-            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 20px;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            gap: 20px;
             min-height: 100vh;
         }
-        .profile-card {
-            background: #ffffff;
-            width: 90%;
-            max-width: 400px;
-            padding: 40px 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            text-align: center;
+        
+        /* Left Side: Input Form Sidebar */
+        .input-sidebar {
+            width: 420px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            max-height: 95vh;
         }
-        .profile-img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid transparent;
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) border-box;
-            padding: 3px;
+        .input-sidebar h3 {
+            margin-top: 0;
+            color: #0d6efd;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        .section-title {
+            background-color: #e2e3e5;
+            padding: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #343a40;
+            margin: 20px 0 15px 0;
+            border-left: 5px solid #0d6efd;
+        }
+        .input-group {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .input-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #495057;
+            width: 45%;
+        }
+        .input-group input[type="text"], .input-group input[type="file"] {
+            width: 50%;
+            padding: 6px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+        }
+        .input-group input:focus {
+            border-color: #0d6efd;
+            outline: none;
+        }
+        .upload-section {
+            background: #f8f9fa;
+            border: 1px dashed #adb5bd;
+            padding: 15px;
+            border-radius: 8px;
             margin-bottom: 20px;
         }
-        .brand-name {
-            font-size: 24px;
+
+        /* Right Side: Preview Area */
+        .preview-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            overflow-y: auto;
+            max-height: 95vh;
+            padding-bottom: 40px;
+        }
+        
+        .card-box-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-box-wrapper h4 {
+            margin: 0 0 10px 0;
             color: #333;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-size: 26px;
         }
-        .description {
-            font-size: 15px;
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        .follow-btn {
-            display: inline-block;
-            background: linear-gradient(45deg, #f09433, #dc2743, #bc1888);
-            color: white;
-            text-decoration: none;
-            padding: 14px 40px;
-            border-radius: 30px;
-            font-size: 18px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(220, 39, 67, 0.3);
-        }
-        .follow-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(220, 39, 67, 0.4);
-        }
-        .offer-tag {
-            margin-top: 25px;
-            font-size: 13px;
-            color: #28a745;
-            background: #e8f5e9;
-            padding: 8px 15px;
+
+        /* High Quality PVC Card Container (1011x638 Standard CR80) */
+        .card-container {
+            position: relative;
+            width: 1011px;  
+            height: 638px;  
+            background-color: #fff;
+            background-size: 100% 100%; 
+            background-repeat: no-repeat;
+            background-position: center;
             border-radius: 15px;
-            display: inline-block;
-            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            transform-origin: top center;
+            transform: scale(0.65); 
+            margin-bottom: -210px; /* Adjusting gap for CSS scaling */
         }
+
+        /* Default Server Backgrounds (Update your server links here) */
+        #cardCanvasFront { background-image: url('bg2.jpg'); }
+        #cardCanvasBack { background-image: url('bg.jpg'); }
+
+        /* Text Overlay Styles */
+        .card-text {
+            position: absolute;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000;
+            white-space: nowrap;
+        }
+        .val-bold { font-weight: bold; }
+        .val-normal { font-weight: normal; }
+        
+        /* --- FRONT CARD POSITIONS --- */
+        #out-regNo { top: 25.5%; left: 28%; font-size: 26px; }
+        #out-regDate { top: 26%; left: 56.5%; font-size: 24px; }
+        #out-validity { top: 26%; left: 81%; font-size: 24px; }
+        #out-chassis { top: 37.5%; left: 28%; font-size: 22px; }
+        #out-ownerSerial { top: 37.5%; left: 89%; font-size: 22px; }
+        #out-engine { top: 50.5%; left: 28%; font-size: 22px; }
+        #out-ownerName { top: 62.5%; left: 28%; font-size: 24px; }
+        #out-fatherName { top: 76.5%; left: 28%; font-size: 24px; }
+        #out-address1 { top: 85.5%; left: 28%; font-size: 22px; }
+        #out-address2 { top: 90.5%; left: 28%; font-size: 22px; }
+        #out-address3 { top: 95.5%; left: 28%; font-size: 22px; }
+        #out-fuel { top: 78%; left: 3%; font-size: 20px; }
+        #out-emission { top: 89.5%; left: 3%; font-size: 20px; }
+        #out-issueDate { top: 50%; right: -8.5%; font-size: 20px; transform: rotate(-90deg); transform-origin: center; }
+
+        /* --- BACK CARD POSITIONS (Adjusted Upwards slightly & QR Code Enalrged) --- */
+        #out-bk-serial { top: 3.7%; right: 4%; font-size: 26px; color: #333; letter-spacing: 1px; }
+        #out-bk-regNo { top: 24.7%; left: 5.5%; font-size: 26px; }
+        
+        /* QR Code exact size and position (Enlarged) */
+        #qr-preview { position: absolute; top: 31%; left: 5.5%; width: 190px; height: 190px; object-fit: contain; }
+        
+        #out-bk-mfg { top: 67.2%; left: 5.5%; font-size: 21px; }
+        #out-bk-cylinders { top: 76.2%; left: 5.5%; font-size: 21px; }
+        #out-bk-axle { top: 85.7%; left: 5.5%; font-size: 21px; }
+        
+        #out-bk-vehClass { top: 11.2%; left: 42%; font-size: 21px; }
+        #out-bk-maker { top: 21.2%; left: 28.5%; font-size: 21px; }
+        #out-bk-model { top: 30.7%; left: 28.5%; font-size: 21px; }
+        #out-bk-colour { top: 40.2%; left: 28.5%; font-size: 21px; }
+        #out-bk-body { top: 49.7%; left: 28.5%; font-size: 21px; }
+        
+        #out-bk-seat { top: 58.7%; left: 28.5%; font-size: 21px; }
+        #out-bk-stand { top: 58.7%; left: 44.5%; font-size: 21px; }
+        #out-bk-sleep { top: 58.7%; left: 55.5%; font-size: 21px; }
+        
+        #out-bk-unladen { top: 67.2%; left: 28.5%; font-size: 21px; }
+        #out-bk-laden { top: 67.2%; left: 41%; font-size: 21px; }
+        #out-bk-gross { top: 67.2%; left: 51.5%; font-size: 21px; }
+        
+        #out-bk-cubic { top: 76.2%; left: 28.5%; font-size: 21px; }
+        #out-bk-hp { top: 76.2%; left: 45.5%; font-size: 21px; }
+        #out-bk-wheelbase { top: 76.2%; left: 67.5%; font-size: 21px; }
+        
+        #out-bk-financer { top: 85.7%; left: 28.5%; font-size: 21px; }
+        
+        #out-bk-authority { bottom: 4.8%; right: 5%; font-size: 20px; text-align: right; line-height: 1.2; }
+        
+        #out-bk-form { top: 49.2%; right: 0.5%; transform: rotate(-90deg); font-size: 18px; color: #333; }
+
+        /* Action Buttons */
+        .actions {
+            margin-top: 230px; 
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+        }
+        .btn-download {
+            background-color: #198754;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+        .btn-pdf {
+            background-color: #dc3545;
+        }
+        .btn-download:hover { opacity: 0.9; transform: translateY(-2px); }
     </style>
 </head>
 <body>
 
-    <div class="profile-card">
-        <!-- உங்களின் 3D லோகோ அல்லது இமேஜ் லிங்கை இங்கே மாற்றவும் -->
-        <img src="YOUR_LOGO_URL_HERE.jpg" alt="Profile Logo" class="profile-img">
+    <!-- Left Sidebar: Input Form -->
+    <div class="input-sidebar">
+        <h3>Digital Print Portal</h3>
         
-        <h1 class="brand-name">Digital Print Portal</h1>
-        
-        <p class="description">
-            எங்களின் புதிய சேவைகள், ஆஃபர்கள் மற்றும் முக்கிய அப்டேட்களை உடனுக்குடன் தெரிந்துகொள்ள இன்ஸ்டாகிராமில் எங்களை பின்தொடருங்கள்!
-        </p>
-        
-        <!-- உங்களின் இன்ஸ்டாகிராம் லிங்கை href-ல் மாற்றவும் -->
-        <a href="https://instagram.com/sk_Xerox_Shop" class="follow-btn" target="_blank">
-            Follow on Instagram
-        </a>
+        <!-- QR Upload Only -->
+        <div class="upload-section">
+            <div class="input-group">
+                <label>Upload QR Code (Back)</label>
+                <input type="file" id="in-qrCode" accept="image/*" onchange="uploadImage('in-qrCode', 'qr-preview', false)">
+            </div>
+        </div>
 
-        <div class="offer-tag">
-            ✨ Follow செய்து சிறப்பு சலுகைகளை பெறுங்கள்!
+        <div class="section-title">Front Side Details</div>
+        <div class="input-group"><label>Regn. Number</label><input type="text" id="in-regNo" value="TN03AQ7209" oninput="updateText('regNo'); updateText('bk-regNo')"></div>
+        <div class="input-group"><label>Date of Regn.</label><input type="text" id="in-regDate" value="14-01-2026" oninput="updateText('regDate')"></div>
+        <div class="input-group"><label>Regn. Validity</label><input type="text" id="in-validity" value="13-01-2041" oninput="updateText('validity')"></div>
+        <div class="input-group"><label>Chassis Number</label><input type="text" id="in-chassis" value="MBLJFW728SGL11960" oninput="updateText('chassis')"></div>
+        <div class="input-group"><label>Owner Serial</label><input type="text" id="in-ownerSerial" value="1" oninput="updateText('ownerSerial')"></div>
+        <div class="input-group"><label>Engine Number</label><input type="text" id="in-engine" value="JF17EUSGL13620" oninput="updateText('engine')"></div>
+        <div class="input-group"><label>Owner Name</label><input type="text" id="in-ownerName" value="SENTHIL KUMAR V" oninput="updateText('ownerName')"></div>
+        <div class="input-group"><label>Father/Husband Name</label><input type="text" id="in-fatherName" value="VENKATESH" oninput="updateText('fatherName')"></div>
+        <div class="input-group"><label>Address Line 1</label><input type="text" id="in-address1" value="NO 9/7 2ND FLOOR CORPORATION," oninput="updateText('address1')"></div>
+        <div class="input-group"><label>Address Line 2</label><input type="text" id="in-address2" value="COLONY 1ST STREET TONDIARPET,," oninput="updateText('address2')"></div>
+        <div class="input-group"><label>Address Line 3</label><input type="text" id="in-address3" value="Chennai, TN, 600081" oninput="updateText('address3')"></div>
+        <div class="input-group"><label>Fuel</label><input type="text" id="in-fuel" value="PETROL" oninput="updateText('fuel')"></div>
+        <div class="input-group"><label>Emission Norms</label><input type="text" id="in-emission" value="BHARAT STAGE VI" oninput="updateText('emission')"></div>
+        <div class="input-group"><label>Card Issue Date</label><input type="text" id="in-issueDate" value="30-01-2026" oninput="updateText('issueDate')"></div>
+
+        <div class="section-title">Back Side Details</div>
+        <div class="input-group"><label>Card Serial No.</label><input type="text" id="in-bk-serial" value="TNN17048710" oninput="updateText('bk-serial')"></div>
+        <div class="input-group"><label>Vehicle Class</label><input type="text" id="in-bk-vehClass" value="M-Cycle/Scooter" oninput="updateText('bk-vehClass')"></div>
+        <div class="input-group"><label>Maker's Name</label><input type="text" id="in-bk-maker" value="HERO MOTOCORP LTD" oninput="updateText('bk-maker')"></div>
+        <div class="input-group"><label>Model Name</label><input type="text" id="in-bk-model" value="DESTINI 125 ZX+" oninput="updateText('bk-model')"></div>
+        <div class="input-group"><label>Colour</label><input type="text" id="in-bk-colour" value="PEARL BLACK" oninput="updateText('bk-colour')"></div>
+        <div class="input-group"><label>Body Type</label><input type="text" id="in-bk-body" value="SOLO WITH PILLION" oninput="updateText('bk-body')"></div>
+        <div class="input-group"><label>Seating Cap.</label><input type="text" id="in-bk-seat" value="2" oninput="updateText('bk-seat')"></div>
+        <div class="input-group"><label>Standing Cap.</label><input type="text" id="in-bk-stand" value="0" oninput="updateText('bk-stand')"></div>
+        <div class="input-group"><label>Sleeper Cap.</label><input type="text" id="in-bk-sleep" value="0" oninput="updateText('bk-sleep')"></div>
+        <div class="input-group"><label>Mfg Month-Year</label><input type="text" id="in-bk-mfg" value="11-2025" oninput="updateText('bk-mfg')"></div>
+        <div class="input-group"><label>Unladen Weight</label><input type="text" id="in-bk-unladen" value="115" oninput="updateText('bk-unladen')"></div>
+        <div class="input-group"><label>Laden Weight</label><input type="text" id="in-bk-laden" value="245" oninput="updateText('bk-laden')"></div>
+        <div class="input-group"><label>Gross Weight</label><input type="text" id="in-bk-gross" value="0" oninput="updateText('bk-gross')"></div>
+        <div class="input-group"><label>No. of Cylinders</label><input type="text" id="in-bk-cylinders" value="1" oninput="updateText('bk-cylinders')"></div>
+        <div class="input-group"><label>Cubic Cap (CC)</label><input type="text" id="in-bk-cubic" value="124.6" oninput="updateText('bk-cubic')"></div>
+        <div class="input-group"><label>Horse Power</label><input type="text" id="in-bk-hp" value="8.98" oninput="updateText('bk-hp')"></div>
+        <div class="input-group"><label>Wheel Base</label><input type="text" id="in-bk-wheelbase" value="1302" oninput="updateText('bk-wheelbase')"></div>
+        <div class="input-group"><label>Number of Axle</label><input type="text" id="in-bk-axle" value="1" oninput="updateText('bk-axle')"></div>
+        <div class="input-group"><label>Financer Name</label><input type="text" id="in-bk-financer" value="" oninput="updateText('bk-financer')"></div>
+        <div class="input-group"><label>Registration Auth</label><input type="text" id="in-bk-authority" value="TN03 CHENNAI NE RTO" oninput="updateText('bk-authority')"></div>
+    </div>
+
+    <!-- Right Side: Live Preview -->
+    <div class="preview-area">
+        
+        <!-- Front Card Box -->
+        <div class="card-box-wrapper">
+            <h4>Front Side Preview</h4>
+            <div class="card-container" id="cardCanvasFront">
+                <div class="card-text val-bold" id="out-regNo">TN03AQ7209</div>
+                <div class="card-text val-bold" id="out-regDate">14-01-2026</div>
+                <div class="card-text val-bold" id="out-validity">13-01-2041</div>
+                <div class="card-text val-bold" id="out-chassis">MBLJFW728SGL11960</div>
+                <div class="card-text val-bold" id="out-ownerSerial">1</div>
+                <div class="card-text val-bold" id="out-engine">JF17EUSGL13620</div>
+                <div class="card-text val-bold" id="out-ownerName">SENTHIL KUMAR V</div>
+                <div class="card-text val-bold" id="out-fatherName">VENKATESH</div>
+                <div class="card-text val-bold" id="out-address1">NO 9/7 2ND FLOOR CORPORATION,</div>
+                <div class="card-text val-bold" id="out-address2">COLONY 1ST STREET TONDIARPET,,</div>
+                <div class="card-text val-bold" id="out-address3">Chennai, TN, 600081</div>
+                <div class="card-text val-bold" id="out-fuel">PETROL</div>
+                <div class="card-text val-bold" id="out-emission">BHARAT STAGE VI</div>
+                <div class="card-text val-bold" id="out-issueDate">Card Issue Date 30-01-2026</div>
+            </div>
+        </div>
+
+        <!-- Back Card Box -->
+        <div class="card-box-wrapper" style="margin-top: 20px;">
+            <h4>Back Side Preview</h4>
+            <div class="card-container" id="cardCanvasBack">
+                <div class="card-text val-normal" id="out-bk-serial">TNN17048710</div>
+                <div class="card-text val-bold" id="out-bk-regNo">TN03AQ7209</div>
+                <img id="qr-preview" src="" alt="" style="display:none;">
+                <div class="card-text val-bold" id="out-bk-vehClass">M-Cycle/Scooter</div>
+                <div class="card-text val-bold" id="out-bk-maker">HERO MOTOCORP LTD</div>
+                <div class="card-text val-bold" id="out-bk-model">DESTINI 125 ZX+</div>
+                <div class="card-text val-bold" id="out-bk-colour">PEARL BLACK</div>
+                <div class="card-text val-bold" id="out-bk-body">SOLO WITH PILLION</div>
+                <div class="card-text val-bold" id="out-bk-seat">2</div>
+                <div class="card-text val-bold" id="out-bk-stand">0</div>
+                <div class="card-text val-bold" id="out-bk-sleep">0</div>
+                <div class="card-text val-bold" id="out-bk-mfg">11-2025</div>
+                <div class="card-text val-bold" id="out-bk-unladen">115</div>
+                <div class="card-text val-bold" id="out-bk-laden">245</div>
+                <div class="card-text val-bold" id="out-bk-gross">0</div>
+                <div class="card-text val-bold" id="out-bk-cylinders">1</div>
+                <div class="card-text val-bold" id="out-bk-cubic">124.6</div>
+                <div class="card-text val-bold" id="out-bk-hp">8.98</div>
+                <div class="card-text val-bold" id="out-bk-wheelbase">1302</div>
+                <div class="card-text val-bold" id="out-bk-axle">1</div>
+                <div class="card-text val-bold" id="out-bk-financer"></div>
+                <div class="card-text val-bold" id="out-bk-authority">TN03 CHENNAI NE RTO</div>
+                <div class="card-text val-normal" id="out-bk-form">Form 23A</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-download" onclick="downloadPNG()">Download as PNG</button>
+            <button class="btn-download btn-pdf" onclick="downloadPDF()">Download as PDF</button>
         </div>
     </div>
 
+    <script>
+        function updateText(fieldId) {
+            let inputElement = document.getElementById('in-' + fieldId);
+            if(inputElement) {
+                let inputVal = inputElement.value;
+                let targetElem = document.getElementById('out-' + fieldId);
+                if(targetElem) {
+                    if (fieldId === 'issueDate') {
+                        targetElem.innerText = "Card Issue Date " + inputVal;
+                    } else if(fieldId === 'bk-authority') {
+                        targetElem.innerHTML = "Registration Authority<br>" + inputVal;
+                    } else {
+                        targetElem.innerText = inputVal;
+                    }
+                }
+            }
+        }
+        
+        // Initial setup for multiline Authority text
+        updateText('bk-authority');
+
+        // QR Upload function
+        function uploadImage(inputId, targetId) {
+            const file = document.getElementById(inputId).files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgElem = document.getElementById(targetId);
+                    imgElem.src = e.target.result;
+                    imgElem.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- FIXED DOWNLOAD SCRIPT ---
+        
+        // Helper function to capture canvases reliably
+        async function captureCards() {
+            const frontCard = document.getElementById('cardCanvasFront');
+            const backCard = document.getElementById('cardCanvasBack');
+            
+            // Temporarily reset scaling for exact 1011x638 rendering
+            frontCard.style.transform = 'scale(1)'; 
+            backCard.style.transform = 'scale(1)'; 
+            
+            // Wait slightly for DOM to reflow before capturing
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            const options = { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null };
+            
+            let frontCanvas = null, backCanvas = null;
+            try {
+                frontCanvas = await html2canvas(frontCard, options);
+                backCanvas = await html2canvas(backCard, options);
+            } catch (err) {
+                alert("Download Failed! Ensure your Background Image URL is correct and allows CORS.");
+                console.error(err);
+            }
+            
+            // Restore UI scale
+            frontCard.style.transform = 'scale(0.65)'; 
+            backCard.style.transform = 'scale(0.65)'; 
+
+            return { frontCanvas, backCanvas };
+        }
+
+        // PNG Download Function
+        async function downloadPNG() {
+            const { frontCanvas, backCanvas } = await captureCards();
+            if(!frontCanvas || !backCanvas) return;
+
+            // Trigger Front Download
+            const linkFront = document.createElement('a');
+            linkFront.download = 'RC_Card_Front.png';
+            linkFront.href = frontCanvas.toDataURL('image/png');
+            linkFront.click();
+
+            // Trigger Back Download (Delay slightly to prevent blocking)
+            setTimeout(() => {
+                const linkBack = document.createElement('a');
+                linkBack.download = 'RC_Card_Back.png';
+                linkBack.href = backCanvas.toDataURL('image/png');
+                linkBack.click();
+            }, 600);
+        }
+
+        // PDF Download Function
+        async function downloadPDF() {
+            const { frontCanvas, backCanvas } = await captureCards();
+            if(!frontCanvas || !backCanvas) return;
+
+            const { jsPDF } = window.jspdf;
+            // A4 page setup
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            // Standard CR80 PVC Card Dimensions in mm (85.6 x 54.0)
+            const cardWidth = 85.6; 
+            const cardHeight = 54.0;
+            const pageWidth = 210; 
+            const marginX = (pageWidth - cardWidth) / 2; // Center horizontally
+            
+            // Add Front Card
+            doc.text("Front Side", marginX, 25);
+            doc.addImage(frontCanvas.toDataURL('image/png'), 'PNG', marginX, 28, cardWidth, cardHeight);
+            doc.setDrawColor(200);
+            doc.rect(marginX, 28, cardWidth, cardHeight); // Add subtle border
+
+            // Add Back Card
+            let backY = 28 + cardHeight + 20;
+            doc.text("Back Side", marginX, backY - 3);
+            doc.addImage(backCanvas.toDataURL('image/png'), 'PNG', marginX, backY, cardWidth, cardHeight);
+            doc.rect(marginX, backY, cardWidth, cardHeight);
+
+            doc.save('Digital_Print_Portal_RC.pdf');
+        }
+    </script>
 </body>
 </html>
