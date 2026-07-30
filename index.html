@@ -231,15 +231,13 @@
         .b-bottom-right { bottom: 12px; right: 35px; text-align: center; font-size: 11px; font-weight: bold; line-height: 1.3; color: #000; }
 
         .btn-download {
-            background-color: #198754; color: white; border: none; padding: 14px 20px;
-            font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15); transition: background-color 0.2s;
-            flex: 1;
+            background-color: #198754; color: white; border: none; padding: 14px 30px;
+            font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(25, 135, 84, 0.3); margin-top: 10px; width: 100%;
+            transition: background-color 0.2s;
         }
-        .btn-download:hover { opacity: 0.9; }
-        .btn-download:disabled { background-color: #6c757d !important; cursor: not-allowed; }
-        .btn-png { background-color: #0d6efd; }
-        .btn-pdf { background-color: #198754; }
+        .btn-download:hover { background-color: #157347; }
+        .btn-download:disabled { background-color: #6c757d; cursor: not-allowed; }
         
         .info-note {
             font-size: 11px; color: #dc3545; font-weight: bold; margin-bottom: 10px;
@@ -414,11 +412,7 @@
                 </div>
             </div>
             
-            <!-- தனித்தனி PNG மற்றும் PDF டவுன்லோட் பட்டன்கள் -->
-            <div style="display: flex; gap: 15px; width: 100%; margin-top: 10px;">
-                <button class="btn-download btn-png" id="downloadPngBtn" onclick="downloadPNGs()">Download PNG (Front & Back)</button>
-                <button class="btn-download btn-pdf" id="downloadPdfBtn" onclick="downloadPDF()">Download High-Quality PDF</button>
-            </div>
+            <button class="btn-download" id="downloadBtn" onclick="downloadAllFormats()">Download High-Quality PDF & PNGs</button>
         </div>
     </div>
 
@@ -733,7 +727,7 @@
             document.body.removeChild(link);
         }
 
-        // --- EXACT SCALE & HIGH-QUALITY RENDERING (480px x 302px Exact Size - No Quality Loss) ---
+        // --- HIGH-QUALITY EXACT RENDERING (100% Server Quality Without Pixelation & Position Shift) ---
         async function renderExactCard(elementId) {
             const cardElement = document.getElementById(elementId);
             
@@ -747,14 +741,11 @@
             window.scrollTo(0, 0);
 
             try {
-                // scale 1 மற்றும் width 480, height 302 வழங்குவதன் மூலம் நீங்கள் கொடுத்த அதே அளவில் குவாலிட்டி மாறாமல் படம் டவுன்லோட் ஆகும்
                 const canvas = await html2canvas(cardElement, {
-                    scale: 1,               
-                    width: 480,
-                    height: 302,
-                    useCORS: true,          
-                    allowTaint: false,      
-                    imageTimeout: 15000,    
+                    scale: 6,               // 6x High Scale: சர்வரில் உள்ள படத்தின் அசல் குவாலிட்டி சிறிதும் உடையாமல் HD-ஆக கிடைக்க
+                    useCORS: true,          // சர்வரில் உள்ள l1.jpg, l2.jpg மற்றும் லோகோக்கள் துல்லியமாக ரெண்டர் ஆக
+                    allowTaint: false,      // toDataURL() Security Error வராமல் தடுக்க allowTaint false செய்யப்பட்டுள்ளது
+                    imageTimeout: 15000,    // சர்வர் இமேஜ்கள் முழுமையாக ரெண்டர் ஆகும் வரை காத்திருக்க
                     backgroundColor: '#ffffff',
                     logging: false,
                     scrollX: 0,
@@ -768,46 +759,12 @@
             }
         }
 
-        // --- 1. Separate PNGs Download Function ---
-        window.downloadPNGs = async function() {
-            const downloadPngBtn = document.getElementById('downloadPngBtn');
-            const originalBtnText = downloadPngBtn.innerText;
-            downloadPngBtn.innerText = "Downloading PNGs...";
-            downloadPngBtn.disabled = true;
-
-            try {
-                const resizer = document.getElementById('photo-resizer');
-                if (resizer) resizer.style.display = 'none';
-
-                const frontCanvas = await renderExactCard('frontPreview');
-                const frontImgData = frontCanvas.toDataURL('image/png');
-                
-                const backCanvas = await renderExactCard('backPreview');
-                const backImgData = backCanvas.toDataURL('image/png');
-
-                if (resizer) resizer.style.display = 'block';
-
-                saveAsPNG(frontImgData, 'TN_DL_Front_Exact.png');
-                
-                setTimeout(() => {
-                    saveAsPNG(backImgData, 'TN_DL_Back_Exact.png');
-                }, 400);
-
-            } catch (error) {
-                console.error("PNG Download Error: ", error);
-                alert("PNG டவுன்லோட் செய்வதில் பிழை ஏற்பட்டது: " + error.message);
-            } finally {
-                downloadPngBtn.innerText = originalBtnText;
-                downloadPngBtn.disabled = false;
-            }
-        };
-
-        // --- 2. Separate PDF Download Function ---
-        window.downloadPDF = async function() {
-            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-            const originalBtnText = downloadPdfBtn.innerText;
-            downloadPdfBtn.innerText = "Generating PDF...";
-            downloadPdfBtn.disabled = true;
+        // --- High-Quality PDF and PNG Download ---
+        window.downloadAllFormats = async function() {
+            const downloadBtn = document.getElementById('downloadBtn');
+            const originalBtnText = downloadBtn.innerText;
+            downloadBtn.innerText = "Processing High-Quality Files... Please Wait";
+            downloadBtn.disabled = true;
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -818,15 +775,18 @@
             let currentY = 20;
 
             try {
+                // போட்டோ ரீசைஸ் ஹேண்டிலை டவுன்லோட் ஆகும் படத்தில் மறைக்க
                 const resizer = document.getElementById('photo-resizer');
                 if (resizer) resizer.style.display = 'none';
 
+                // 1. சர்வர் குவாலிட்டியில் சிறிதும் உடையாமல் High Resolution Canvas-ஆக மாற்றுதல்
                 const frontCanvas = await renderExactCard('frontPreview');
                 const frontImgData = frontCanvas.toDataURL('image/png');
                 
                 const backCanvas = await renderExactCard('backPreview');
                 const backImgData = backCanvas.toDataURL('image/png');
 
+                // --- 2. Build High-Quality PDF ---
                 doc.addImage(frontImgData, 'PNG', marginX, currentY, cardWidth, cardHeight);
                 doc.setDrawColor(200); doc.rect(marginX, currentY, cardWidth, cardHeight);
                 
@@ -837,16 +797,25 @@
 
                 if (resizer) resizer.style.display = 'block';
 
-                doc.save('TN_DL_Card_Exact.pdf');
+                // --- 3. Save ALL Three Files Simultaneously ---
+                doc.save('TN_DL_High_Quality_Card.pdf');
+                
+                setTimeout(() => {
+                    saveAsPNG(frontImgData, 'TN_DL_Front_HD.png');
+                }, 400);
+
+                setTimeout(() => {
+                    saveAsPNG(backImgData, 'TN_DL_Back_HD.png');
+                }, 800);
 
             } catch (error) {
-                console.error("PDF Download Error: ", error);
-                alert("PDF டவுன்லோட் செய்வதில் பிழை ஏற்பட்டது: " + error.message);
+                console.error("Download Error: ", error);
+                alert("டவுன்லோட் செய்வதில் பிழை ஏற்பட்டது: " + error.message);
             } finally {
-                downloadPdfBtn.innerText = originalBtnText;
-                downloadPdfBtn.disabled = false;
+                downloadBtn.innerText = originalBtnText;
+                downloadBtn.disabled = false;
             }
-        };
+        }
     </script>
 </body>
 </html>
