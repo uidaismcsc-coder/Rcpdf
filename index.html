@@ -167,10 +167,10 @@
 
         /* FRONT CARD ELEMENTS */
         .f-dl-no { top: 25px; left: 20px; font-size: 14px; font-weight: bold; color: #000; }
-        .f-dates { top: 107px; left: 130px; font-size: 11.5px; display: flex; gap: 24px; font-weight: bold; color: #000; white-space: nowrap; }
+        .f-dates { top: 104px; left: 126px; font-size: 11.5px; display: flex; gap: 24px; font-weight: bold; color: #000; white-space: nowrap; }
         
         .f-photo-box { 
-            top: 60px; right: 30px; width: 78px; height: 96px; display: flex; 
+            top: 63px; left: 372px; right: auto; width: 73px; height: 75px; display: flex; 
             align-items: center; justify-content: center; font-size: 11px; 
             color: #777; background-color: transparent; overflow: hidden; border: 1px dashed #6c757d;
         }
@@ -727,20 +727,36 @@
             document.body.removeChild(link);
         }
 
-        // --- HIGH-QUALITY EXACT RENDERING (Server Quality Without Pixelation) ---
+        // --- HIGH-QUALITY EXACT RENDERING (100% Server Quality Without Pixelation & Position Shift) ---
         async function renderExactCard(elementId) {
             const cardElement = document.getElementById(elementId);
             
-            return await html2canvas(cardElement, {
-                scale: 5,               // 5x Scale: சர்வரில் உள்ள படத்தின் அசல் குவாலிட்டி சிறிதும் உடையாமல் கிடைக்க
-                useCORS: true,          // இணையத்தில் உள்ள படங்கள் மற்றும் பேக்ரவுண்ட் துல்லியமாக ரெண்டர் ஆக
-                allowTaint: true,       
-                imageTimeout: 0,        // சர்வர் படங்கள் முழுமையாக ரெண்டர் ஆகும் வரை காத்திருக்க
-                backgroundColor: null,
-                logging: false,
-                scrollX: 0,
-                scrollY: -window.scrollY
-            });
+            // html2canvas ரெண்டர் செய்யும்போது crisp-edges காரணமாக இமேஜ்/பேக்ரவுண்ட் உடைவதைத் தவிர்க்க தற்காலிகமாக normal மாற்றுதல்
+            const originalImageRendering = cardElement.style.imageRendering;
+            cardElement.style.imageRendering = 'auto';
+
+            // ரெண்டர் செய்வதற்கு முன் ஸ்க்ரோல் நிலையால் ஏற்படும் பொசிஷன் மாற்றங்களைத் தவிர்க்க
+            const originalScrollX = window.scrollX;
+            const originalScrollY = window.scrollY;
+            window.scrollTo(0, 0);
+
+            try {
+                const canvas = await html2canvas(cardElement, {
+                    scale: 6,               // 6x High Scale: சர்வரில் உள்ள படத்தின் அசல் குவாலிட்டி சிறிதும் உடையாமல் HD-ஆக கிடைக்க
+                    useCORS: true,          // சர்வரில் உள்ள l1.jpg, l2.jpg மற்றும் லோகோக்கள் துல்லியமாக ரெண்டர் ஆக
+                    allowTaint: false,      // toDataURL() Security Error வராமல் தடுக்க allowTaint false செய்யப்பட்டுள்ளது
+                    imageTimeout: 15000,    // சர்வர் இமேஜ்கள் முழுமையாக ரெண்டர் ஆகும் வரை காத்திருக்க
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0
+                });
+                return canvas;
+            } finally {
+                // மீண்டும் அசல் நிலைக்கு மாற்றுதல்
+                cardElement.style.imageRendering = originalImageRendering;
+                window.scrollTo(originalScrollX, originalScrollY);
+            }
         }
 
         // --- High-Quality PDF and PNG Download ---
@@ -763,12 +779,12 @@
                 const resizer = document.getElementById('photo-resizer');
                 if (resizer) resizer.style.display = 'none';
 
-                // 1. சர்வர் குவாலிட்டியில் சிறிதும் உடையாமல் DataURL (1.0 Quality) ஆக மாற்றுதல்
+                // 1. சர்வர் குவாலிட்டியில் சிறிதும் உடையாமல் High Resolution Canvas-ஆக மாற்றுதல்
                 const frontCanvas = await renderExactCard('frontPreview');
-                const frontImgData = frontCanvas.toDataURL('image/png', 1.0);
+                const frontImgData = frontCanvas.toDataURL('image/png');
                 
                 const backCanvas = await renderExactCard('backPreview');
-                const backImgData = backCanvas.toDataURL('image/png', 1.0);
+                const backImgData = backCanvas.toDataURL('image/png');
 
                 // --- 2. Build High-Quality PDF ---
                 doc.addImage(frontImgData, 'PNG', marginX, currentY, cardWidth, cardHeight);
