@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Print Portal - Exact TN DL Editor</title>
-    <!-- jsPDF & QRious Libraries -->
+    <!-- jsPDF, QRious & html2canvas Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -723,96 +724,19 @@
             document.body.removeChild(link);
         }
 
-        // --- Helper Function to load an Image safely ---
-        function loadImage(src) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = () => {
-                    console.warn(`Could not load image: ${src}`);
-                    resolve(null);
-                };
-                img.src = src;
-            });
-        }
-
-        // --- 100% Native HTML5 Canvas Card Renderer (Tainted Canvas Fix applied!) ---
-        async function renderCardToCanvas(cardElement, bgImageName) {
-            const scale = 4; // Ultra HD Print Quality
-            const width = cardElement.offsetWidth;
-            const height = cardElement.offsetHeight;
+        // --- HIGH-QUALITY EXACT RENDERING (Web & Address Compatible) ---
+        async function renderExactCard(elementId) {
+            const cardElement = document.getElementById(elementId);
             
-            const canvas = document.createElement('canvas');
-            canvas.width = width * scale;
-            canvas.height = height * scale;
-            const ctx = canvas.getContext('2d');
-            ctx.scale(scale, scale);
-
-            // 1. Draw Background Image (l1.jpg or l2.jpg)
-            const bgImg = await loadImage(bgImageName);
-            if (bgImg) {
-                ctx.drawImage(bgImg, 0, 0, width, height);
-            } else {
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, width, height);
-            }
-
-            // 2. Draw all child elements inside the Card
-            const cardRect = cardElement.getBoundingClientRect();
-            const elements = cardElement.querySelectorAll('*');
-
-            for (const el of elements) {
-                if (el.classList.contains('resize-handle') || el.style.display === 'none') continue;
-                
-                const rect = el.getBoundingClientRect();
-                const x = rect.left - cardRect.left;
-                const y = rect.top - cardRect.top;
-
-                // If element has a background image (Photo / Signature)
-                const bgImageStyle = window.getComputedStyle(el).backgroundImage;
-                if (bgImageStyle && bgImageStyle !== 'none') {
-                    const urlMatch = bgImageStyle.match(/url\(["']?(.*?)["']?\)/);
-                    if (urlMatch && urlMatch[1]) {
-                        const innerImg = await loadImage(urlMatch[1]);
-                        if (innerImg) {
-                            ctx.drawImage(innerImg, x, y, rect.width, rect.height);
-                        }
-                    }
-                }
-
-                // If element is a Canvas (QR Code)
-                if (el.tagName.toLowerCase() === 'canvas') {
-                    ctx.drawImage(el, x, y, rect.width, rect.height);
-                }
-
-                // If element contains Text
-                const computedStyle = window.getComputedStyle(el);
-                const text = el.innerText;
-                const hasDirectText = Array.from(el.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.nodeValue.trim() !== '');
-                
-                if (text && hasDirectText && el.children.length === 0) {
-                    ctx.save();
-                    ctx.font = `${computedStyle.fontWeight} ${parseFloat(computedStyle.fontSize)}px ${computedStyle.fontFamily}`;
-                    ctx.fillStyle = computedStyle.color || '#000000';
-                    ctx.textBaseline = 'top';
-
-                    // Support for Vertical Rotated Text
-                    if (computedStyle.transform && computedStyle.transform !== 'none') {
-                        ctx.translate(x + rect.width, y + rect.height);
-                        ctx.rotate(-Math.PI / 2);
-                        ctx.fillText(text.trim(), 0, 0);
-                    } else {
-                        const lines = text.split('\n');
-                        let lineHeight = parseFloat(computedStyle.fontSize) * 1.35;
-                        lines.forEach((line, index) => {
-                            ctx.fillText(line.trim(), x, y + (index * lineHeight));
-                        });
-                    }
-                    ctx.restore();
-                }
-            }
-
-            return canvas;
+            return await html2canvas(cardElement, {
+                scale: 4,               // 4x High Resolution Ultra HD
+                useCORS: true,          // இணையத்தில் (Website / Hosting) வேலை செய்ய
+                allowTaint: true,       // லோக்கல் மற்றும் எக்ஸ்டர்னல் படங்களை அனுமதிக்க
+                backgroundColor: null,
+                logging: false,
+                scrollX: 0,
+                scrollY: -window.scrollY
+            });
         }
 
         // --- High-Quality PDF and PNG Download ---
@@ -831,19 +755,18 @@
             let currentY = 20;
 
             try {
+                // போட்டோ ரீசைஸ் ஹேண்டிலை (சிறிய நீல புள்ளி) டவுன்லோட் ஆகும் படத்தில் மறைக்க
                 const resizer = document.getElementById('photo-resizer');
                 if (resizer) resizer.style.display = 'none';
 
-                // 1. Render Front & Back Cards using Native Canvas
-                const frontElement = document.getElementById('frontPreview');
-                const frontCanvas = await renderCardToCanvas(frontElement, 'l1.jpg');
+                // 1. நீங்கள் திரையில் பார்ப்பதை அப்படியே துல்லியமாக Canvas-ல் மாற்றுதல்
+                const frontCanvas = await renderExactCard('frontPreview');
                 const frontImgData = frontCanvas.toDataURL('image/png');
                 
-                const backElement = document.getElementById('backPreview');
-                const backCanvas = await renderCardToCanvas(backElement, 'l2.jpg');
+                const backCanvas = await renderExactCard('backPreview');
                 const backImgData = backCanvas.toDataURL('image/png');
 
-                // --- 2. Build PDF ---
+                // --- 2. Build High-Quality PDF ---
                 doc.addImage(frontImgData, 'PNG', marginX, currentY, cardWidth, cardHeight);
                 doc.setDrawColor(200); doc.rect(marginX, currentY, cardWidth, cardHeight);
                 
