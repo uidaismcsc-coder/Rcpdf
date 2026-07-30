@@ -577,17 +577,18 @@
             }
         }
 
-        // --- செக் பாக்ஸ் டிக் செய்ததும் இன்புட் பாக்ஸ்களை உருவாக்கும் செயல்பாடு ---
+        // --- செக் பாக்ஸ் டிக் செய்ததும் லோகோக்களுடன் இன்புட் பாக்ஸ்களை உருவாக்கும் செயல்பாடு ---
         function autoGenerateTableInputs() {
             const container = document.getElementById('dynamic_table_inputs');
             const issueDate = document.getElementById('in_first_issue').value;
             const rtoCode = document.getElementById('in_dl_no').value.substring(0, 4) || 'TN04';
             
+            // சர்வரில் டீஃபால்ட்டாக உள்ள லோகோ படங்களின் பெயர்கள் (mcwg.png, lmv.png, 3w.png, hmv.png)
             const vehicles = [
-                { id: 'chk_mcwg', code: 'MCWG', cat: 'NT' },
-                { id: 'chk_lmv', code: 'LMV', cat: 'NT' },
-                { id: 'chk_3w', code: '3W-NT', cat: 'NT' },
-                { id: 'chk_hmv', code: 'HMV', cat: 'TR' }
+                { id: 'chk_mcwg', code: 'MCWG', cat: 'NT', icon: 'mcwg.png' },
+                { id: 'chk_lmv', code: 'LMV', cat: 'NT', icon: 'lmv.png' },
+                { id: 'chk_3w', code: '3W-NT', cat: 'NT', icon: '3w.png' },
+                { id: 'chk_hmv', code: 'HMV', cat: 'TR', icon: 'hmv.png' }
             ];
 
             container.innerHTML = '';
@@ -598,6 +599,7 @@
                     const rowDiv = document.createElement('div');
                     rowDiv.className = 'table-input-row';
                     rowDiv.innerHTML = `
+                        <input type="hidden" id="t_icon_${rowIndex}" value="${v.icon}">
                         <input type="text" id="t_c1_${rowIndex}" value="${v.code}" oninput="renderTableFromInputs()" title="Class of Vehicle">
                         <input type="text" id="t_c2_${rowIndex}" value="${v.code}" oninput="renderTableFromInputs()" title="Code">
                         <input type="text" id="t_c3_${rowIndex}" value="${rtoCode}" oninput="renderTableFromInputs()" title="Issued By">
@@ -612,7 +614,7 @@
             renderTableFromInputs();
         }
 
-        // --- இன்புட் பாக்ஸில் உள்ள தகவல்களை அட்டவணையில் தனித்தனியாக நகரும் வகையில் காண்பித்தல் ---
+        // --- அட்டவணையில் சர்வர் லோகோக்களுடன் தகவல்களை காண்பித்தல் ---
         function renderTableFromInputs() {
             const tableBody = document.getElementById('vehicle_table_body');
             const rows = document.querySelectorAll('.table-input-row');
@@ -620,14 +622,15 @@
 
             for (let i = 0; i < 4; i++) {
                 if (rows[i]) {
-                    const c1 = document.getElementById(`t_c1_${i}`).value;
+                    const icon = document.getElementById(`t_icon_${i}`).value;
                     const c2 = document.getElementById(`t_c2_${i}`).value;
                     const c3 = document.getElementById(`t_c3_${i}`).value;
                     const c4 = document.getElementById(`t_c4_${i}`).value;
                     const c5 = document.getElementById(`t_c5_${i}`).value;
 
+                    // முதல் காலத்தில் (Class of Vehicle) சர்வரில் உள்ள லோகோ படம் துல்லியமாக வரும் வகையில் அமைக்கப்பட்டுள்ளது
                     html += `<tr>
-                        <td><span class="cell-draggable">${c1}</span></td>
+                        <td><span class="cell-draggable"><img src="${icon}" alt="logo" style="height: 12px; max-width: 34px; object-fit: contain; display: inline-block; vertical-align: middle;"></span></td>
                         <td><span class="cell-draggable">${c2}</span></td>
                         <td><span class="cell-draggable">${c3}</span></td>
                         <td><span class="cell-draggable">${c4}</span></td>
@@ -724,14 +727,15 @@
             document.body.removeChild(link);
         }
 
-        // --- HIGH-QUALITY EXACT RENDERING (Web & Address Compatible) ---
+        // --- HIGH-QUALITY EXACT RENDERING (Server Quality Without Pixelation) ---
         async function renderExactCard(elementId) {
             const cardElement = document.getElementById(elementId);
             
             return await html2canvas(cardElement, {
-                scale: 4,               // 4x High Resolution Ultra HD
-                useCORS: true,          // இணையத்தில் (Website / Hosting) வேலை செய்ய
-                allowTaint: true,       // லோக்கல் மற்றும் எக்ஸ்டர்னல் படங்களை அனுமதிக்க
+                scale: 5,               // 5x Scale: சர்வரில் உள்ள படத்தின் அசல் குவாலிட்டி சிறிதும் உடையாமல் கிடைக்க
+                useCORS: true,          // இணையத்தில் உள்ள படங்கள் மற்றும் பேக்ரவுண்ட் துல்லியமாக ரெண்டர் ஆக
+                allowTaint: true,       
+                imageTimeout: 0,        // சர்வர் படங்கள் முழுமையாக ரெண்டர் ஆகும் வரை காத்திருக்க
                 backgroundColor: null,
                 logging: false,
                 scrollX: 0,
@@ -755,16 +759,16 @@
             let currentY = 20;
 
             try {
-                // போட்டோ ரீசைஸ் ஹேண்டிலை (சிறிய நீல புள்ளி) டவுன்லோட் ஆகும் படத்தில் மறைக்க
+                // போட்டோ ரீசைஸ் ஹேண்டிலை டவுன்லோட் ஆகும் படத்தில் மறைக்க
                 const resizer = document.getElementById('photo-resizer');
                 if (resizer) resizer.style.display = 'none';
 
-                // 1. நீங்கள் திரையில் பார்ப்பதை அப்படியே துல்லியமாக Canvas-ல் மாற்றுதல்
+                // 1. சர்வர் குவாலிட்டியில் சிறிதும் உடையாமல் DataURL (1.0 Quality) ஆக மாற்றுதல்
                 const frontCanvas = await renderExactCard('frontPreview');
-                const frontImgData = frontCanvas.toDataURL('image/png');
+                const frontImgData = frontCanvas.toDataURL('image/png', 1.0);
                 
                 const backCanvas = await renderExactCard('backPreview');
-                const backImgData = backCanvas.toDataURL('image/png');
+                const backImgData = backCanvas.toDataURL('image/png', 1.0);
 
                 // --- 2. Build High-Quality PDF ---
                 doc.addImage(frontImgData, 'PNG', marginX, currentY, cardWidth, cardHeight);
