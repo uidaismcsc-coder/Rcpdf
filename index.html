@@ -58,7 +58,6 @@
         .form-group input[type="file"] { padding: 5px; background: #fff; cursor: pointer;}
         .form-group textarea { height: 60px; resize: vertical; }
 
-        /* Vehicle Class Checkbox Styling - Small Radio-like Buttons */
         .checkbox-group {
             background: #fff;
             border: 1px solid #ced4da;
@@ -116,7 +115,6 @@
             border-radius: 3px;
         }
 
-        /* Right Panel - Preview Card */
         .preview-section {
             flex: 1.5;
             min-width: 500px;
@@ -126,7 +124,7 @@
             gap: 20px;
         }
         
-        /* PVC Card Standard Size Setup - High Quality Rendering */
+        
         .pvc-card {
             width: 480px; 
             height: 302px; 
@@ -146,11 +144,11 @@
             user-select: none;
         }
 
-        /* DIRECT FOLDER TAG CONNECTION */
+        
         #frontPreview { background-image: url('l1.jpg'); }
         #backPreview { background-image: url('l2.jpg'); }
 
-        /* Draggable Element Common Styling */
+       
         .draggable {
             position: absolute;
             cursor: move;
@@ -200,7 +198,7 @@
             transform: rotate(-90deg); font-size: 12px; font-weight: bold; color: #000; white-space: nowrap;
         }
         
-        /* BACK CARD ELEMENTS */
+       
         .b-dl-no { top: 23px; left: 85px; font-weight: bold; font-size: 14px; color: #000; }
         .b-top-right { top: 20px; right: 30px; font-size: 13px; color: #333; font-weight: bold; }
         
@@ -230,7 +228,7 @@
         .b-bottom-left { bottom: 22px; left: 215px; font-size: 12px; font-weight: bold; color: #000; }
         .b-bottom-right { bottom: 12px; right: 35px; text-align: center; font-size: 11px; font-weight: bold; line-height: 1.3; color: #000; }
 
-        /* Separate Download Buttons Styling */
+        
         .btn-download {
             background-color: #198754; color: white; border: none; padding: 14px 20px;
             font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer;
@@ -257,7 +255,7 @@
         
         <!-- Left Panel: Input Fields -->
         <div class="input-section">
-            <h3>முன்பக்க தகவல்கள் (Front Side)</h3>
+            <h3>(Front Side)</h3>
             
             <div class="form-row">
                 <div class="form-group">
@@ -327,7 +325,7 @@
                 </div>
             </div>
 
-            <h3 style="margin-top: 20px;">பின்பக்க தகவல்கள் (Back Side)</h3>
+            <h3 style="margin-top: 20px;">(Back Side)</h3>
             
             <div class="checkbox-group">
                 <label><input type="checkbox" id="chk_mcwg" checked onchange="autoGenerateTableInputs()"> MCWG</label>
@@ -405,7 +403,7 @@
                     <div class="b-table-container">
                         <table class="b-table">
                             <tbody id="vehicle_table_body">
-                                <!-- JavaScript மூலம் தானாக நிரம்பும் -->
+                               
                             </tbody>
                         </table>
                     </div>
@@ -415,7 +413,7 @@
                 </div>
             </div>
             
-            <!-- தனித்தனி PNG மற்றும் PDF டவுன்லோட் பட்டன்கள் -->
+           
             <div style="display: flex; gap: 15px; width: 100%; margin-top: 10px;">
                 <button class="btn-download btn-png" id="downloadPngBtn" onclick="downloadPNGs()">Download 4K HD PNG (Front & Back)</button>
                 <button class="btn-download btn-pdf" id="downloadPdfBtn" onclick="downloadPDF()">Download 4K High-Quality PDF</button>
@@ -424,7 +422,7 @@
     </div>
 
     <script>
-        // --- பொதுவான Drag & Drop Logic ---
+       
         function makeDraggable(element) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
             
@@ -484,7 +482,7 @@
             }
         }
 
-        // --- அட்டவணை எழுத்துக்கள் மவுஸ் பாயிண்டருடன் மட்டுமே நகரும் சிறப்பு Drag Logic ---
+        
         function makeCellDraggable(element) {
             let startX = 0, startY = 0;
             let currentX = 0, currentY = 0;
@@ -536,7 +534,7 @@
             };
         }
 
-        // --- Photo Resizing Logic ---
+      
         function makeResizable(element, handle) {
             let startX, startY, startWidth, startHeight;
 
@@ -584,13 +582,13 @@
             }
         }
 
-        // --- செக் பாக்ஸ் டிக் செய்ததும் லோகோக்களுடன் இன்புட் பாக்ஸ்களை உருவாக்கும் செயல்பாடு ---
+       
         function autoGenerateTableInputs() {
             const container = document.getElementById('dynamic_table_inputs');
             const issueDate = document.getElementById('in_first_issue').value;
             const rtoCode = document.getElementById('in_dl_no').value.substring(0, 4) || 'TN04';
             
-            // சர்வரில் டீஃபால்ட்டாக உள்ள லோகோ படங்களின் பெயர்கள் (mcwg.png, lmv.png, 3w.png, hmv.png)
+            
             const vehicles = [
                 { id: 'chk_mcwg', code: 'MCWG', cat: 'NT', icon: 'mcwg.png' },
                 { id: 'chk_lmv', code: 'LMV', cat: 'NT', icon: 'lmv.png' },
@@ -621,7 +619,7 @@
             renderTableFromInputs();
         }
 
-        // --- அட்டவணையில் சர்வர் லோகோக்களுடன் தகவல்களை காண்பித்தல் ---
+       
         function renderTableFromInputs() {
             const tableBody = document.getElementById('vehicle_table_body');
             const rows = document.querySelectorAll('.table-input-row');
@@ -635,7 +633,7 @@
                     const c4 = document.getElementById(`t_c4_${i}`).value;
                     const c5 = document.getElementById(`t_c5_${i}`).value;
 
-                    // முதல் காலத்தில் (Class of Vehicle) சர்வரில் உள்ள லோகோ படம் துல்லியமாக வரும் வகையில் அமைக்கப்பட்டுள்ளது
+                   
                     html += `<tr>
                         <td><span class="cell-draggable"><img src="${icon}" alt="logo" style="height: 12px; max-width: 34px; object-fit: contain; display: inline-block; vertical-align: middle;"></span></td>
                         <td><span class="cell-draggable">${c2}</span></td>
@@ -653,7 +651,7 @@
             document.querySelectorAll('#vehicle_table_body .cell-draggable').forEach(makeCellDraggable);
         }
 
-        // Initialize drag, resize & table on DOM load
+       
         window.addEventListener('DOMContentLoaded', () => {
             const draggables = document.querySelectorAll('.draggable');
             draggables.forEach(makeDraggable);
@@ -668,7 +666,7 @@
             autoGenerateTableInputs();
         });
 
-        // --- QR Code Generator ---
+       
         const qrCanvas = new QRious({
             element: document.getElementById('qr-canvas'),
             size: 250,
@@ -687,7 +685,7 @@
             qrCanvas.value = qrData;
         }
 
-        // --- Photo & Signature Preview ---
+      
         function previewImage(event, boxId) {
             const file = event.target.files[0];
             if (file) {
@@ -710,7 +708,7 @@
             }
         }
 
-        // --- Data Binding Helpers ---
+      
         function updateText(elementId, value) { document.getElementById(elementId).innerText = value; }
         
         function updateDLNo(value) {
@@ -734,26 +732,24 @@
             document.body.removeChild(link);
         }
 
-        // --- EXACT SIZE WITH 4K ULTRA-HD QUALITY RENDERING ---
-        // சர்வரில் உள்ள l1.jpg, l2.jpg மற்றும் லோகோக்களின் அசல் ரெசல்யூஷன் சிறிதும் குறையாமல்,
-        // அதே நேரத்தில் நீங்கள் வடிவமைத்த 480px x 302px அளவு விகிதம் மாறாமல் 4K (scale: 8) HD-ஆக ரெண்டர் செய்யும் ஃபங்ஷன்.
+       
         async function render4KExactCard(elementId) {
             const cardElement = document.getElementById(elementId);
             
-            // html2canvas ரெண்டர் செய்யும்போது crisp-edges காரணமாக இமேஜ்/பேக்ரவுண்ட் உடைவதைத் தவிர்க்க தற்காலிகமாக normal மாற்றுதல்
+            
             const originalImageRendering = cardElement.style.imageRendering;
             cardElement.style.imageRendering = 'auto';
 
-            // ரெண்டர் செய்வதற்கு முன் ஸ்க்ரோல் நிலையால் ஏற்படும் பொசிஷன் மாற்றங்களைத் தவிர்க்க
+         
             const originalScrollX = window.scrollX;
             const originalScrollY = window.scrollY;
             window.scrollTo(0, 0);
 
             try {
-                // scale: 8 வழங்குவதன் மூலம் 480px x 302px அசல் அளவு விகிதத்தில் 4K Quality (3840px x 2416px resolution) கிடைக்கிறது
+                
                 const canvas = await html2canvas(cardElement, {
-                    scale: 8,               // 4K Ultra-HD Crisp Resolution (8x supersampling)
-                    useCORS: true,          // சர்வரில் உள்ள l1.jpg, l2.jpg மற்றும் லோகோக்கள் துல்லியமாக ரெண்டர் ஆக
+                    scale: 8,               
+                    useCORS: true,          
                     allowTaint: false,      
                     imageTimeout: 15000,    
                     backgroundColor: '#ffffff',
@@ -763,13 +759,13 @@
                 });
                 return canvas;
             } finally {
-                // மீண்டும் அசல் நிலைக்கு மாற்றுதல்
+                
                 cardElement.style.imageRendering = originalImageRendering;
                 window.scrollTo(originalScrollX, originalScrollY);
             }
         }
 
-        // --- 1. Separate PNGs Download Function (4K Ultra-HD) ---
+       
         window.downloadPNGs = async function() {
             const downloadPngBtn = document.getElementById('downloadPngBtn');
             const originalBtnText = downloadPngBtn.innerText;
@@ -803,7 +799,7 @@
             }
         };
 
-        // --- 2. Separate PDF Download Function (Exact 85.6mm x 54mm Standard PVC Size with 4K Sharpness) ---
+        
         window.downloadPDF = async function() {
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
             const originalBtnText = downloadPdfBtn.innerText;
