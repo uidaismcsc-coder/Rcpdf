@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Print Portal - Exact TN DL Editor</title>
+    <!-- jsPDF, QRious & html2canvas Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .main-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 1350px;
+            width: 100%;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .header-title {
+            width: 100%;
+            text-align: center;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header-title h2 { color: #0d6efd; margin: 0 0 5px 0; }
+        
+        /* Left Panel - Input Form */
+        .input-section {
+            flex: 1;
+            min-width: 380px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            max-height: 850px;
+            overflow-y: auto; 
+        }
+        .input-section h3 { margin-top: 0; color: #333; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 8px;}
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .form-group { flex: 1; display: flex; flex-direction: column; margin-bottom: 10px; }
+        .form-group label { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 4px; }
+        .form-group input, .form-group textarea {
+            padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px;
+        }
+        .form-group input[type="file"] { padding: 5px; background: #fff; cursor: pointer;}
+        .form-group textarea { height: 60px; resize: vertical; }
+
+        /* Vehicle Class Checkbox Styling - Small Radio-like Buttons */
+        .checkbox-group {
+            background: #fff;
+            border: 1px solid #ced4da;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .checkbox-group label {
+            display: inline-flex;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #0d6efd;
+            cursor: pointer;
+        }
+        .checkbox-group input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #0d6efd;
+            border-radius: 50%;
+            margin-right: 6px;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            background-color: #fff;
+        }
+        .checkbox-group input[type="checkbox"]:checked {
+            background-color: #0d6efd;
+            box-shadow: inset 0 0 0 2px #fff;
+        }
+
+        /* Dynamic Table Inputs Styling */
+        .table-input-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 6px;
+            background: #ffffff;
+            padding: 6px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            align-items: center;
+        }
+        .table-input-row input {
+            width: 100%;
+            padding: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+        }
+
+        /* Right Panel - Preview Card */
+        .preview-section {
+            flex: 1.5;
+            min-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        /* PVC Card Standard Size Setup - High Quality Rendering */
+        .pvc-card {
+            width: 480px; 
+            height: 302px; 
+            border: 1px solid #ced4da;
+            border-radius: 14px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+            overflow: hidden; 
+            color: #000;
+            background-color: #fff;
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            user-select: none;
+        }
+
+        /* DIRECT FOLDER TAG CONNECTION */
+        #frontPreview { background-image: url('l1.jpg'); }
+        #backPreview { background-image: url('l2.jpg'); }
+
+        /* Draggable Element Common Styling */
+        .draggable {
+            position: absolute;
+            cursor: move;
+            touch-action: none;
+            padding: 2px;
+            border: 1px dashed transparent;
+            transition: border 0.2s ease;
+            z-index: 10;
+        }
+        .draggable:hover, .draggable:active {
+            border: 1px dashed #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+
+        /* FRONT CARD ELEMENTS */
+        .f-dl-no { top: 25px; left: 20px; font-size: 14px; font-weight: bold; color: #000; }
+        .f-dates { top: 104px; left: 126px; font-size: 11.5px; display: flex; gap: 24px; font-weight: bold; color: #000; white-space: nowrap; }
+        
+        .f-photo-box { 
+            top: 63px; left: 372px; right: auto; width: 73px; height: 75px; display: flex; 
+            align-items: center; justify-content: center; font-size: 11px; 
+            color: #777; background-color: transparent; overflow: hidden; border: 1px dashed #6c757d;
+        }
+
+        .resize-handle {
+            position: absolute; right: 0; bottom: 0; width: 12px; height: 12px;
+            background-color: #0d6efd; cursor: nwse-resize; z-index: 20;
+            border-radius: 2px; touch-action: none;
+        }
+
+        .f-sign-box { 
+            top: 170px; right: 22px; width: 95px; height: 26px; display: flex; 
+            align-items: center; justify-content: center; font-size: 10px; 
+            color: #777; background-color: transparent; overflow: hidden; 
+        }
+        
+        .f-name { top: 168px; left: 65px; font-size: 13px; font-weight: bold; color: #000; }
+        .f-dob { top: 188px; left: 105px; font-size: 13px; font-weight: bold; color: #000; }
+        .f-swd { top: 208px; left: 145px; font-size: 13px; font-weight: bold; color: #000; }
+        
+        .f-address { top: 238px; left: 78px; width: 290px; font-weight: bold; font-size: 11px; line-height: 1.35; color: #000; }
+        .f-blood { top: 198px; left: 220px; font-size: 13px; font-weight: bold; color: #000;}
+        .f-donor { top: 198px; left: 360px; font-size: 13px; font-weight: bold; color: #000;}
+        
+        .f-vertical-text { 
+            right: 15px; bottom: 85px; transform-origin: right bottom; 
+            transform: rotate(-90deg); font-size: 12px; font-weight: bold; color: #000; white-space: nowrap;
+        }
+        
+        /* BACK CARD ELEMENTS */
+        .b-dl-no { top: 23px; left: 85px; font-weight: bold; font-size: 14px; color: #000; }
+        .b-top-right { top: 20px; right: 30px; font-size: 13px; color: #333; font-weight: bold; }
+        
+        .b-qr { top: 68px; left: 36px; width: 78px; height: 78px; border: none; background-color: transparent; }
+        .b-qr canvas { width: 100%; height: 100%; mix-blend-mode: multiply; }
+        
+        .b-table-container { top: 176px; left: 20px; width: 442px; position: absolute; }
+        .b-table { width: 100%; border-collapse: collapse; font-size: 9.8px; text-align: center; font-weight: bold; background: transparent; }
+        .b-table td { height: 15.2px; padding: 1px 0; border: none; color: #000; position: relative; }
+        .b-table td span.cell-draggable {
+            display: inline-block; cursor: move; user-select: none; padding: 1px 3px;
+            border: 1px dashed transparent; position: relative; z-index: 15; touch-action: none;
+        }
+        .b-table td span.cell-draggable:hover, .b-table td span.cell-draggable:active {
+            border: 1px dashed #0d6efd; background-color: rgba(13, 110, 253, 0.05);
+        }
+        
+        .b-table td:nth-child(1) { width: 15%; }
+        .b-table td:nth-child(2) { width: 12%; }
+        .b-table td:nth-child(3) { width: 14%; }
+        .b-table td:nth-child(4) { width: 17%; }
+        .b-table td:nth-child(5) { width: 12%; }
+        .b-table td:nth-child(6) { width: 10%; }
+        .b-table td:nth-child(7) { width: 10%; }
+        .b-table td:nth-child(8) { width: 10%; }
+        
+        .b-bottom-left { bottom: 22px; left: 215px; font-size: 12px; font-weight: bold; color: #000; }
+        .b-bottom-right { bottom: 12px; right: 35px; text-align: center; font-size: 11px; font-weight: bold; line-height: 1.3; color: #000; }
+
+        /* Separate Download Buttons Styling */
+        .btn-download {
+            background-color: #198754; color: white; border: none; padding: 14px 20px;
+            font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15); transition: background-color 0.2s;
+            flex: 1;
+        }
+        .btn-download:hover { opacity: 0.9; }
+        .btn-download:disabled { background-color: #6c757d !important; cursor: not-allowed; }
+        .btn-png { background-color: #0d6efd; }
+        .btn-pdf { background-color: #198754; }
+        
+        .info-note {
+            font-size: 11px; color: #dc3545; font-weight: bold; margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="header-title">
+            <h2>Digital Print Portal</h2>
+            <p style="color:#6c757d; font-size:14px; margin:0;">Exact Tamil Nadu DL Layout - High-Quality PDF & PNG Export</p>
+        </div>
+        
+        <!-- Left Panel: Input Fields -->
+        <div class="input-section">
+            <h3>முன்பக்க தகவல்கள் (Front Side)</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Upload Photo</label>
+                    <input type="file" id="in_photo" accept="image/png, image/jpeg" onchange="previewImage(event, 'f-photo-box')">
+                </div>
+                <div class="form-group">
+                    <label>Upload Signature</label>
+                    <input type="file" id="in_sign" accept="image/png, image/jpeg" onchange="previewImage(event, 'f-sign-box')">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>DL Number (Front & Back)</label>
+                    <input type="text" id="in_dl_no" value="TN03 20120000656" oninput="updateDLNo(this.value); generateQR();">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Issue Date</label>
+                    <input type="text" id="in_issue_date" value="24-02-2026" oninput="updateText('out_issue_date', this.value)">
+                </div>
+                <div class="form-group">
+                    <label>Validity (NT)</label>
+                    <input type="text" id="in_val_nt" value="22-01-2032" oninput="updateText('out_val_nt', this.value)">
+                </div>
+                <div class="form-group">
+                    <label>Validity (TR)</label>
+                    <input type="text" id="in_val_tr" value="24-02-2031" oninput="updateText('out_val_tr', this.value)">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="in_name" value="GURUSANKAR R" oninput="updateText('out_name', this.value); generateQR();">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="text" id="in_dob" value="10-04-1986" oninput="updateText('out_dob', this.value); generateQR();">
+                </div>
+                <div class="form-group">
+                    <label>Son/Daughter/Wife of</label>
+                    <input type="text" id="in_swd" value="RAMACHANDRAN" oninput="updateText('out_swd', this.value)">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Address</label>
+                <textarea id="in_address" oninput="updateAddress(this.value)">NO- 51/23 3-RD- FLOOR THANDAVARAYAN GRAMINI STREET&#10;TONDIARPET CHENNAI 600081</textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Blood Group</label>
+                    <input type="text" id="in_blood" value="B+" oninput="updateText('out_blood', this.value)">
+                </div>
+                <div class="form-group">
+                    <label>Organ Donor</label>
+                    <input type="text" id="in_donor" value="N" oninput="updateText('out_donor', this.value)">
+                </div>
+                <div class="form-group">
+                    <label>First Issue Date</label>
+                    <input type="text" id="in_first_issue" value="23-01-2012" oninput="updateText('out_first_issue', this.value); autoGenerateTableInputs();">
+                </div>
+            </div>
+
+            <h3 style="margin-top: 20px;">பின்பக்க தகவல்கள் (Back Side)</h3>
+            
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="chk_mcwg" checked onchange="autoGenerateTableInputs()"> MCWG</label>
+                <label><input type="checkbox" id="chk_lmv" checked onchange="autoGenerateTableInputs()"> LMV</label>
+                <label><input type="checkbox" id="chk_3w" onchange="autoGenerateTableInputs()"> 3W-NT</label>
+                <label><input type="checkbox" id="chk_hmv" onchange="autoGenerateTableInputs()"> HMV</label>
+            </div>
+
+            <label style="font-size:11px; font-weight:bold; color:#0d6efd; display:block; margin-bottom:5px;">தேவையான மாற்றங்களை கீழே உள்ள பெட்டிகளில் எடிட் செய்யலாம்:</label>
+            <div id="dynamic_table_inputs"></div>
+
+            <div class="form-row" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>TND Number</label>
+                    <input type="text" id="in_tnd" value="TND30076493" oninput="updateText('out_tnd', this.value)">
+                </div>
+                <div class="form-group">
+                    <label>Emergency Contact</label>
+                    <input type="text" id="in_emg" value="9876543210" oninput="updateText('out_emg', this.value)">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>RTO Authority Name</label>
+                    <input type="text" id="in_rto" value="TN03 TONDIARPET NE RTO" oninput="updateText('out_rto', this.value)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Live Preview Card -->
+        <div class="preview-section">
+            <div style="text-align: left; width: 100%;">
+                <h3 style="margin: 0 0 5px 5px; font-size: 14px; color: #555;">Front Side (l1.jpg Layout)</h3>
+                <p class="info-note">* புகைப்படத்தின் கீழ் வலது மூலையில் உள்ள சிறிய நீல நிறப் புள்ளியை (Handle) தொட்டு இழுத்து அளவை மாற்றிக் கொள்ளலாம்.</p>
+                <div class="pvc-card" id="frontPreview">
+                    
+                    <div class="draggable f-dl-no" id="out_dl_no_f">TN03 20120000656</div>
+
+                    <div class="draggable f-dates">
+                        <span id="out_issue_date">24-02-2026</span>
+                        <span id="out_val_nt">22-01-2032</span>
+                        <span id="out_val_tr">24-02-2031</span>
+                    </div>
+                    
+                    <div class="draggable f-photo-box" id="f-photo-box">
+                        Photo
+                        <div class="resize-handle" id="photo-resizer"></div>
+                    </div>
+
+                    <div class="draggable f-sign-box" id="f-sign-box">Signature</div>
+                    
+                    <div class="draggable f-name" id="out_name">GURUSANKAR R</div>
+                    <div class="draggable f-dob" id="out_dob">10-04-1986</div>
+                    <div class="draggable f-swd" id="out_swd">RAMACHANDRAN</div>
+                    
+                    <div class="draggable f-address" id="out_address">NO- 51/23 3-RD- FLOOR THANDAVARAYAN GRAMINI STREET<br>TONDIARPET CHENNAI 600081</div>
+                    
+                    <div class="draggable f-blood" id="out_blood">B+</div>
+                    <div class="draggable f-donor" id="out_donor">N</div>
+                    
+                    <div class="draggable f-vertical-text" id="out_first_issue">23-01-2012</div>
+                </div>
+            </div>
+
+            <div style="text-align: left; width: 100%;">
+                <h3 style="margin: 0 0 5px 5px; font-size: 14px; color: #555;">Back Side (l2.jpg Layout)</h3>
+                <div class="pvc-card" id="backPreview">
+                    <div class="draggable b-dl-no" id="out_dl_no_b">TN03 20120000656</div>
+                    <div class="draggable b-top-right" id="out_tnd">TND30076493</div>
+                    
+                    <div class="draggable b-qr">
+                        <canvas id="qr-canvas"></canvas>
+                    </div>
+                    
+                    <div class="b-table-container">
+                        <table class="b-table">
+                            <tbody id="vehicle_table_body">
+                                <!-- JavaScript மூலம் தானாக நிரம்பும் -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="draggable b-bottom-left" id="out_emg">9876543210</div>
+                    <div class="draggable b-bottom-right" id="out_rto">TN03 TONDIARPET NE RTO</div>
+                </div>
+            </div>
+            
+            <!-- தனித்தனி PNG மற்றும் PDF டவுன்லோட் பட்டன்கள் -->
+            <div style="display: flex; gap: 15px; width: 100%; margin-top: 10px;">
+                <button class="btn-download btn-png" id="downloadPngBtn" onclick="downloadPNGs()">Download 4K HD PNG (Front & Back)</button>
+                <button class="btn-download btn-pdf" id="downloadPdfBtn" onclick="downloadPDF()">Download 4K High-Quality PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- பொதுவான Drag & Drop Logic ---
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            
+            element.onmousedown = dragMouseDown;
+            element.ontouchstart = dragTouchStart;
+
+            function dragMouseDown(e) {
+                if (e.target.classList.contains('resize-handle')) return;
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDragMouse;
+            }
+
+            function dragTouchStart(e) {
+                if (e.target.classList.contains('resize-handle')) return;
+                const touch = e.touches[0];
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                document.ontouchend = closeDragElement;
+                document.ontouchmove = elementDragTouch;
+            }
+
+            function elementDragMouse(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                updateElementPosition();
+            }
+
+            function elementDragTouch(e) {
+                const touch = e.touches[0];
+                pos1 = pos3 - touch.clientX;
+                pos2 = pos4 - touch.clientY;
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                updateElementPosition();
+            }
+
+            function updateElementPosition() {
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+                element.style.right = "auto";
+                element.style.bottom = "auto";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                document.ontouchend = null;
+                document.ontouchmove = null;
+            }
+        }
+
+        // --- அட்டவணை எழுத்துக்கள் மவுஸ் பாயிண்டருடன் மட்டுமே நகரும் சிறப்பு Drag Logic ---
+        function makeCellDraggable(element) {
+            let startX = 0, startY = 0;
+            let currentX = 0, currentY = 0;
+
+            element.onmousedown = function(e) {
+                e = e || window.event;
+                e.preventDefault();
+                startX = e.clientX;
+                startY = e.clientY;
+
+                document.onmouseup = function() {
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                };
+
+                document.onmousemove = function(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    let dx = e.clientX - startX;
+                    let dy = e.clientY - startY;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    currentX += dx;
+                    currentY += dy;
+                    element.style.transform = `translate(${currentX}px, ${currentY}px)`;
+                };
+            };
+
+            element.ontouchstart = function(e) {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+
+                document.ontouchend = function() {
+                    document.ontouchend = null;
+                    document.ontouchmove = null;
+                };
+
+                document.ontouchmove = function(e) {
+                    const touch = e.touches[0];
+                    let dx = touch.clientX - startX;
+                    let dy = touch.clientY - startY;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    currentX += dx;
+                    currentY += dy;
+                    element.style.transform = `translate(${currentX}px, ${currentY}px)`;
+                };
+            };
+        }
+
+        // --- Photo Resizing Logic ---
+        function makeResizable(element, handle) {
+            let startX, startY, startWidth, startHeight;
+
+            handle.addEventListener('mousedown', initResizeMouse);
+            handle.addEventListener('touchstart', initResizeTouch);
+
+            function initResizeMouse(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = parseInt(document.defaultView.getComputedStyle(element).width, 10);
+                startHeight = parseInt(document.defaultView.getComputedStyle(element).height, 10);
+                document.addEventListener('mousemove', doResizeMouse);
+                document.addEventListener('mouseup', stopResize);
+            }
+
+            function initResizeTouch(e) {
+                e.stopPropagation();
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                startWidth = parseInt(document.defaultView.getComputedStyle(element).width, 10);
+                startHeight = parseInt(document.defaultView.getComputedStyle(element).height, 10);
+                document.addEventListener('touchmove', doResizeTouch);
+                document.addEventListener('touchend', stopResize);
+            }
+
+            function doResizeMouse(e) {
+                element.style.width = (startWidth + e.clientX - startX) + 'px';
+                element.style.height = (startHeight + e.clientY - startY) + 'px';
+            }
+
+            function doResizeTouch(e) {
+                const touch = e.touches[0];
+                element.style.width = (startWidth + touch.clientX - startX) + 'px';
+                element.style.height = (startHeight + touch.clientY - startY) + 'px';
+            }
+
+            function stopResize() {
+                document.removeEventListener('mousemove', doResizeMouse);
+                document.removeEventListener('mouseup', stopResize);
+                document.removeEventListener('touchmove', doResizeTouch);
+                document.removeEventListener('touchend', stopResize);
+            }
+        }
+
+        // --- செக் பாக்ஸ் டிக் செய்ததும் லோகோக்களுடன் இன்புட் பாக்ஸ்களை உருவாக்கும் செயல்பாடு ---
+        function autoGenerateTableInputs() {
+            const container = document.getElementById('dynamic_table_inputs');
+            const issueDate = document.getElementById('in_first_issue').value;
+            const rtoCode = document.getElementById('in_dl_no').value.substring(0, 4) || 'TN04';
+            
+            // சர்வரில் டீஃபால்ட்டாக உள்ள லோகோ படங்களின் பெயர்கள் (mcwg.png, lmv.png, 3w.png, hmv.png)
+            const vehicles = [
+                { id: 'chk_mcwg', code: 'MCWG', cat: 'NT', icon: 'mcwg.png' },
+                { id: 'chk_lmv', code: 'LMV', cat: 'NT', icon: 'lmv.png' },
+                { id: 'chk_3w', code: '3W-NT', cat: 'NT', icon: '3w.png' },
+                { id: 'chk_hmv', code: 'HMV', cat: 'TR', icon: 'hmv.png' }
+            ];
+
+            container.innerHTML = '';
+            let rowIndex = 0;
+
+            vehicles.forEach((v) => {
+                if (document.getElementById(v.id).checked && rowIndex < 4) {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'table-input-row';
+                    rowDiv.innerHTML = `
+                        <input type="hidden" id="t_icon_${rowIndex}" value="${v.icon}">
+                        <input type="text" id="t_c1_${rowIndex}" value="${v.code}" oninput="renderTableFromInputs()" title="Class of Vehicle">
+                        <input type="text" id="t_c2_${rowIndex}" value="${v.code}" oninput="renderTableFromInputs()" title="Code">
+                        <input type="text" id="t_c3_${rowIndex}" value="${rtoCode}" oninput="renderTableFromInputs()" title="Issued By">
+                        <input type="text" id="t_c4_${rowIndex}" value="${issueDate}" oninput="renderTableFromInputs()" title="Date of Issue">
+                        <input type="text" id="t_c5_${rowIndex}" value="${v.cat}" oninput="renderTableFromInputs()" title="Category">
+                    `;
+                    container.appendChild(rowDiv);
+                    rowIndex++;
+                }
+            });
+
+            renderTableFromInputs();
+        }
+
+        // --- அட்டவணையில் சர்வர் லோகோக்களுடன் தகவல்களை காண்பித்தல் ---
+        function renderTableFromInputs() {
+            const tableBody = document.getElementById('vehicle_table_body');
+            const rows = document.querySelectorAll('.table-input-row');
+            let html = '';
+
+            for (let i = 0; i < 4; i++) {
+                if (rows[i]) {
+                    const icon = document.getElementById(`t_icon_${i}`).value;
+                    const c2 = document.getElementById(`t_c2_${i}`).value;
+                    const c3 = document.getElementById(`t_c3_${i}`).value;
+                    const c4 = document.getElementById(`t_c4_${i}`).value;
+                    const c5 = document.getElementById(`t_c5_${i}`).value;
+
+                    // முதல் காலத்தில் (Class of Vehicle) சர்வரில் உள்ள லோகோ படம் துல்லியமாக வரும் வகையில் அமைக்கப்பட்டுள்ளது
+                    html += `<tr>
+                        <td><span class="cell-draggable"><img src="${icon}" alt="logo" style="height: 12px; max-width: 34px; object-fit: contain; display: inline-block; vertical-align: middle;"></span></td>
+                        <td><span class="cell-draggable">${c2}</span></td>
+                        <td><span class="cell-draggable">${c3}</span></td>
+                        <td><span class="cell-draggable">${c4}</span></td>
+                        <td><span class="cell-draggable">${c5}</span></td>
+                        <td></td><td></td><td></td>
+                    </tr>`;
+                } else {
+                    html += `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+                }
+            }
+
+            tableBody.innerHTML = html;
+            document.querySelectorAll('#vehicle_table_body .cell-draggable').forEach(makeCellDraggable);
+        }
+
+        // Initialize drag, resize & table on DOM load
+        window.addEventListener('DOMContentLoaded', () => {
+            const draggables = document.querySelectorAll('.draggable');
+            draggables.forEach(makeDraggable);
+            
+            const photoBox = document.getElementById('f-photo-box');
+            const resizer = document.getElementById('photo-resizer');
+            if (photoBox && resizer) {
+                makeResizable(photoBox, resizer);
+            }
+
+            generateQR();
+            autoGenerateTableInputs();
+        });
+
+        // --- QR Code Generator ---
+        const qrCanvas = new QRious({
+            element: document.getElementById('qr-canvas'),
+            size: 250,
+            level: 'M',
+            backgroundAlpha: 0, 
+            foreground: '#000000',
+            padding: 0
+        });
+
+        function generateQR() {
+            const dlNo = document.getElementById('in_dl_no').value;
+            const name = document.getElementById('in_name').value;
+            const dob = document.getElementById('in_dob').value;
+            
+            const qrData = `DL No: ${dlNo}\nName: ${name}\nDOB: ${dob}`;
+            qrCanvas.value = qrData;
+        }
+
+        // --- Photo & Signature Preview ---
+        function previewImage(event, boxId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const box = document.getElementById(boxId);
+                    box.style.backgroundImage = `url('${e.target.result}')`;
+                    box.style.backgroundSize = '100% 100%';
+                    box.style.backgroundPosition = 'center';
+                    box.style.border = 'none';
+                    if (boxId === 'f-photo-box') {
+                        box.innerHTML = '<div class="resize-handle" id="photo-resizer"></div>';
+                        const resizer = document.getElementById('photo-resizer');
+                        makeResizable(box, resizer);
+                    } else {
+                        box.innerHTML = '';
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- Data Binding Helpers ---
+        function updateText(elementId, value) { document.getElementById(elementId).innerText = value; }
+        
+        function updateDLNo(value) {
+            document.getElementById('out_dl_no_f').innerText = value;
+            document.getElementById('out_dl_no_b').innerText = value;
+            autoGenerateTableInputs(); 
+        }
+
+        function updateAddress(value) {
+            const formattedValue = value.replace(/\n/g, '<br>');
+            document.getElementById('out_address').innerHTML = formattedValue;
+        }
+
+        // --- Helper Function for PNG Download ---
+        function saveAsPNG(dataUrl, fileName) {
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- EXACT SIZE WITH 4K ULTRA-HD QUALITY RENDERING ---
+        // சர்வரில் உள்ள l1.jpg, l2.jpg மற்றும் லோகோக்களின் அசல் ரெசல்யூஷன் சிறிதும் குறையாமல்,
+        // அதே நேரத்தில் நீங்கள் வடிவமைத்த 480px x 302px அளவு விகிதம் மாறாமல் 4K (scale: 8) HD-ஆக ரெண்டர் செய்யும் ஃபங்ஷன்.
+        async function render4KExactCard(elementId) {
+            const cardElement = document.getElementById(elementId);
+            
+            // html2canvas ரெண்டர் செய்யும்போது crisp-edges காரணமாக இமேஜ்/பேக்ரவுண்ட் உடைவதைத் தவிர்க்க தற்காலிகமாக normal மாற்றுதல்
+            const originalImageRendering = cardElement.style.imageRendering;
+            cardElement.style.imageRendering = 'auto';
+
+            // ரெண்டர் செய்வதற்கு முன் ஸ்க்ரோல் நிலையால் ஏற்படும் பொசிஷன் மாற்றங்களைத் தவிர்க்க
+            const originalScrollX = window.scrollX;
+            const originalScrollY = window.scrollY;
+            window.scrollTo(0, 0);
+
+            try {
+                // scale: 8 வழங்குவதன் மூலம் 480px x 302px அசல் அளவு விகிதத்தில் 4K Quality (3840px x 2416px resolution) கிடைக்கிறது
+                const canvas = await html2canvas(cardElement, {
+                    scale: 8,               // 4K Ultra-HD Crisp Resolution (8x supersampling)
+                    useCORS: true,          // சர்வரில் உள்ள l1.jpg, l2.jpg மற்றும் லோகோக்கள் துல்லியமாக ரெண்டர் ஆக
+                    allowTaint: false,      
+                    imageTimeout: 15000,    
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0
+                });
+                return canvas;
+            } finally {
+                // மீண்டும் அசல் நிலைக்கு மாற்றுதல்
+                cardElement.style.imageRendering = originalImageRendering;
+                window.scrollTo(originalScrollX, originalScrollY);
+            }
+        }
+
+        // --- 1. Separate PNGs Download Function (4K Ultra-HD) ---
+        window.downloadPNGs = async function() {
+            const downloadPngBtn = document.getElementById('downloadPngBtn');
+            const originalBtnText = downloadPngBtn.innerText;
+            downloadPngBtn.innerText = "Processing 4K PNGs...";
+            downloadPngBtn.disabled = true;
+
+            try {
+                const resizer = document.getElementById('photo-resizer');
+                if (resizer) resizer.style.display = 'none';
+
+                const frontCanvas = await render4KExactCard('frontPreview');
+                const frontImgData = frontCanvas.toDataURL('image/png', 1.0);
+                
+                const backCanvas = await render4KExactCard('backPreview');
+                const backImgData = backCanvas.toDataURL('image/png', 1.0);
+
+                if (resizer) resizer.style.display = 'block';
+
+                saveAsPNG(frontImgData, 'TN_DL_Front_4K_HD.png');
+                
+                setTimeout(() => {
+                    saveAsPNG(backImgData, 'TN_DL_Back_4K_HD.png');
+                }, 400);
+
+            } catch (error) {
+                console.error("PNG Download Error: ", error);
+                alert("PNG டவுன்லோட் செய்வதில் பிழை ஏற்பட்டது: " + error.message);
+            } finally {
+                downloadPngBtn.innerText = originalBtnText;
+                downloadPngBtn.disabled = false;
+            }
+        };
+
+        // --- 2. Separate PDF Download Function (Exact 85.6mm x 54mm Standard PVC Size with 4K Sharpness) ---
+        window.downloadPDF = async function() {
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            const originalBtnText = downloadPdfBtn.innerText;
+            downloadPdfBtn.innerText = "Generating 4K PDF...";
+            downloadPdfBtn.disabled = true;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            const cardWidth = 85.6;
+            const cardHeight = 54.0;
+            const marginX = (210 - cardWidth) / 2;
+            let currentY = 20;
+
+            try {
+                const resizer = document.getElementById('photo-resizer');
+                if (resizer) resizer.style.display = 'none';
+
+                const frontCanvas = await render4KExactCard('frontPreview');
+                const frontImgData = frontCanvas.toDataURL('image/png', 1.0);
+                
+                const backCanvas = await render4KExactCard('backPreview');
+                const backImgData = backCanvas.toDataURL('image/png', 1.0);
+
+                doc.addImage(frontImgData, 'PNG', marginX, currentY, cardWidth, cardHeight, '', 'FAST');
+                doc.setDrawColor(200); doc.rect(marginX, currentY, cardWidth, cardHeight);
+                
+                currentY += cardHeight + 25;
+
+                doc.addImage(backImgData, 'PNG', marginX, currentY, cardWidth, cardHeight, '', 'FAST');
+                doc.setDrawColor(200); doc.rect(marginX, currentY, cardWidth, cardHeight);
+
+                if (resizer) resizer.style.display = 'block';
+
+                doc.save('TN_DL_Card_4K_HD.pdf');
+
+            } catch (error) {
+                console.error("PDF Download Error: ", error);
+                alert("PDF டவுன்லோட் செய்வதில் பிழை ஏற்பட்டது: " + error.message);
+            } finally {
+                downloadPdfBtn.innerText = originalBtnText;
+                downloadPdfBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
