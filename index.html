@@ -124,7 +124,6 @@
             gap: 20px;
         }
         
-        
         .pvc-card {
             width: 480px; 
             height: 302px; 
@@ -139,16 +138,13 @@
             background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
+            image-rendering: auto; /* Fixed: Removed crisp-edges to prevent pixel breaking */
             user-select: none;
         }
 
-        
         #frontPreview { background-image: url('l1.jpg'); }
         #backPreview { background-image: url('l2.jpg'); }
 
-       
         .draggable {
             position: absolute;
             cursor: move;
@@ -198,7 +194,7 @@
             transform: rotate(-90deg); font-size: 12px; font-weight: bold; color: #000; white-space: nowrap;
         }
         
-       
+        /* BACK CARD ELEMENTS */
         .b-dl-no { top: 23px; left: 85px; font-weight: bold; font-size: 14px; color: #000; }
         .b-top-right { top: 20px; right: 30px; font-size: 13px; color: #333; font-weight: bold; }
         
@@ -228,7 +224,6 @@
         .b-bottom-left { bottom: 22px; left: 215px; font-size: 12px; font-weight: bold; color: #000; }
         .b-bottom-right { bottom: 12px; right: 35px; text-align: center; font-size: 11px; font-weight: bold; line-height: 1.3; color: #000; }
 
-        
         .btn-download {
             background-color: #198754; color: white; border: none; padding: 14px 20px;
             font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer;
@@ -413,7 +408,6 @@
                 </div>
             </div>
             
-           
             <div style="display: flex; gap: 15px; width: 100%; margin-top: 10px;">
                 <button class="btn-download btn-png" id="downloadPngBtn" onclick="downloadPNGs()">Download 4K HD PNG (Front & Back)</button>
                 <button class="btn-download btn-pdf" id="downloadPdfBtn" onclick="downloadPDF()">Download 4K High-Quality PDF</button>
@@ -422,7 +416,6 @@
     </div>
 
     <script>
-       
         function makeDraggable(element) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
             
@@ -482,7 +475,6 @@
             }
         }
 
-        
         function makeCellDraggable(element) {
             let startX = 0, startY = 0;
             let currentX = 0, currentY = 0;
@@ -534,7 +526,6 @@
             };
         }
 
-      
         function makeResizable(element, handle) {
             let startX, startY, startWidth, startHeight;
 
@@ -582,12 +573,10 @@
             }
         }
 
-       
         function autoGenerateTableInputs() {
             const container = document.getElementById('dynamic_table_inputs');
             const issueDate = document.getElementById('in_first_issue').value;
             const rtoCode = document.getElementById('in_dl_no').value.substring(0, 4) || 'TN04';
-            
             
             const vehicles = [
                 { id: 'chk_mcwg', code: 'MCWG', cat: 'NT', icon: 'mcwg.png' },
@@ -619,7 +608,6 @@
             renderTableFromInputs();
         }
 
-       
         function renderTableFromInputs() {
             const tableBody = document.getElementById('vehicle_table_body');
             const rows = document.querySelectorAll('.table-input-row');
@@ -633,7 +621,6 @@
                     const c4 = document.getElementById(`t_c4_${i}`).value;
                     const c5 = document.getElementById(`t_c5_${i}`).value;
 
-                   
                     html += `<tr>
                         <td><span class="cell-draggable"><img src="${icon}" alt="logo" style="height: 12px; max-width: 34px; object-fit: contain; display: inline-block; vertical-align: middle;"></span></td>
                         <td><span class="cell-draggable">${c2}</span></td>
@@ -651,7 +638,6 @@
             document.querySelectorAll('#vehicle_table_body .cell-draggable').forEach(makeCellDraggable);
         }
 
-       
         window.addEventListener('DOMContentLoaded', () => {
             const draggables = document.querySelectorAll('.draggable');
             draggables.forEach(makeDraggable);
@@ -666,7 +652,6 @@
             autoGenerateTableInputs();
         });
 
-       
         const qrCanvas = new QRious({
             element: document.getElementById('qr-canvas'),
             size: 250,
@@ -685,7 +670,6 @@
             qrCanvas.value = qrData;
         }
 
-      
         function previewImage(event, boxId) {
             const file = event.target.files[0];
             if (file) {
@@ -708,7 +692,6 @@
             }
         }
 
-      
         function updateText(elementId, value) { document.getElementById(elementId).innerText = value; }
         
         function updateDLNo(value) {
@@ -722,7 +705,6 @@
             document.getElementById('out_address').innerHTML = formattedValue;
         }
 
-        // --- Helper Function for PNG Download ---
         function saveAsPNG(dataUrl, fileName) {
             const link = document.createElement('a');
             link.download = fileName;
@@ -732,25 +714,18 @@
             document.body.removeChild(link);
         }
 
-       
         async function render4KExactCard(elementId) {
             const cardElement = document.getElementById(elementId);
-            
-            
-            const originalImageRendering = cardElement.style.imageRendering;
-            cardElement.style.imageRendering = 'auto';
-
-         
             const originalScrollX = window.scrollX;
             const originalScrollY = window.scrollY;
             window.scrollTo(0, 0);
 
             try {
-                
+                // Fixed: scale: 4 provides optimum 600+ DPI sharpness without breaking pixels
                 const canvas = await html2canvas(cardElement, {
-                    scale: 8,               
+                    scale: 4,               
                     useCORS: true,          
-                    allowTaint: false,      
+                    allowTaint: true,      
                     imageTimeout: 15000,    
                     backgroundColor: '#ffffff',
                     logging: false,
@@ -759,13 +734,10 @@
                 });
                 return canvas;
             } finally {
-                
-                cardElement.style.imageRendering = originalImageRendering;
                 window.scrollTo(originalScrollX, originalScrollY);
             }
         }
 
-       
         window.downloadPNGs = async function() {
             const downloadPngBtn = document.getElementById('downloadPngBtn');
             const originalBtnText = downloadPngBtn.innerText;
@@ -795,11 +767,11 @@
                 alert("PNG டவுன்லோட் செய்வதில் பிழை ஏற்பட்டது: " + error.message);
             } finally {
                 downloadPngBtn.innerText = originalBtnText;
+                downloadPdfBtn.disabled = false;
                 downloadPngBtn.disabled = false;
             }
         };
 
-        
         window.downloadPDF = async function() {
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
             const originalBtnText = downloadPdfBtn.innerText;
@@ -824,12 +796,13 @@
                 const backCanvas = await render4KExactCard('backPreview');
                 const backImgData = backCanvas.toDataURL('image/png', 1.0);
 
-                doc.addImage(frontImgData, 'PNG', marginX, currentY, cardWidth, cardHeight, '', 'FAST');
+                // Fixed: Removed 'FAST' compression; changed to 'SLOW' (Lossless quality)
+                doc.addImage(frontImgData, 'PNG', marginX, currentY, cardWidth, cardHeight, '', 'SLOW');
                 doc.setDrawColor(200); doc.rect(marginX, currentY, cardWidth, cardHeight);
                 
                 currentY += cardHeight + 25;
 
-                doc.addImage(backImgData, 'PNG', marginX, currentY, cardWidth, cardHeight, '', 'FAST');
+                doc.addImage(backImgData, 'PNG', marginX, currentY, cardWidth, cardHeight, '', 'SLOW');
                 doc.setDrawColor(200); doc.rect(marginX, currentY, cardWidth, cardHeight);
 
                 if (resizer) resizer.style.display = 'block';
