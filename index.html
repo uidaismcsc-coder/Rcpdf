@@ -138,14 +138,23 @@
             background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
-            /* ஒரிஜினல் சர்வர் இமேஜ் குவாலிட்டி குறையாமல் இருக்க High Quality Rendering சேர்க்கப்பட்டுள்ளது */
             image-rendering: -webkit-optimize-contrast;
             image-rendering: high-quality;
             user-select: none;
         }
 
-        #frontPreview { background-image: url('l1.jpg'); }
-        #backPreview { background-image: url('l2.jpg'); }
+        #frontPreview { 
+            background-image: url('l1.jpg'); 
+            background-size: 100% 100%;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: high-quality;
+        }
+        #backPreview { 
+            background-image: url('l2.jpg'); 
+            background-size: 100% 100%;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: high-quality;
+        }
 
         .draggable {
             position: absolute;
@@ -723,24 +732,30 @@
             window.scrollTo(0, 0);
 
             try {
-                // Scale 6 மற்றும் High quality smoothing மூலம் l1.jpg, l2.jpg ஒரிஜினல் சர்வர் ரெசல்யூஷனில் டவுன்லோட் ஆகும்
+                // scale: 6 captures at 2880x1812 px, preserving original server image resolution (l1.jpg / l2.jpg)
                 const canvas = await html2canvas(cardElement, {
                     scale: 6,               
                     useCORS: true,          
                     allowTaint: true,      
-                    imageTimeout: 0,    
+                    imageTimeout: 15000,    
                     backgroundColor: '#ffffff',
                     logging: false,
                     scrollX: 0,
-                    scrollY: 0
+                    scrollY: 0,
+                    onclone: function(clonedDoc) {
+                        const el = clonedDoc.getElementById(elementId);
+                        if (el) {
+                            el.style.imageRendering = '-webkit-optimize-contrast';
+                        }
+                    }
                 });
 
+                // Maximize canvas smoothing context for sharp server quality rendering
                 const ctx = canvas.getContext('2d');
                 if (ctx) {
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
                 }
-
                 return canvas;
             } finally {
                 window.scrollTo(originalScrollX, originalScrollY);
