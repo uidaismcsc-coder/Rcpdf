@@ -138,7 +138,9 @@
             background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
-            image-rendering: auto; /* Fixed: Removed crisp-edges to prevent pixel breaking */
+            /* ஒரிஜினல் சர்வர் இமேஜ் குவாலிட்டி குறையாமல் இருக்க High Quality Rendering சேர்க்கப்பட்டுள்ளது */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: high-quality;
             user-select: none;
         }
 
@@ -721,17 +723,24 @@
             window.scrollTo(0, 0);
 
             try {
-                // Fixed: scale: 4 provides optimum 600+ DPI sharpness without breaking pixels
+                // Scale 6 மற்றும் High quality smoothing மூலம் l1.jpg, l2.jpg ஒரிஜினல் சர்வர் ரெசல்யூஷனில் டவுன்லோட் ஆகும்
                 const canvas = await html2canvas(cardElement, {
-                    scale: 4,               
+                    scale: 6,               
                     useCORS: true,          
                     allowTaint: true,      
-                    imageTimeout: 15000,    
+                    imageTimeout: 0,    
                     backgroundColor: '#ffffff',
                     logging: false,
                     scrollX: 0,
                     scrollY: 0
                 });
+
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                }
+
                 return canvas;
             } finally {
                 window.scrollTo(originalScrollX, originalScrollY);
@@ -796,7 +805,6 @@
                 const backCanvas = await render4KExactCard('backPreview');
                 const backImgData = backCanvas.toDataURL('image/png', 1.0);
 
-                // Fixed: Removed 'FAST' compression; changed to 'SLOW' (Lossless quality)
                 doc.addImage(frontImgData, 'PNG', marginX, currentY, cardWidth, cardHeight, '', 'SLOW');
                 doc.setDrawColor(200); doc.rect(marginX, currentY, cardWidth, cardHeight);
                 
